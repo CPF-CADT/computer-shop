@@ -53,7 +53,6 @@ jobs:
         with:
           args: >
             -Dsonar.projectKey=CPF-CADT_computer-shop
-            -Dsonar.organization=cpf-cadt
           
             # Unique key of your project. You can find it in SonarQube > [my project] > Project Information (top-right menu)
             # mandatory
