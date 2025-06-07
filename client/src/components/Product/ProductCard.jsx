@@ -8,11 +8,12 @@ export default function ProductCard({
   newPrice,
   reviews,
   rating,
+  imgClassName,
 }) {
   return (
-    <div className="rounded-md p-4 w-64 bg-white">
+    <div className="rounded-md p-5 w-64 bg-white">
       <div className="flex justify-center items-center mb-2">
-        <img src={image} alt={title} className="w-200 h-30 object-contain" />
+        <img src={image} alt={title} className= {imgClassName ? imgClassName : "w-50 h-48 object-contain"} />
       </div>
       <div className="flex items-center mb-1">
         {[...Array(5)].map((_, i) => (
