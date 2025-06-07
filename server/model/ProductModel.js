@@ -43,7 +43,6 @@ class ProductModel {
             try {
                 let productDetail = yield this.getOneProduct(productCode);
                 let customerFeedback = yield database_integretion_1.default.any('select * from customerFeedbackForProduct where product_code = $(id)', { id: productCode });
-                console.log(productDetail);
                 if (customerFeedback && customerFeedback.length > 0 && productDetail !== undefined && productDetail !== null) {
                     productDetail.customerFeedback = customerFeedback.map((data) => ({
                         feedback_id: data.feedback_id,
