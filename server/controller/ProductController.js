@@ -18,8 +18,10 @@ exports.getProductDetail = getProductDetail;
 const ProductModel_1 = __importDefault(require("../model/ProductModel"));
 function getAllProduct(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        const category = req.query.category;
+        const type_product = req.query.type_product;
         try {
-            const product = yield ProductModel_1.default.getAllProduct();
+            const product = yield ProductModel_1.default.getAllProduct(category, type_product);
             res.status(200).send(product);
         }
         catch (err) {

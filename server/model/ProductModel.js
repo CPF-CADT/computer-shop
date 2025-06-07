@@ -15,9 +15,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const database_integretion_1 = __importDefault(require("./database_integretion"));
 class ProductModel {
     static getAllProduct() {
-        return __awaiter(this, void 0, void 0, function* () {
+        return __awaiter(this, arguments, void 0, function* (category = '', typeProduct = '') {
             try {
-                const data = yield database_integretion_1.default.any('select * from productShowInformation');
+                let data;
+                if (category !== '' && typeProduct !== '') {
+                    data = yield database_integretion_1.default.any('select * from productShowInformation where category_title = $(ctitle) and type_product = $(tPro)', { ctitle: category, tPro: typeProduct });
+                }
+                else if (typeProduct !== '') {
+                    data = yield database_integretion_1.default.any('select * from productShowInformation where type_product = $(tPro)', { tPro: typeProduct });
+                    console.log('search_by type', data);
+                }
+                else if (category !== '') {
+                    data = yield database_integretion_1.default.any('select * from productShowInformation where category_title = $(ctitle)', { ctitle: category });
+                    console.log('search by category', category);
+                }
+                else {
+                    data = yield database_integretion_1.default.any('select * from productShowInformation');
+                }
                 return data.map(toProductStructure);
             }
             catch (err) {
