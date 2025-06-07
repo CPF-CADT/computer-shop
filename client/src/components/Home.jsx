@@ -5,8 +5,20 @@ import HotProduct from "./Product/HotProduct"
 import ServiceProvide from "./Advertise/ServiceProvide"
 import BannerGPU from "./Advertise/BannerGPU"
 import ProductCard from "./Product/ProductCard"
+import Categories from "./Categories"
+import Navigate from "./Navigate"
+import {OverlayHome,OverlayBrands} from "./Overlay"
+import HotProduct from "./Product/HotProduct"
+import ServiceProvide from "./Advertise/ServiceProvide"
+import BannerGPU from "./Advertise/BannerGPU"
+import ProductCard from "./Product/ProductCard"
 import ProductSectionGroup from './Product/ProductSectionGroup';
 
+
+
+import PC1 from '../assets/CUSTOM_PC.png'
+import PC2 from '../assets/OMEN_PC.png'
+import G713PI from '../assets/G713PI.jpg'
 
 
 import PC1 from '../assets/CUSTOM_PC.png'
@@ -48,7 +60,6 @@ export default function Home(){
             <div>
                 <h2 className="text-2xl font-bold my-6">New In</h2>
                 <div className="flex flex-row gap-9">
-                    {/* betaDATA */}
                 <ProductCard
                     image={G713PI}
                     title={'ASUS ROG Strix G17 G713PI'}
