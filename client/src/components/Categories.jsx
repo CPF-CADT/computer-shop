@@ -1,12 +1,13 @@
 import { GiHamburgerMenu } from "react-icons/gi";
 import { Link } from 'react-router-dom';
+
 const categories = [
-  "Laptop",
-  "Desktop",
-  "PC Components",
-  "Peripherals",
-  "Networking",
-  "Monitors",
+  { name: "Laptop", path: "/laptop" },
+  { name: "Desktop", path: "/desktop" },
+  { name: "PC Components", path: "/components" },
+  { name: "Peripherals", path: "/peripherals" },
+  { name: "Networking", path: "/networking" },
+  { name: "Monitors", path: "/monitors" },
 ];
 
 export default function Categories() {
@@ -19,8 +20,8 @@ export default function Categories() {
       <ul className="mt-2 space-y-1 px-6">
         {categories.map((item, index) => (
           <li key={index}>
-            <Link to={'/'} className='hover:font-bold'>
-                {item}
+            <Link to={item.path} className='hover:font-bold'>
+                {item.name}
             </Link>
           </li>
         ))}
