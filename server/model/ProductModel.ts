@@ -1,9 +1,20 @@
 import db from "./database_integretion";
 
 class ProductModel {
-    static async getAllProduct(): Promise<Product[] | null> {
+    static async getAllProduct(category:string = '',typeProduct:string=''): Promise<Product[] | null> {
         try {
-            const data = await db.any('select * from productShowInformation');
+            let data :any;
+            if(category!=='' && typeProduct!==''){
+                data = await db.any('select * from productShowInformation where category_title = $(ctitle) and type_product = $(tPro)',{ctitle:category,tPro:typeProduct});
+            }else if(typeProduct!==''){
+                data = await db.any('select * from productShowInformation where type_product = $(tPro)',{tPro:typeProduct});
+                console.log('search_by type',data)
+            }else if(category!==''){
+                data = await db.any('select * from productShowInformation where category_title = $(ctitle)',{ctitle:category});
+                console.log('search by category',category)
+            }else{
+                data = await db.any('select * from productShowInformation');
+            }
             return data.map(toProductStructure);
         } catch (err) {
             console.error('get data error', err);
