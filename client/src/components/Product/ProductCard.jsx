@@ -11,6 +11,7 @@ export default function ProductCard({
   reviews,
   rating,
   imgClassName,
+  imgClassName,
 }) {
   const CardContent = (
     <div className="rounded-md p-5 w-56 bg-white hover:shadow-xl transition-all duration-300 cursor-pointer">
