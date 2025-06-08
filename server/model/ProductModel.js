@@ -14,28 +14,32 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const database_integretion_1 = __importDefault(require("./database_integretion"));
 class ProductModel {
-    static getAllProduct() {
-        return __awaiter(this, arguments, void 0, function* (category = '', typeProduct = '') {
+    static getAllProduct(category, typeProduct, brand) {
+        return __awaiter(this, void 0, void 0, function* () {
             try {
-                let data;
-                if (category !== '' && typeProduct !== '') {
-                    data = yield database_integretion_1.default.any('select * from productShowInformation where category_title = $(ctitle) and type_product = $(tPro)', { ctitle: category, tPro: typeProduct });
+                let query = 'SELECT * FROM productShowInformation';
+                const params = {};
+                const conditions = [];
+                if (category) {
+                    conditions.push('category_title = $(category)');
+                    params.category = category;
                 }
-                else if (typeProduct !== '') {
-                    data = yield database_integretion_1.default.any('select * from productShowInformation where type_product = $(tPro)', { tPro: typeProduct });
-                    console.log('search_by type', data);
+                if (typeProduct) {
+                    conditions.push('type_product = $(typeProduct)');
+                    params.typeProduct = typeProduct;
                 }
-                else if (category !== '') {
-                    data = yield database_integretion_1.default.any('select * from productShowInformation where category_title = $(ctitle)', { ctitle: category });
-                    console.log('search by category', category);
+                if (brand) {
+                    conditions.push('brand_name = $(brandProduct)');
+                    params.brandProduct = brand;
                 }
-                else {
-                    data = yield database_integretion_1.default.any('select * from productShowInformation');
+                if (conditions.length > 0) {
+                    query += ' WHERE ' + conditions.join(' AND ');
                 }
+                const data = yield database_integretion_1.default.any(query, params);
                 return data.map(toProductStructure);
             }
             catch (err) {
-                console.error('get data error', err);
+                console.error('Error fetching products:', err);
                 return null;
             }
         });
@@ -86,7 +90,7 @@ function toProductStructure(row) {
             currency: 'USD',
         },
         description: row.description,
-        brand: row.brand,
+        brand: row.brand_name,
         category: {
             id: row.category_id,
             title: row.category_title,

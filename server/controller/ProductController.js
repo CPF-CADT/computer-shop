@@ -20,8 +20,9 @@ function getAllProduct(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const category = req.query.category;
         const type_product = req.query.type_product;
+        const brandProduct = req.query.brand;
         try {
-            const product = yield ProductModel_1.default.getAllProduct(category, type_product);
+            const product = yield ProductModel_1.default.getAllProduct(category, type_product, brandProduct);
             res.status(200).send(product);
         }
         catch (err) {
