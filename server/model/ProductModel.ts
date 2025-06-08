@@ -1,23 +1,30 @@
 import db from "./database_integretion";
 
 class ProductModel {
-    static async getAllProduct(category:string = '',typeProduct:string=''): Promise<Product[] | null> {
+    static async getAllProduct(category?: string , typeProduct?: string ,brand?:string): Promise<Product[] | null> {
         try {
-            let data :any;
-            if(category!=='' && typeProduct!==''){
-                data = await db.any('select * from productShowInformation where category_title = $(ctitle) and type_product = $(tPro)',{ctitle:category,tPro:typeProduct});
-            }else if(typeProduct!==''){
-                data = await db.any('select * from productShowInformation where type_product = $(tPro)',{tPro:typeProduct});
-                console.log('search_by type',data)
-            }else if(category!==''){
-                data = await db.any('select * from productShowInformation where category_title = $(ctitle)',{ctitle:category});
-                console.log('search by category',category)
-            }else{
-                data = await db.any('select * from productShowInformation');
+            let query = 'SELECT * FROM productShowInformation';
+            const params: ProductQueryParams = {};
+            const conditions: string[] = [];
+            if (category) {
+                conditions.push('category_title = $(category)');
+                params.category = category;
             }
+            if (typeProduct) {
+                conditions.push('type_product = $(typeProduct)');
+                params.typeProduct = typeProduct;
+            }
+            if (brand) {
+                conditions.push('brand_name = $(brandProduct)');
+                params.brandProduct = brand;
+            }
+            if (conditions.length > 0) {
+                query += ' WHERE ' + conditions.join(' AND ');
+            }
+            const data = await db.any(query, params);
             return data.map(toProductStructure);
         } catch (err) {
-            console.error('get data error', err);
+            console.error('Error fetching products:', err);
             return null;
         }
     }
@@ -34,7 +41,7 @@ class ProductModel {
         try {
             let productDetail: Product | null = await this.getOneProduct(productCode);
             let customerFeedback = await db.any('select * from customerFeedbackForProduct where product_code = $(id)', { id: productCode })
-            if (customerFeedback && customerFeedback.length > 0 && productDetail !== undefined && productDetail!==null) {
+            if (customerFeedback && customerFeedback.length > 0 && productDetail !== undefined && productDetail !== null) {
                 productDetail.customerFeedback = customerFeedback.map((data: any) => ({
                     feedback_id: data.feedback_id,
                     rating: data.rating,
@@ -52,6 +59,11 @@ class ProductModel {
     }
 }
 
+type ProductQueryParams = {
+    category?: string;
+    typeProduct?: string;
+    brandProduct?: string;
+};
 interface Price {
     amount: number;
     currency: 'USD' | 'KHR';
@@ -107,7 +119,7 @@ function toProductStructure(row: any): Product {
             currency: 'USD',
         },
         description: row.description,
-        brand: row.brand,
+        brand: row.brand_name,
         category: {
             id: row.category_id,
             title: row.category_title,

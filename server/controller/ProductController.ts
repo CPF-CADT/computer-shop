@@ -3,8 +3,9 @@ import { Request, Response } from 'express';
 export async function getAllProduct(req:Request,res:Response){
     const category: string | undefined = req.query.category as string;
     const type_product: string | undefined = req.query.type_product as string;
+    const brandProduct: string | undefined = req.query.brand as string;
     try{
-        const product = await ProductModel.getAllProduct(category,type_product);
+        const product = await ProductModel.getAllProduct(category,type_product,brandProduct);
         res.status(200).send(product);
     }catch(err){
         res.status(404).json({message:'Get product Error'+err});
