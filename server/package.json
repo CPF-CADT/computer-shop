@@ -2,10 +2,11 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "server.ts",
   "scripts": {
     "dev": "nodemon --watch . --ext ts --exec ts-node server.ts",
-    "start": "ts-node server.ts"
+    "start": "ts-node server.ts",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
@@ -17,9 +18,8 @@
     "express": "^5.1.0",
     "pg": "^8.16.0",
     "pg-hstore": "^2.3.4",
-    "pg-promise": "^11.13.0",
+    "pg-promise": "^11.14.0",
     "reflect-metadata": "^0.2.2",
-    "sequelize": "^6.37.7",
     "sequelize-typescript": "^2.1.6"
   },
   "devDependencies": {

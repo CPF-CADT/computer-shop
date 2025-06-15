@@ -5,7 +5,7 @@ export async function getAllCategory(req:Request,res:Response) {
         const category = await CategoryRepository.getAllCategory();
         res.status(200).json(category);
     }catch (err){
-        res.status(404).json({message:'Get category Error'+err});
+        res.status(404).json({message: (err as Error).message});
     }
 }
 export async function getAllTypeProduct(req:Request,res:Response) {
@@ -13,7 +13,7 @@ export async function getAllTypeProduct(req:Request,res:Response) {
         const typeProduct = await TypeProductRepository.getAllTypeProduct();
         res.status(200).json(typeProduct);
     }catch (err){
-        res.status(404).json({message:'Get type product Error'+err});
+        res.status(404).json({message: (err as Error).message});
     }
 }
 export async function getAllBrand(req:Request,res:Response){
@@ -21,6 +21,6 @@ export async function getAllBrand(req:Request,res:Response){
         const brand = await BrandRepository.getAllBrand();
         res.status(200).json(brand);
     }catch (err){
-        res.status(404).json({message:'Get Brand Error'+err});
+        res.status(404).json({message: (err as Error).message});
     }
 }

@@ -8,7 +8,7 @@ export async function getAllProduct(req:Request,res:Response){
         const product = await ProductRepository.getAllProduct(category,type_product,brandProduct);
         res.status(200).send(product);
     }catch(err){
-        res.status(404).json({message:'Get product Error'+err});
+        res.status(404).json({message: (err as Error).message});
     }
 }
 export async function getOneProduct(req:Request,res:Response){
@@ -17,7 +17,7 @@ export async function getOneProduct(req:Request,res:Response){
         const product = await ProductRepository.getOneProduct(productCode);
         res.status(200).send(product);
     }catch(err){
-        res.status(404).json({message:'Get product Error'+err});
+        res.status(404).json({message: (err as Error).message});
     }
 }
 export async function getProductDetail(req:Request,res:Response){
@@ -26,6 +26,6 @@ export async function getProductDetail(req:Request,res:Response){
         const product = await ProductRepository.getProductDetail(productCode);
         res.status(200).send(product);
     }catch(err){
-        res.status(404).json({message:'Get product Error'+err});
+        res.status(404).json({message: (err as Error).message});
     }
 }
