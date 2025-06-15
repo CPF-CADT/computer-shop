@@ -1,4 +1,5 @@
 import { FaStar } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 export default function ProductCard({
   image,
@@ -9,11 +10,12 @@ export default function ProductCard({
   reviews,
   rating,
   imgClassName,
+  to, // new prop for link
 }) {
-  return (
-    <div className="rounded-md p-5 w-64 bg-white">
+  const CardContent = (
+    <div className="rounded-md p-5 w-56 bg-white hover:shadow-lg transition">
       <div className="flex justify-center items-center mb-2">
-        <img src={image} alt={title} className= {imgClassName ? imgClassName : "w-50 h-48 object-contain"} />
+        <img src={image} alt={title} className={imgClassName ? imgClassName : "w-50 h-48 object-contain"} />
       </div>
       <div className="flex items-center mb-1">
         {[...Array(5)].map((_, i) => (
@@ -31,5 +33,11 @@ export default function ProductCard({
       <div className="text-gray-400 line-through text-sm">${oldPrice}</div>
       <div className="text-2xl font-bold text-black">${newPrice}</div>
     </div>
+  );
+
+  return to ? (
+    <Link to={to} className="block">{CardContent}</Link>
+  ) : (
+    CardContent
   );
 }
