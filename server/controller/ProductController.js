@@ -15,14 +15,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllProduct = getAllProduct;
 exports.getOneProduct = getOneProduct;
 exports.getProductDetail = getProductDetail;
-const ProductModel_1 = __importDefault(require("../model/ProductModel"));
+const productRepository_1 = __importDefault(require("../repositories/productRepository"));
 function getAllProduct(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const category = req.query.category;
         const type_product = req.query.type_product;
         const brandProduct = req.query.brand;
         try {
-            const product = yield ProductModel_1.default.getAllProduct(category, type_product, brandProduct);
+            const product = yield productRepository_1.default.getAllProduct(category, type_product, brandProduct);
             res.status(200).send(product);
         }
         catch (err) {
@@ -34,7 +34,7 @@ function getOneProduct(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const productCode = req.params.product_code;
-            const product = yield ProductModel_1.default.getOneProduct(productCode);
+            const product = yield productRepository_1.default.getOneProduct(productCode);
             res.status(200).send(product);
         }
         catch (err) {
@@ -46,7 +46,7 @@ function getProductDetail(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const productCode = req.params.product_code;
-            const product = yield ProductModel_1.default.getProductDetail(productCode);
+            const product = yield productRepository_1.default.getProductDetail(productCode);
             res.status(200).send(product);
         }
         catch (err) {

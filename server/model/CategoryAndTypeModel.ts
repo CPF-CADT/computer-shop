@@ -1,38 +1,4 @@
-import db from "./database_integretion";
-export class CategoryModel {
-    static async getAllCategory():Promise<Category[] | null> {
-        try {
-            let data:Category[] = await db.any('select * from category');
-            return data.map(toCategoryStructure);
-        }catch(err){
-            console.error('Error fetching category:', err);
-            return null;
-        }
-    }
-}
-export class TypeProductModel {
-    static async getAllTypeProduct():Promise<TypeProduct[] | null> {
-        try {
-            let data:TypeProduct[] = await db.any('select * from typeproduct');
-            return data.map(toTypeProductStructure);
-        }catch(err){
-            console.error('Error fetching type product:', err);
-            return null;
-        }
-    }
-}
-export class BrandModel{
-    static async getAllBrand():Promise<Brand[] | null > {
-        try {
-            let data:Brand[] = await db.any('select * from brand');
-            return data.map(toBrandStructure);
-        }catch(err){
-            console.error('Error fetching brand:', err);
-            return null;
-        }
-    }
-}
-function toCategoryStructure(row:any):Category{
+export function toCategoryStructure(row:any):Category{
     return {
         id:row.category_id,
         title:row.title,
@@ -40,7 +6,7 @@ function toCategoryStructure(row:any):Category{
     }
 }
 
-function toTypeProductStructure(row:any):TypeProduct{
+export function toTypeProductStructure(row:any):TypeProduct{
     return {
         id:row.type_id,
         title:row.name,
@@ -48,7 +14,7 @@ function toTypeProductStructure(row:any):TypeProduct{
     }
 }
 
-function toBrandStructure(row:any):Brand{
+export function toBrandStructure(row:any):Brand{
     return {
         id:row.id,
         name:row.name,
@@ -58,17 +24,17 @@ function toBrandStructure(row:any):Brand{
     }
 }
 
-interface Category {
+export interface Category {
     id:number;
     title:string;
     description?:string;
 }
-interface TypeProduct {
+export interface TypeProduct {
     id: number;
     title: string;
     description?:string;
 }
-interface Brand {
+export interface Brand {
     id:number;
     name:string;
     url_logo:string;

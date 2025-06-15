@@ -12,11 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllCategory = getAllCategory;
 exports.getAllTypeProduct = getAllTypeProduct;
 exports.getAllBrand = getAllBrand;
-const CategoryAndTypeModel_1 = require("../model/CategoryAndTypeModel");
+const CategoryAndTypeRepository_1 = require("../repositories/CategoryAndTypeRepository");
 function getAllCategory(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const category = yield CategoryAndTypeModel_1.CategoryModel.getAllCategory();
+            const category = yield CategoryAndTypeRepository_1.CategoryRepository.getAllCategory();
             res.status(200).json(category);
         }
         catch (err) {
@@ -27,7 +27,7 @@ function getAllCategory(req, res) {
 function getAllTypeProduct(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const typeProduct = yield CategoryAndTypeModel_1.TypeProductModel.getAllTypeProduct();
+            const typeProduct = yield CategoryAndTypeRepository_1.TypeProductRepository.getAllTypeProduct();
             res.status(200).json(typeProduct);
         }
         catch (err) {
@@ -38,7 +38,7 @@ function getAllTypeProduct(req, res) {
 function getAllBrand(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const brand = yield CategoryAndTypeModel_1.BrandModel.getAllBrand();
+            const brand = yield CategoryAndTypeRepository_1.BrandRepository.getAllBrand();
             res.status(200).json(brand);
         }
         catch (err) {
