@@ -11,10 +11,10 @@ export default function ProductCard({
   reviews,
   rating,
   imgClassName,
-  imgClassName,
+  to, // new prop for link
 }) {
   const CardContent = (
-    <div className="rounded-md p-5 w-56 bg-white hover:shadow-xl transition-all duration-300 cursor-pointer">
+    <div className="rounded-md p-5 w-56 bg-white hover:shadow-lg transition">
       <div className="flex justify-center items-center mb-2">
         <img src={image} alt={title} className={imgClassName ? imgClassName : "w-50 h-48 object-contain"} />
       </div>
@@ -39,8 +39,8 @@ export default function ProductCard({
     </div>
   );
 
-  return productId ? (
-    <Link to={`/product/${productId}`}>{CardContent}</Link>
+  return to ? (
+    <Link to={to} className="block">{CardContent}</Link>
   ) : (
     CardContent
   );
