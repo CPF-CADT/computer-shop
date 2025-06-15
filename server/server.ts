@@ -17,13 +17,11 @@ const PORT = process.env.PORT;
 (async () => {
   try {
     await connectToDatabase();
-
     app.use('/api/product', productRouter);
     app.use('/api/category', categoryRouter);
     app.use('/api/type-product', typeProducRouter);
     app.use('/api/brand', BrandRouter);
     app.use('/api/user/', customerRouter);
-
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on http://localhost:${PORT}`);
     });

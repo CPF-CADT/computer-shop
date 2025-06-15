@@ -1,4 +1,4 @@
-export function toCategoryStructure(row:any):Category{
+export function toCategoryStructure(row:any):CategoryStructure{
     return {
         id:row.category_id,
         title:row.title,
@@ -6,7 +6,7 @@ export function toCategoryStructure(row:any):Category{
     }
 }
 
-export function toTypeProductStructure(row:any):TypeProduct{
+export function toTypeProductStructure(row:any):TypeProductStructure{
     return {
         id:row.type_id,
         title:row.name,
@@ -14,7 +14,7 @@ export function toTypeProductStructure(row:any):TypeProduct{
     }
 }
 
-export function toBrandStructure(row:any):Brand{
+export function toBrandStructure(row:any):BrandStructure{
     return {
         id:row.id,
         name:row.name,
@@ -24,17 +24,17 @@ export function toBrandStructure(row:any):Brand{
     }
 }
 
-export interface Category {
+export interface CategoryStructure {
     id:number;
     title:string;
     description?:string;
 }
-export interface TypeProduct {
+export interface TypeProductStructure {
     id: number;
     title: string;
     description?:string;
 }
-export interface Brand {
+export interface BrandStructure {
     id:number;
     name:string;
     url_logo:string;
