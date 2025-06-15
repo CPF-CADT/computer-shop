@@ -48,6 +48,7 @@ export default function Home(){
             <div>
                 <h2 className="text-2xl font-bold my-6">New In</h2>
                 <div className="flex flex-row gap-9">
+                    {/* betaDATA */}
                 <ProductCard
                     image={G713PI}
                     title={'ASUS ROG Strix G17 G713PI'}

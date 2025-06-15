@@ -9,8 +9,6 @@ console.log({
   PGPORT: process.env.PGPORT,
   PGDATABASE: process.env.PGDATABASE
 })
-// const db = pgp(`postgres://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`)
-// export default db;
 
-const db = pgp('postgresql://neondb_owner:npg_pfsibwg03hod@ep-hidden-sky-a1sq10j0-pooler.ap-southeast-1.aws.neon.tech/computer_shop?sslmode=require');
+const db = pgp(`${process.env.DATABASE_URL}`);
 export default db;
