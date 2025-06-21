@@ -4,13 +4,13 @@ import { Link } from "react-router-dom";
 export default function ProductCard({
   image,
   title,
-  assetName,
+  description,
   oldPrice,
   newPrice,
   reviews,
   rating,
   imgClassName,
-  to, // new prop for link
+  to,
 }) {
   const CardContent = (
     <div className="rounded-md p-5 w-56 bg-white hover:shadow-lg transition">
@@ -28,7 +28,7 @@ export default function ProductCard({
         <span className="ml-2 text-gray-500 text-sm">Reviews ({reviews})</span>
       </div>
       <div className="font-semibold text-gray-800 text-sm">
-        {title} <span className="text-600 text-xs font-bold">| {assetName}</span>
+        {title} <span className="text-600 text-xs font-bold">| {description}</span>
       </div>
       <div className="text-gray-400 line-through text-sm">${oldPrice}</div>
       <div className="text-2xl font-bold text-black">${newPrice}</div>
