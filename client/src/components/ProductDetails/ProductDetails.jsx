@@ -1,5 +1,5 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { mockProducts } from '../../data/mockData';
 import { FaStar } from 'react-icons/fa';
 
@@ -12,6 +12,11 @@ export default function ProductDetails() {
     text: '',
     rating: 5,
   });
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const product = mockProducts.find(p => p.product_code === productId);
 
@@ -48,6 +53,15 @@ export default function ProductDetails() {
 
   return (
     <div className="max-w-[1200px] mx-auto p-4">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+        <Link to="/" className="hover:text-orange-500">Home</Link>
+        <span>&gt;</span>
+        <Link to="/laptop" className="hover:text-orange-500">Laptops</Link>
+        <span>&gt;</span>
+        <span className="text-gray-700">{product.name}</span>
+      </div>
+
       <button
         onClick={() => navigate(-1)}
         className="mb-4 text-gray-600 hover:text-gray-800 flex items-center"
