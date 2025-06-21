@@ -7,6 +7,7 @@ import LaptopBreadcrumb from "./LaptopCompo.jsx/LaptopBreadcrumb";
 import LaptopSortBar from "./LaptopCompo.jsx/LaptopSortBar";
 import LaptopBanner from "./LaptopCompo.jsx/LaptopBanner";
 import LaptopProductGrid from "./LaptopCompo.jsx/LaptopProductGrid";
+import LaptopLatestProducts from "./LaptopCompo.jsx/LaptopLatestProducts";
 
 export default function Laptop() {
   const [filteredProducts, setFilteredProducts] = useState(mockLaptop);
@@ -49,7 +50,10 @@ export default function Laptop() {
 
   return (
     <div className="flex gap-8">
-      <LaptopFilterSidebar onFilterChange={handleFilterChange} />
+      <div className="flex flex-col gap-4">
+        <LaptopFilterSidebar onFilterChange={handleFilterChange} />
+        <LaptopLatestProducts />
+      </div>
       <div className="flex-1">
         <div className="mb-2">
           <Link
