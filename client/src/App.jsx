@@ -9,12 +9,11 @@ import LoginForm from "./components/Login";
 import RegisterForm from "./components/Register";
 import Laptop from "./components/Laptop";
 import Desktop from "./components/Desktop";
-// import ProductDetails from './components/ProductDetails';
+import ProductDetails from './components/ProductDetails/ProductDetails';
 
 import CartLayout from './components/cart/CartLayout'; 
 import ShoppingCartPage from './components/cart/ShoppingCartPage';
 import CheckoutPage from "./components/checkout/CheckoutPage";
-// import OrderConfirmation from './components/checkout/OrderConfirmationPage'; // Assuming you create this
 
 function App() {
   return (
@@ -28,7 +27,7 @@ function App() {
         <Route path="/register" element={<RegisterForm />} />
         <Route path="/laptop" element={<Laptop />} />
         <Route path="/desktop" element={<Desktop />} />
-
+        <Route path="/product/:productId" element={<ProductDetails />} />
         <Route element={<CartLayout />}> 
           <Route path="/cart" element={<ShoppingCartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />

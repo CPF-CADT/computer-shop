@@ -6,6 +6,7 @@ export default function LaptopProductGrid({ products }) {
       {products.map((product) => (
         <ProductCard
           key={product.product_code}
+          productId={product.product_code}
           image={product.image_path}
           title={product.name}
           description={product.description}

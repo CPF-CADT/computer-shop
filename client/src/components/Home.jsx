@@ -13,7 +13,7 @@ import Mouse from '../assets/Mouse/Rog Mouse.png';
 import Keyboard from '../assets/Keyboard/Keyboard Razer.png';
 
 // Import your mock data
-import { mockLaptop, mockPC } from "../data/mockData";
+import { homePageLaptops, mockPC, mockLaptop } from "../data/mockData";
 
 export default function Home() {
   return (
@@ -43,9 +43,10 @@ export default function Home() {
       <div>
         <h2 className="text-2xl font-bold my-6">New In</h2>
         <div className="flex flex-row gap-9">
-          {mockLaptop.map(product => (
+          {homePageLaptops.map(product => (
             <ProductCard
               key={product.product_code}
+              productId={product.product_code}
               image={product.image_path}
               title={product.name}
               description={product.description}
@@ -72,7 +73,6 @@ export default function Home() {
       <div>
         <BannerGPU />
       </div>
-      {/* You can do the same for ProductSectionGroup, mapping from mock data */}
 
       {/* Low End, High End, Used PC Section */}
       <div className="flex flex-col mt-8">
@@ -81,6 +81,7 @@ export default function Home() {
           {mockPC.slice(0, 3).map(product => (
             <ProductCard
               key={product.product_code}
+              productId={product.product_code}
               image={product.image_path}
               title={product.name}
               description={product.description}
@@ -95,19 +96,25 @@ export default function Home() {
       {/* ROG O series Section */}
       <div className="flex flex-col mt-8">
         <h3 className="font-bold text-lg mb-2">ROG O series</h3>
-        <div className="flex flex-row gap-9">
-          {mockLaptop.map(product => (
-            <ProductCard
-              key={product.product_code}
-              image={product.image_path}
-              title={product.name}
-              description={product.description}
-              oldPrice={parseFloat(product.price.amount) + 500}
-              newPrice={parseFloat(product.price.amount)}
-              reviews={product.feedback.totalReview}
-              rating={parseFloat(product.feedback.rating)}
-            />
-          ))}
+        <div className="relative">
+          <div className="flex overflow-x-auto gap-9 pb-2 
+            scrollbar-thin scrollbar-thumb-orange-400/60 scrollbar-track-gray-100/20 
+            hover:scrollbar-thumb-orange-500/80">
+            {mockLaptop.map(product => (
+              <div className="flex-none" key={product.product_code}>
+                <ProductCard
+                  productId={product.product_code}
+                  image={product.image_path}
+                  title={product.name}
+                  description={product.description}
+                  oldPrice={parseFloat(product.price.amount) + 500}
+                  newPrice={parseFloat(product.price.amount)}
+                  reviews={product.feedback.totalReview}
+                  rating={parseFloat(product.feedback.rating)}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       {/* Accessories Section Example */}
@@ -118,6 +125,7 @@ export default function Home() {
           {[1,2,3,4].map(idx => (
             <ProductCard
               key={idx}
+              productId={`accessory-${idx}`}
               image={Keyboard}
               title={"Razer Barracuda X Chrome Wireless Gaming Headset"}
               description={"2.4GHz Wireless & Bluetooth"}
@@ -136,6 +144,7 @@ export default function Home() {
           {[1,2,3].map(idx => (
             <ProductCard
               key={idx}
+              productId={`monitor-${idx}`}
               image={Monitor}
               title={"EX DISPLAY - ASUS ROG Swift"}
               description={"Gaming Monitors"}
