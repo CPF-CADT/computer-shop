@@ -54,7 +54,7 @@ export function toProductStructure(row: any): Product {
         name: row.name,
         image_path: row.image_path,
         price: {
-            amount: row.price,
+            amount: parseFloat(row.price),
             currency: 'USD',
         },
         description: row.description,
@@ -69,7 +69,7 @@ export function toProductStructure(row: any): Product {
         },
         discount: {
             type: row.discount_type,
-            value: row.discount_value,
+            value: parseFloat(row.discount_value),
         },
         feedback: {
             rating: row.average_rating,

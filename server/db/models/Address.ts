@@ -21,18 +21,18 @@ export class Address extends Model {
 
   @Column({
     type: DataType.STRING(255),
-    allowNull: false,
+    allowNull: true,
   })
-  street_line!: string;
+  street_line?: string;
 
   @Column(DataType.STRING(100))
   commune?: string;
 
   @Column(DataType.STRING(100))
-  district?: string;
+  district!: string;
 
   @Column(DataType.STRING(100))
-  province?: string;
+  province!: string;
 
   @Column(DataType.TEXT)
   google_map_link?: string;

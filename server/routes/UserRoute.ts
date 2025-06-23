@@ -1,4 +1,7 @@
 import express from 'express'
-import {createUser} from '../controller/UserController'
+import {createUser,customerLogin,sendVerificationCode,verifyTwoFaCode} from '../controller/UserController'
 export const customerRouter = express.Router();
-customerRouter.post('/',createUser);
+customerRouter.post('/register',createUser);
+customerRouter.post('/login',customerLogin);
+customerRouter.post('/request-otp',sendVerificationCode);
+customerRouter.post('/verify-otp',verifyTwoFaCode);
