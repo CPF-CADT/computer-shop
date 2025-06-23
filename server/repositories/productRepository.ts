@@ -1,6 +1,7 @@
 import { QueryTypes } from "sequelize";
 import { sequelize } from "../db/sequelize";
 import { Product, ProductQueryParams, toProductStructure } from "../model/ProductModel";
+import { ProductFeedback } from "../db/models";
 
 class ProductRepository {
     static async getAllProduct(category?: string, typeProduct?: string, brand?: string): Promise<Product[] | null> {
@@ -72,3 +73,20 @@ class ProductRepository {
 
 
 export default ProductRepository;
+
+export class ProductFeedBackRepositories{
+    static async addFeedback(productCode:string,customerId:number,rating:number,comment:string):Promise<boolean>{
+        try{
+            ProductFeedback.create({
+                customer_id:customerId,
+                product_code:productCode,
+                rating:rating,
+                comment:comment,
+                feedback_date:new Date().toISOString(),
+            })
+            return true;
+        }catch(err){
+            throw err;
+        }
+    }
+}

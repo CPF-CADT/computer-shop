@@ -18,8 +18,8 @@ const RegisterForm = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4">
-      <h1 className="text-4xl font-bold text-gray-800 mb-8 self-start ml-[5%] md:ml-[10%] lg:ml-[15%] xl:ml-[calc(50%-32rem)]">
+    <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-2">
+      <h1 className="text-4xl font-bold text-gray-800 mb-2 self-start ml-[5%] md:ml-[10%] lg:ml-[15%] xl:ml-[calc(50%-32rem)]">
         Register
       </h1>
 
@@ -57,14 +57,14 @@ const RegisterForm = () => {
        
             <div>
               <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
-                Email <span className="text-red-500">*</span>
+                Phone Number <span className="text-red-500">*</span>
               </label>
               <input
-                type="email" 
+                type="phone" 
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Your Email / Phone Number"
+                placeholder="Phone Number"
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm placeholder-gray-400"
                 required
               />
@@ -102,6 +102,12 @@ const RegisterForm = () => {
               />
             </div>
 
+            <div>
+              <p>Continue with Telegram</p>
+              <div className='bg-blue-600 w-40 h-10'>
+
+              </div>
+            </div>
             <div className="pt-2">
               <button
                 type="submit"

@@ -10,6 +10,7 @@ import { Promotion } from './Promotion';
 import { ProductPromotion } from './ProductPromotion';
 import { Orders } from './Orders';
 import { OrderItem } from './OrderItem';
+import { CartItem } from './CartItem';
 
 @Table({
   tableName: 'product',
@@ -66,7 +67,7 @@ export class Product extends Model {
   @ForeignKey(() => TypeProduct)
   @Column(DataType.INTEGER)
   type_id?: number;
-  
+
   @BelongsTo(() => Brand, { onDelete: 'SET NULL' })
   brand?: Brand;
 
@@ -90,4 +91,7 @@ export class Product extends Model {
 
   @BelongsToMany(() => Orders, () => OrderItem)
   orders!: Orders[];
+
+  @HasMany(() => CartItem)
+  cartItems!: CartItem[];
 }

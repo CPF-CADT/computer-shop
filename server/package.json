@@ -9,7 +9,7 @@
     "start": "npm run build; nodemon server.js"
 =======
     "dev": "nodemon --watch . --ext ts --exec ts-node server.ts",
-    "start": "ts-node server.ts",
+    "start": "ts- nodemon server.ts",
     "build": "tsc"
 >>>>>>> f77662c2ecef8d03a7b9c45e85349418027e5629
   },
@@ -17,19 +17,24 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.0",
     "pg-hstore": "^2.3.4",
     "pg-promise": "^11.14.0",
     "reflect-metadata": "^0.2.2",
-    "sequelize-typescript": "^2.1.6"
+    "sequelize-typescript": "^2.1.6",
+    "twilio": "^5.7.1"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.18",
-    "@types/express": "^5.0.2",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.15.31",
     "@types/sequelize": "^4.28.20",
     "nodemon": "^3.1.10",

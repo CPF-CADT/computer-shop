@@ -15,3 +15,5 @@ export { Promotion } from './Promotion';
 export { Staff } from './Staff';
 export { Supplier } from './Supplier';
 export { TypeProduct } from './TypeProduct';
+export { CartItem } from './CartItem';
+export { TwoFaToken } from './TwoFaToken';
