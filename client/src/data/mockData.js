@@ -54,6 +54,18 @@ export const homeLatestProducts = [
     discount: { type: "Percentage", value: "8.00" },
     feedback: { rating: "5.0", totalReview: 3 },
   },
+    {
+    product_code: "HOME-LATEST-ROG",
+    name: "ASUS ROG Flow X16",
+    image_path: G713PI,
+    price: { amount: "2799.00", currency: "USD" },
+    description: "NEW! AMD R9-7945HX, 64GB DDR5, RTX 4090",
+    brand: "ASUS",
+    category: { id: 1, title: "Laptops" },
+    type: { id: 1, title: "Gaming Laptop" },
+    discount: { type: "Percentage", value: "8.00" },
+    feedback: { rating: "5.0", totalReview: 3 },
+  },
   {
     product_code: "HOME-LATEST-ALIENWARE",
     name: "Alienware x16 R2",
@@ -71,6 +83,18 @@ export const homeLatestProducts = [
 // Laptop Page Main Catalog
 export const mockLaptop = [
   {
+    product_code: "ROG-STRIX-G17",
+    name: "ROG STRIX G17",
+    image_path: G713PI,
+    price: { amount: "1999.00", currency: "USD" },
+    description: "AMD R9-7945HX, 64GB DDR5 RAM, 1TB SSD, RTX 4070, 17.3'' 240Hz",
+    brand: "ASUS",
+    category: { id: 1, title: "Laptops" },
+    type: { id: 1, title: "Gaming Laptop" },
+    discount: { type: "Percentage", value: "5.00" },
+    feedback: { rating: "4.8", totalReview: 12 },
+  },
+    {
     product_code: "ROG-STRIX-G17",
     name: "ROG STRIX G17",
     image_path: G713PI,
