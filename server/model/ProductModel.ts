@@ -1,57 +1,8 @@
-import db from "./database_integretion";
-
-class ProductModel {
-    static async getAllProduct(category:string = '',typeProduct:string=''): Promise<Product[] | null> {
-        try {
-            let data :any;
-            if(category!=='' && typeProduct!==''){
-                data = await db.any('select * from productShowInformation where category_title = $(ctitle) and type_product = $(tPro)',{ctitle:category,tPro:typeProduct});
-            }else if(typeProduct!==''){
-                data = await db.any('select * from productShowInformation where type_product = $(tPro)',{tPro:typeProduct});
-                console.log('search_by type',data)
-            }else if(category!==''){
-                data = await db.any('select * from productShowInformation where category_title = $(ctitle)',{ctitle:category});
-                console.log('search by category',category)
-            }else{
-                data = await db.any('select * from productShowInformation');
-            }
-            return data.map(toProductStructure);
-        } catch (err) {
-            console.error('get data error', err);
-            return null;
-        }
-    }
-    static async getOneProduct(productCode: string): Promise<Product | null> {
-        try {
-            const data = await db.one('select * from productShowInformation where product_code = $(id)', { id: productCode });
-            return toProductStructure(data);
-        } catch (err) {
-            console.error('get data error', err);
-            return null;
-        }
-    }
-    static async getProductDetail(productCode: string): Promise<Product | null> {
-        try {
-            let productDetail: Product | null = await this.getOneProduct(productCode);
-            let customerFeedback = await db.any('select * from customerFeedbackForProduct where product_code = $(id)', { id: productCode })
-            if (customerFeedback && customerFeedback.length > 0 && productDetail !== undefined && productDetail!==null) {
-                productDetail.customerFeedback = customerFeedback.map((data: any) => ({
-                    feedback_id: data.feedback_id,
-                    rating: data.rating,
-                    customerName: data.customer_name,
-                    userProfilePath: data.user_profile_path,
-                    comment: data.comment,
-                    feedbackDate: new Date(data.feedback_date),
-                }));
-            }
-            return productDetail;
-        } catch (err) {
-            console.error('get data error', err);
-            return null;
-        }
-    }
-}
-
+export type ProductQueryParams = {
+    category?: string;
+    typeProduct?: string;
+    brandProduct?: string;
+};
 interface Price {
     amount: number;
     currency: 'USD' | 'KHR';
@@ -83,7 +34,7 @@ interface CusomerFeedbackOnProduct {
     comment: string;
     feedbackDate: Date;
 }
-interface Product {
+export interface Product {
     readonly product_code: string;
     name: string;
     image_path: string;
@@ -97,7 +48,7 @@ interface Product {
     readonly discount: Discount;
 }
 
-function toProductStructure(row: any): Product {
+export function toProductStructure(row: any): Product {
     return {
         product_code: row.product_code,
         name: row.name,
@@ -107,7 +58,7 @@ function toProductStructure(row: any): Product {
             currency: 'USD',
         },
         description: row.description,
-        brand: row.brand,
+        brand: row.brand_name,
         category: {
             id: row.category_id,
             title: row.category_title,
@@ -121,11 +72,8 @@ function toProductStructure(row: any): Product {
             value: row.discount_value,
         },
         feedback: {
-            rating: row.rating,
-            totalReview: row.count_feedback_by_product,
+            rating: row.average_rating,
+            totalReview: row.feedback_count,
         },
     };
 }
-
-
-export default ProductModel;
