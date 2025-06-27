@@ -8,6 +8,7 @@ import { connectToDatabase } from './db/sequelize';
 import { CartItemRouter } from './routes/CartItemRoute';
 import {AddressRouter } from './routes/AddressRouter'
 import { CheckoutRouter } from './routes/CheckoutRoutes';
+import { TelegramBot } from './service/TelgramBot';
 // import { getExpiryDate, sentVerifyCodeViaSMS } from './service/TwoFA';\
 
 // import JWT from './logic/JWT';
@@ -16,6 +17,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 const PORT = process.env.PORT;
+  const botMessage = new TelegramBot();
+  botMessage.startPolling();
 (async () => {
   try {
     await connectToDatabase();
