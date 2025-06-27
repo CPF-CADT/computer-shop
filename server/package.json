@@ -4,14 +4,9 @@
   "description": "",
   "main": "server.ts",
   "scripts": {
-<<<<<<< HEAD
-    "build": "tsc",
-    "start": "npm run build; nodemon server.js"
-=======
     "dev": "nodemon --watch . --ext ts --exec ts-node server.ts",
     "start": "ts- nodemon server.ts",
     "build": "tsc"
->>>>>>> f77662c2ecef8d03a7b9c45e85349418027e5629
   },
   "keywords": [],
   "author": "",

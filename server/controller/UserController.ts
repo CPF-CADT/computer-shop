@@ -53,58 +53,58 @@ export async function customerLogin(req: Request, res: Response) {
     }
 }
 
-export async function sendVerificationCode(req: Request, res: Response) {
-    const body: {
-        phone_number: string;
-    } = req.body;
-    const { phone_number } = body;
-    try{
-        const customer = await CusomerRepository.getUser(phone_number);
-        if(customer){
-            const code:string = generate4DigitToken();
-            const exp_date:Date = getExpiryDate(15);
-            await TwoFaTokenRepository.addToken(customer.customer_id,code,exp_date);
-            res.status(201).json({message:'verify code is create successful'});
-            // need to implement sent message to user
-        }else{
-            res.status(404).json({ message: 'phone number does not exixts' })
-        }
-    }catch(err){
-            res.status(500).json({ err: 'sever fail ' + err })
-    }
-}
-export async function verifyTwoFaCode(req: Request, res: Response) {
-    const body: {
-        phone_number: string;
-        code:number;
-    } = req.body;
-    const { phone_number,code } = body;
-    try{
-        const customer = await CusomerRepository.getUser(phone_number);
-        if(customer){
-            const userToken =  await TwoFaTokenRepository.getToken(customer.customer_id);
-            if(userToken){
-                const now = new Date();
-                if ( now < userToken.expire_at) {
-                    if(userToken.is_used!==true){
-                        const success: boolean = code.toString() === userToken.code;
-                        if(success){
-                            await TwoFaTokenRepository.markTokenAsUsed(customer.customer_id);
-                            res.status(201).json({message:'verify code successful'});
-                        }else{
-                            res.status(401).json({message:'verify code is incorrect'});
-                        }
-                    }else{
-                        res.status(401).json({message:'verify code is already used'});
-                    }
-                }else{
-                    res.status(401).json({message:'verify code is expired'});
-                }
-            }
-        }else{
-            res.status(404).json({ message: 'phone number does not exixts' })
-        }
-    }catch(err){
-            res.status(500).json({ err: 'sever fail ' + err })
-    }
-}
+// export async function sendVerificationCode(req: Request, res: Response) {
+//     const body: {
+//         phone_number: string;
+//     } = req.body;
+//     const { phone_number } = body;
+//     try{
+//         const customer = await CusomerRepository.getUser(phone_number);
+//         if(customer){
+//             const code:string = generate4DigitToken();
+//             const exp_date:Date = getExpiryDate(15);
+//             await TwoFaTokenRepository.addToken(customer.customer_id,code,exp_date);
+//             res.status(201).json({message:'verify code is create successful'});
+//             // need to implement sent message to user
+//         }else{
+//             res.status(404).json({ message: 'phone number does not exixts' })
+//         }
+//     }catch(err){
+//             res.status(500).json({ err: 'sever fail ' + err })
+//     }
+// }
+// export async function verifyTwoFaCode(req: Request, res: Response) {
+//     const body: {
+//         phone_number: string;
+//         code:number;
+//     } = req.body;
+//     const { phone_number,code } = body;
+//     try{
+//         const customer = await CusomerRepository.getUser(phone_number);
+//         if(customer){
+//             const userToken =  await TwoFaTokenRepository.getToken(customer.customer_id);
+//             if(userToken){
+//                 const now = new Date();
+//                 if ( now < userToken.expire_at) {
+//                     if(userToken.is_used!==true){
+//                         const success: boolean = code.toString() === userToken.code;
+//                         if(success){
+//                             await TwoFaTokenRepository.markTokenAsUsed(customer.customer_id);
+//                             res.status(201).json({message:'verify code successful'});
+//                         }else{
+//                             res.status(401).json({message:'verify code is incorrect'});
+//                         }
+//                     }else{
+//                         res.status(401).json({message:'verify code is already used'});
+//                     }
+//                 }else{
+//                     res.status(401).json({message:'verify code is expired'});
+//                 }
+//             }
+//         }else{
+//             res.status(404).json({ message: 'phone number does not exixts' })
+//         }
+//     }catch(err){
+//             res.status(500).json({ err: 'sever fail ' + err })
+//     }
+// }

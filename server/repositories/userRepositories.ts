@@ -2,11 +2,13 @@
 import { Customer } from "../db/models";
 import { TwoFaToken } from "../db/models/TwoFaToken";
 export class CusomerRepository {
-    static async getUser(phoneNumber?: string): Promise<Customer | null> {
+    static async getUser(phoneNumber?: string, id?: number): Promise<Customer | Customer[] | null> {
         if (phoneNumber) {
-            return await Customer.findOne({ where: { phone_number: phoneNumber } }) as unknown as Customer;
+            return await Customer.findOne({ where: { phone_number: phoneNumber } }) as Customer;
+        } else if (id) {
+            return await Customer.findByPk(id) as Customer;
         } else {
-            return await Customer.findAll() as unknown as Customer;
+            return await Customer.findAll() as Customer[];
         }
     }
     static async createNewUser(name: string, phone_number: string, usr_profile_url: string | null, password: string): Promise<boolean | null> {
