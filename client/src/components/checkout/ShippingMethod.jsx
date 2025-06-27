@@ -48,7 +48,9 @@ const ShippingMethod = ({ onNext, onBack, currentSelection, onSelectionChange, i
                 <div className="ml-3 flex-grow">
                   <span className="block text-sm font-medium text-gray-700">{method.name}</span>
                 </div>
-                <span className="text-sm text-gray-600">${method.price.toFixed(2)}</span>
+                <span className="text-sm text-gray-600">
+                  ${typeof method.price === "number" ? method.price.toFixed(2) : parseFloat(method.price).toFixed(2)}
+                </span>
               </label>
             ))}
           </div>

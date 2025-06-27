@@ -1,92 +1,127 @@
 // src/context/CartContext.js
 import React, { createContext, useState, useContext } from 'react';
-import { mockProducts } from '../../data/mockData'; // Using the exported mockProducts
+import { mockProducts } from '../../data/mockData';
 
 const CartContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
   console.log("CartProvider IS RENDERING (Using mockProducts)");
 
-  const [cartItems, setCartItems] = useState(() => {
-    // Initialize cartItems with a *copy* of some items from mockProducts or an empty array
-    // This prevents modifying the original mockProducts array if it's used elsewhere for a product listing.
-    if (mockProducts && mockProducts.length >= 2) {
-      // Create new objects for the cart, ensuring 'qty' is present if not in original mockProduct for listing
-      const initialCart = [
-        { ...mockProducts[0], qty: mockProducts[0].qty || 1 }, // Ensure qty, default to 1
-        { ...mockProducts[1], qty: mockProducts[1].qty || 1 }, // Ensure qty, default to 1
-      ];
-      return initialCart;
-    } else if (mockProducts && mockProducts.length === 1) {
-      return [{ ...mockProducts[0], qty: mockProducts[0].qty || 1 }];
-    }
-    return []; // Default to an empty cart
-  });
+  // Track products with stock
+  const [products, setProducts] = useState(() =>
+    mockProducts.map(p => ({ ...p }))
+  );
+  // Cart is empty initially
+  const [cartItems, setCartItems] = useState([]);
 
-  const addToCart = (product) => {
-    setCartItems((prevItems) => {
-      if (!Array.isArray(prevItems)) prevItems = [];
-      const existingItem = prevItems.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id ? { ...item, qty: (item.qty || 0) + 1 } : item
+  // Add to cart and decrement stock
+  const addToCart = (product, qty = 1) => {
+    // Prevent adding unavailable product
+    const found = products.find(p => p.product_code === product.product_code);
+    if (!found || (typeof found.stock === "number" && found.stock < qty) || qty < 1) return;
+
+    setProducts(prevProducts =>
+      prevProducts.map(p =>
+        p.product_code === product.product_code
+          ? { ...p, stock: Math.max(0, (p.stock || 0) - qty) }
+          : p
+      )
+    );
+    setCartItems(prevItems => {
+      const existing = prevItems.find(i => i.product_code === product.product_code);
+      if (existing) {
+        // Prevent exceeding available stock
+        const maxQty = (found.stock || 0) + (existing.qty || 0);
+        const newQty = Math.min((existing.qty || 0) + qty, maxQty);
+        if (newQty < 1) return prevItems.filter(i => i.product_code !== product.product_code);
+        return prevItems.map(i =>
+          i.product_code === product.product_code
+            ? { ...i, qty: newQty }
+            : i
         );
       }
-      // When adding a new product, ensure it has a qty property
-      return [...prevItems, { ...product, qty: 1 }];
+      // Only add if qty > 0
+      if (qty < 1) return prevItems;
+      return [
+        ...prevItems,
+        {
+          ...product,
+          id: product.product_code,
+          product_code: product.product_code,
+          qty: Math.min(qty, found.stock || 0),
+          price: parseFloat(product.price?.amount ?? product.price),
+        },
+      ];
     });
   };
 
-  const removeFromCart = (productId) => {
-    setCartItems((prevItems) => {
-      if (!Array.isArray(prevItems)) return [];
-      return prevItems.filter((item) => item.id !== productId);
-    });
-  };
-
-  const updateQuantity = (productId, newQty) => {
-    const quantity = Number(newQty);
-    if (isNaN(quantity) || quantity < 0) return;
-
-    if (quantity < 1) {
-      removeFromCart(productId);
-      return;
-    }
-    setCartItems((prevItems) => {
-      if (!Array.isArray(prevItems)) return [];
-      return prevItems.map((item) =>
-        item.id === productId ? { ...item, qty: quantity } : item
+  const removeFromCart = (product_code) => {
+    const item = cartItems.find(i => i.product_code === product_code);
+    if (item) {
+      setProducts(prevProducts =>
+        prevProducts.map(p =>
+          p.product_code === product_code
+            ? { ...p, stock: (typeof p.stock === "number" ? p.stock : 0) + (item.qty || 0) }
+            : p
+        )
       );
-    });
+    }
+    setCartItems(prevItems =>
+      prevItems.filter(i => i.product_code !== product_code)
+    );
   };
 
-  const clearCart = () => {
-    setCartItems([]);
+  const updateQuantity = (product_code, newQty) => {
+    const item = cartItems.find(i => i.product_code === product_code);
+    const found = products.find(p => p.product_code === product_code);
+    if (!item || !found) return;
+
+    // Clamp newQty between 1 and available stock + current cart qty
+    const maxQty = (found.stock || 0) + (item.qty || 0);
+    const clampedQty = Math.max(1, Math.min(newQty, maxQty));
+
+    // Calculate the difference to update stock
+    const diff = clampedQty - (item.qty || 0);
+
+    setCartItems(prevItems =>
+      clampedQty < 1
+        ? prevItems.filter(i => i.product_code !== product_code)
+        : prevItems.map(i =>
+            i.product_code === product_code
+              ? { ...i, qty: clampedQty }
+              : i
+          )
+    );
+    setProducts(prevProducts =>
+      prevProducts.map(p =>
+        p.product_code === product_code
+          ? { ...p, stock: (p.stock || 0) - diff }
+          : p
+      )
+    );
+    // If quantity is set to 0, remove from cart
+    if (newQty < 1) {
+      removeFromCart(product_code);
+    }
   };
 
-  const cartTotal = Array.isArray(cartItems) ? cartItems.reduce((total, item) => {
-    const price = Number(item?.price) || 0;
-    const qty = Number(item?.qty) || 0; // Ensure qty is treated as a number
-    return total + price * qty;
-  }, 0) : 0;
-
-  const itemCount = Array.isArray(cartItems) ? cartItems.reduce((count, item) => {
-    const qty = Number(item?.qty) || 0; // Ensure qty is treated as a number
-    return count + qty;
-  }, 0) : 0;
-
-  const contextValue = {
-    cartItems,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-    cartTotal,
-    itemCount,
-  };
+  // Add itemCount and cartTotal for use in Nav, CartSummary, etc.
+  const itemCount = cartItems.reduce((sum, item) => sum + (item.qty || 0), 0);
+  const cartTotal = cartItems.reduce(
+    (sum, item) => sum + (parseFloat(item.price?.amount ?? item.price) * (item.qty || 0)),
+    0
+  );
 
   return (
-    <CartContext.Provider value={contextValue}>
+    <CartContext.Provider value={{
+      products,
+      cartItems,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      itemCount,
+      cartTotal
+    }}>
       {children}
     </CartContext.Provider>
   );
@@ -94,19 +129,8 @@ export const CartProvider = ({ children }) => {
 
 export const useCart = () => {
   const context = useContext(CartContext);
-  if (context === undefined || context === null) {
-    console.error('useCart must be used within a CartProvider. Context is currently:', context);
-    // Fallback to a default structure to prevent immediate crashes in UI components during development
-    // if the provider is accidentally missed.
-    return {
-        cartItems: [],
-        addToCart: () => console.warn("addToCart called without CartProvider"),
-        removeFromCart: () => console.warn("removeFromCart called without CartProvider"),
-        updateQuantity: () => console.warn("updateQuantity called without CartProvider"),
-        clearCart: () => console.warn("clearCart called without CartProvider"),
-        cartTotal: 0,
-        itemCount: 0
-    };
+  if (context === null) {
+    throw new Error("useCart must be used within a CartProvider");
   }
   return context;
 };

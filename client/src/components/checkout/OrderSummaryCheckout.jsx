@@ -22,7 +22,9 @@ const OrderSummaryCheckout = ({ shippingCost = 0 }) => { // shippingCost can be 
                 <p className="text-xs text-gray-500">Qty: {item.qty}</p>
               </div>
             </div>
-            <p className="text-sm text-gray-600">${(item.price * item.qty).toFixed(2)}</p>
+            <p className="text-sm text-gray-600">
+              ${(parseFloat(item.price?.amount ?? item.price) * item.qty).toFixed(2)}
+            </p>
           </div>
         ))}
       </div>
