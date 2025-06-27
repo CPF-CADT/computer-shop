@@ -84,14 +84,35 @@ const ShoppingCartPage = ({ onProceedToCheckout, onContinueShopping }) => {
 
             {/* Summary Section */}
             <div className="lg:w-[35%]">
-              <CartSummary />
-              <button
-                onClick={onProceedToCheckout || (() => navigate('/checkout'))}
-                disabled={itemCount === 0}
-                className="mt-8 w-full bg-orange-500 text-white py-3.5 rounded-md font-semibold hover:bg-orange-600 transition text-base disabled:opacity-60"
-              >
-                Proceed to Checkout
-              </button>
+              <div className="bg-white p-5 md:p-7 rounded-lg shadow-md sticky top-8">
+                <h2 className="text-xl font-semibold text-gray-800 mb-5 border-b pb-3">Order Summary</h2>
+                <div className="space-y-3 text-sm text-gray-700">
+                  <div className="flex justify-between">
+                    <span>Subtotal ({itemCount} items)</span>
+                    <span className="font-medium">${cartTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Estimated Shipping</span>
+                    <span className="font-medium">${(5.00).toFixed(2)}</span> {/* Placeholder */}
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Estimated Tax</span>
+                    <span className="font-medium">${(cartTotal * 0.07).toFixed(2)}</span> {/* Placeholder 7% tax */}
+                  </div>
+                  <div className="flex justify-between font-bold text-gray-800 text-lg pt-3 border-t mt-3">
+                    <span>Order Total</span>
+                    <span>${(cartTotal + 5.00 + (cartTotal * 0.07)).toFixed(2)}</span>
+                  </div>
+                </div>
+                {/* Always show checkout button in cart summary */}
+                <button
+                  onClick={onProceedToCheckout || (() => navigate('/checkout'))}
+                  disabled={itemCount === 0}
+                  className="mt-8 w-full bg-orange-500 text-white py-3.5 rounded-md font-semibold hover:bg-orange-600 transition text-base disabled:opacity-60"
+                >
+                  Proceed to Checkout
+                </button>
+              </div>
             </div>
           </div>
         )}

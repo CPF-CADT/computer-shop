@@ -1,6 +1,7 @@
 // src/context/CartContext.js
 import React, { createContext, useState, useContext } from 'react';
 import { mockProducts } from '../../data/mockData';
+import { mockProducts } from '../../data/mockData';
 
 const CartContext = createContext(null);
 
