@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+Jimport { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useCart } from '../cart/CartContext';
 import ProductQuantity from './ProductQuantity';
@@ -11,6 +11,9 @@ export default function ProductDetails() {
   const { products, addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const navigate = useNavigate();
+
+  // TODO: Replace with real user context/auth
+  const user = null; // or { name: "John Doe" } if logged in
 
   // Find product from context (with stock)
   const product = products.find(p => p.product_code === productId);
@@ -97,6 +100,7 @@ export default function ProductDetails() {
       <ProductReviews 
         productRating={product.feedback.rating} 
         totalReviews={product.feedback.totalReview} 
+        user={user}
       />
     </div>
   );

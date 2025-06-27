@@ -1,25 +1,27 @@
 import { useState } from 'react';
 import { FaStar } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
-export default function ProductReviews({ productRating, totalReviews }) {
-  const [review, setReview] = useState({ name: '', text: '', rating: 5 });
+export default function ProductReviews({ productRating, totalReviews, user }) {
+  const [review, setReview] = useState({ text: '', rating: 5 });
   const [reviews, setReviews] = useState([]);
+  const navigate = useNavigate();
 
   const handleReviewSubmit = (e) => {
     e.preventDefault();
     const newReview = {
       ...review,
       id: Date.now(),
-      date: new Date().toLocaleDateString()
+      date: new Date().toLocaleDateString(),
+      name: user?.name || "Anonymous"
     };
     setReviews([...reviews, newReview]);
-    setReview({ name: '', text: '', rating: 5 });
+    setReview({ text: '', rating: 5 });
   };
 
   return (
     <div className="mt-12">
       <h2 className="text-xl font-bold mb-6">Ratings & Reviews</h2>
-      
       <div className="mb-8">
         <div className="text-4xl font-bold">
           {productRating}
@@ -30,50 +32,56 @@ export default function ProductReviews({ productRating, totalReviews }) {
         </div>
       </div>
 
-      <form onSubmit={handleReviewSubmit} className="bg-gray-50 p-6 rounded-lg mb-8">
-        <h3 className="font-bold mb-4">Write a review</h3>
-        
-        <div className="mb-4">
-          <label className="block mb-2">Your name *</label>
-          <input
-            type="text"
-            value={review.name}
-            onChange={(e) => setReview({...review, name: e.target.value})}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block mb-2">Your review for this product *</label>
-          <textarea
-            value={review.text}
-            onChange={(e) => setReview({...review, text: e.target.value})}
-            className="w-full p-2 border rounded h-32"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block mb-2">Rating *</label>
-          <div className="flex gap-2">
-            {[1,2,3,4,5].map((star) => (
-              <button
-                key={star}
-                type="button"
-                onClick={() => setReview({...review, rating: star})}
-                className={`text-2xl ${star <= review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
-              >
-                <FaStar />
-              </button>
-            ))}
+      {/* Only allow review if user is logged in */}
+      {user ? (
+        <form onSubmit={handleReviewSubmit} className="bg-gray-50 p-6 rounded-lg mb-8">
+          <h3 className="font-bold mb-4">Write a review</h3>
+          {/* No name input, use user.name */}
+          <div className="mb-4">
+            <label className="block mb-2">Your review for this product *</label>
+            <textarea
+              value={review.text}
+              onChange={(e) => setReview({ ...review, text: e.target.value })}
+              className="w-full p-2 border rounded h-32"
+              required
+            />
           </div>
+          <div className="mb-4">
+            <label className="block mb-2">Rating *</label>
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setReview({ ...review, rating: star })}
+                  className={`text-2xl ${star <= review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                >
+                  <FaStar />
+                </button>
+              ))}
+            </div>
+          </div>
+          <button type="submit" className="bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600">
+            Submit
+          </button>
+        </form>
+      ) : (
+        <div className="bg-gray-50 p-6 rounded-lg mb-8 text-center">
+          <p className="mb-4 font-semibold">You must be <span className="text-orange-600">logged in</span> to write a review.</p>
+          <button
+            className="bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600 mr-2"
+            onClick={() => navigate('/login')}
+          >
+            Login
+          </button>
+          <button
+            className="bg-gray-200 text-gray-800 px-6 py-2 rounded hover:bg-gray-300"
+            onClick={() => navigate('/register')}
+          >
+            Register
+          </button>
         </div>
-
-        <button type="submit" className="bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600">
-          Submit
-        </button>
-      </form>
+      )}
 
       <div className="space-y-6">
         {[...reviews].map((review, idx) => (
@@ -86,8 +94,8 @@ export default function ProductReviews({ productRating, totalReviews }) {
               </div>
             </div>
             <div className="flex gap-1 mb-2">
-              {[1,2,3,4,5].map((star) => (
-                <FaStar 
+              {[1, 2, 3, 4, 5].map((star) => (
+                <FaStar
                   key={star}
                   className={star <= review.rating ? 'text-yellow-400' : 'text-gray-300'}
                 />
