@@ -2,6 +2,8 @@
 import React from 'react';
 import { FaPlus, FaMinus, FaTrash, FaArrowLeft, FaShoppingCart } from 'react-icons/fa';
 import { useCart } from './CartContext'; // Assuming CartContext is in the right place
+import LaptopBreadcrumb from '../LaptopCompo.jsx/LaptopBreadcrumb.jsx'; // <-- import breadcrumb
+import { Link, useNavigate } from 'react-router-dom';
 
 const ShoppingCartItem = ({ item, onUpdateQuantity, onRemoveItem }) => (
   <div className="flex flex-col sm:flex-row items-center py-4 sm:py-6 border-b last:border-b-0">
@@ -13,7 +15,9 @@ const ShoppingCartItem = ({ item, onUpdateQuantity, onRemoveItem }) => (
         <FaTrash className="inline mr-1" /> Remove
       </button>
     </div>
-    <div className="font-semibold text-gray-700 w-24 text-center text-sm md:text-base my-2 sm:my-0">${item.price.toFixed(2)}</div>
+    <div className="font-semibold text-gray-700 w-24 text-center text-sm md:text-base my-2 sm:my-0">
+      ${parseFloat(item.price?.amount ?? item.price).toFixed(2)}
+    </div>
     <div className="flex items-center justify-center mx-2 sm:mx-5 my-2 sm:my-0">
       <button onClick={() => onUpdateQuantity(item.id, item.qty - 1)} className="p-2 border rounded-l-md hover:bg-gray-100 text-gray-600">
         <FaMinus size={12} />
@@ -24,13 +28,14 @@ const ShoppingCartItem = ({ item, onUpdateQuantity, onRemoveItem }) => (
       </button>
     </div>
     <div className="font-bold text-orange-500 w-28 text-center sm:text-right text-sm md:text-base">
-      ${(item.price * item.qty).toFixed(2)}
+      ${(parseFloat(item.price?.amount ?? item.price) * item.qty).toFixed(2)}
     </div>
   </div>
 );
 
 const ShoppingCartPage = ({ onProceedToCheckout, onContinueShopping }) => {
   const { cartItems, updateQuantity, removeFromCart, clearCart, cartTotal, itemCount } = useCart();
+  const navigate = useNavigate();
 
   if (!cartItems) { // Should be handled by useCart's fallback, but good for clarity
     return <div className="p-8 text-center">Loading cart...</div>;
@@ -39,6 +44,14 @@ const ShoppingCartPage = ({ onProceedToCheckout, onContinueShopping }) => {
   return (
     <div className="bg-gray-50 p-4 sm:p-6 md:p-8 min-h-screen">
       <div className="max-w-6xl mx-auto">
+        {/* Breadcrumb */}
+        <div className="text-sm text-gray-500 mb-2 flex items-center gap-1">
+          <Link to="/" className="hover:underline text-gray-500">Home</Link>
+          <span>&gt;</span>
+          <Link to="/laptop" className="hover:underline text-gray-500">Laptops</Link>
+          <span>&gt;</span>
+          <span className="text-black font-semibold">My Cart</span>
+        </div>
         {/* You can add breadcrumbs or back navigation here */}
         {onContinueShopping && (
             <button onClick={onContinueShopping} className="inline-flex items-center text-sm text-gray-600 hover:text-orange-500 mb-4 font-medium">
@@ -120,15 +133,14 @@ const ShoppingCartPage = ({ onProceedToCheckout, onContinueShopping }) => {
                     <span>${(cartTotal + 5.00 + (cartTotal * 0.07)).toFixed(2)}</span>
                   </div>
                 </div>
-                {onProceedToCheckout && (
-                    <button
-                        onClick={onProceedToCheckout}
-                        disabled={itemCount === 0}
-                        className="mt-8 w-full bg-orange-500 text-white py-3.5 rounded-md font-semibold hover:bg-orange-600 transition text-base disabled:opacity-60"
-                    >
-                        Proceed to Checkout
-                    </button>
-                )}
+                {/* Always show checkout button in cart summary */}
+                <button
+                  onClick={onProceedToCheckout || (() => navigate('/checkout'))}
+                  disabled={itemCount === 0}
+                  className="mt-8 w-full bg-orange-500 text-white py-3.5 rounded-md font-semibold hover:bg-orange-600 transition text-base disabled:opacity-60"
+                >
+                  Proceed to Checkout
+                </button>
               </div>
             </div>
           </div>

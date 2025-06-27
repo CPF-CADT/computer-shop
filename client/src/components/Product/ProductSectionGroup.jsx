@@ -1,6 +1,6 @@
 import ProductCard from './ProductCard';
 
-export default function ProductSectionGroup({ leftImage, leftTitle, leftSubtitle, leftLink, products }) {
+function ProductSectionGroup({ leftImage, leftTitle, leftSubtitle, leftLink, products }) {
   return (
     <div className="flex gap-6 mb-10">
       {/* ...left card... */}
@@ -8,6 +8,7 @@ export default function ProductSectionGroup({ leftImage, leftTitle, leftSubtitle
         {products.map((product, idx) => (
           <ProductCard
             key={product.product_code || idx}
+            productId={product.product_code}
             image={product.image_path}
             title={product.name}
             description={product.description}
@@ -26,3 +27,5 @@ export default function ProductSectionGroup({ leftImage, leftTitle, leftSubtitle
     </div>
   );
 }
+
+export default ProductSectionGroup;

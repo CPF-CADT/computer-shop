@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { FaArrowLeft, FaLock, FaChevronDown, FaChevronUp, FaCreditCard, FaShippingFast } from 'react-icons/fa';
 import { useCart } from '../cart/CartContext'; // Assuming CartContext is in the right place
 import { mockShippingMethods } from '../../data/mockData';
+import { Link } from 'react-router-dom';
 
 // --- Reusable InputField (can be a separate component) ---
 const InputField = ({ label, id, type = "text", placeholder, value, onChange, required = true, error }) => (
@@ -104,6 +105,17 @@ const CheckoutPage = ({ onBackToCart, onOrderPlaced }) => {
   return (
     <div className="bg-gray-100 p-4 sm:p-6 md:p-8 min-h-screen">
       <div className="max-w-5xl mx-auto">
+        {/* Breadcrumb */}
+        <div className="text-sm text-gray-500 mb-2 flex items-center gap-1">
+          <Link to="/" className="hover:underline text-gray-500">Home</Link>
+          <span>&gt;</span>
+          <Link to="/laptop" className="hover:underline text-gray-500">Laptops</Link>
+          <span>&gt;</span>
+          <Link to="/cart" className="hover:underline text-gray-500">My Cart</Link>
+          <span>&gt;</span>
+          <span className="text-black font-semibold">Checkout</span>
+        </div>
+
         {onBackToCart && (
             <button onClick={onBackToCart} className="inline-flex items-center text-sm text-gray-600 hover:text-orange-500 mb-5 font-medium">
                 <FaArrowLeft className="mr-2" /> Back to Cart
@@ -182,6 +194,15 @@ const CheckoutPage = ({ onBackToCart, onOrderPlaced }) => {
                 </div>
                 <button onClick={handleNextStep} disabled={!agreedToTerms} className="mt-5 w-full bg-green-500 text-white px-7 py-3 rounded-md font-semibold hover:bg-green-600 text-sm disabled:opacity-60">
                     Place Order
+                </button>
+                {/* Process Payment Button */}
+                <button
+                  type="button"
+                  onClick={() => alert('Processing payment...')}
+                  className="mt-3 w-full bg-brand-orange text-white px-7 py-3 rounded-md font-semibold hover:bg-brand-orange-dark text-sm"
+                  disabled={!agreedToTerms}
+                >
+                  Process Payment
                 </button>
             </CollapsibleSection>
 
