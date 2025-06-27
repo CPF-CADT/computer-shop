@@ -61,9 +61,13 @@ import CartLayout from './components/cart/CartLayout';
 import ShoppingCartPage from './components/cart/ShoppingCartPage';
 import CheckoutPage from "./components/checkout/CheckoutPage";
 import AdminDash from './components/admin/AdminDash';
+import AdminManagement from './components/admin/AdminManagement';
+import AdminManageRole from './components/admin/AdminManageRole';
+import { CartProvider } from './components/cart/CartContext'; // <-- use client CartProvider
+
 function App() {
   return (
-    <>
+    <CartProvider>
       <Head /> 
       <Nav />  
       <div className="pt-4 pb-8 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -81,7 +85,7 @@ function App() {
           </Route>
         </Routes>
       </div>
-    </>
+    </CartProvider>
   );
 }
 

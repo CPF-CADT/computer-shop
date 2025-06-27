@@ -65,7 +65,7 @@ const ShippingMethod = ({ onNext, onBack, currentSelection, onSelectionChange, i
             <button
               type="submit"
               disabled={!selectedMethod}
-              className="bg-brand-orange text-yellow-300 px-8 py-2.5 rounded-md font-semibold hover:bg-brand-orange-dark disabled:opacity-50"
+              className="bg-brand-orange text-white px-8 py-2.5 rounded-md font-semibold hover:bg-brand-orange-dark disabled:opacity-50"
             >
               Next
             </button>
