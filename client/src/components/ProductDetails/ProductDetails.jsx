@@ -1,4 +1,4 @@
-Jimport { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useCart } from '../cart/CartContext';
 import ProductQuantity from './ProductQuantity';
