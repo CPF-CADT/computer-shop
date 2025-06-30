@@ -1,192 +1,147 @@
-import React, { useState } from "react";
-
-// Mock privileges and tables
+import { useState,useCallback ,useEffect } from "react";
+import AlertBox from "./AlertBox";
+import { apiService } from "../../service/api";
 const privilegeOptions = [
-  "Grant All", "Select", "Insert", "Update", "Delete", "Revoke All"
-];
-const tableOptions = [
-  "users", "products", "orders", "categories", "customers", "messages", "invoices", "discounts"
-];
-
-// Mock users with roles
-const mockUsers = [
-  {
-    id: 1,
-    username: "Alice Smith",
-    privileges: ["Grant All", "Select", "Insert"],
-    tables: ["users", "products"]
-  },
-  {
-    id: 2,
-    username: "Bob Johnson",
-    privileges: ["Select", "Update"],
-    tables: ["orders"]
-  },
-  {
-    id: 3,
-    username: "Charlie Lee",
-    privileges: ["Select", "Delete", "Revoke All"],
-    tables: ["customers", "messages"]
-  }
+  "ALL PRIVILEGES", "SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "GRANT OPTION"
 ];
 
 export default function AdminManageRole() {
-  const [users, setUsers] = useState(mockUsers);
-  const [form, setForm] = useState({
-    username: "",
-    privileges: [],
-    tables: []
-  });
+  const [roles, setRoles] = useState([]);
+  const [availableTables, setAvailableTables] = useState([]); // Dynamic tables
+  const [permissions, setPermissions] = useState({});
+  const [form, setForm] = useState({ roleName: "", privileges: [], tables: [] });
+  const [loading, setLoading] = useState(true);
+  const [alert, setAlert] = useState({ show: false, message: '', type: 'success' });
 
-  // Handle checkbox for privileges
-  const handlePrivilegeChange = (priv) => {
-    setForm((prev) => ({
-      ...prev,
-      privileges: prev.privileges.includes(priv)
-        ? prev.privileges.filter(p => p !== priv)
-        : [...prev.privileges, priv]
-    }));
-  };
+  const fetchInitialData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setAlert({ show: false });
+      const [fetchedRoles, fetchedTables] = await Promise.all([
+          apiService.getRoles(),
+          apiService.getTables()
+      ]);
+      setRoles(fetchedRoles);
+      setAvailableTables(fetchedTables);
+      
+      const permsPromises = fetchedRoles.map(role => apiService.getRolePermissions(role.roleName));
+      const permsResults = await Promise.all(permsPromises);
+      const permsMap = fetchedRoles.reduce((acc, role, index) => {
+        acc[role.roleName] = permsResults[index];
+        return acc;
+      }, {});
+      setPermissions(permsMap);
+    } catch (err) {
+      setAlert({ show: true, message: err.message, type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  // Handle checkbox for tables
-  const handleTableChange = (table) => {
-    setForm((prev) => ({
-      ...prev,
-      tables: prev.tables.includes(table)
-        ? prev.tables.filter(t => t !== table)
-        : [...prev.tables, table]
-    }));
-  };
+  useEffect(() => { fetchInitialData(); }, [fetchInitialData]);
 
-  // Select all privileges
-  const handleSelectAllPrivileges = (checked) => {
-    setForm((prev) => ({
-      ...prev,
-      privileges: checked ? [...privilegeOptions] : []
-    }));
-  };
-
-  // Select all tables
-  const handleSelectAllTables = (checked) => {
-    setForm((prev) => ({
-      ...prev,
-      tables: checked ? [...tableOptions] : []
-    }));
-  };
-
-  const handleInputChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleAddUser = (e) => {
-    e.preventDefault();
-    if (!form.username || form.privileges.length === 0 || form.tables.length === 0) return;
-    setUsers([
-      ...users,
-      {
-        id: users.length + 1,
-        username: form.username,
-        privileges: form.privileges,
-        tables: form.tables
+  const handlePrivilegeChange = (priv) => setForm(prev => ({...prev, privileges: prev.privileges.includes(priv) ? prev.privileges.filter(p => p !== priv) : [...prev.privileges, priv]}));
+  const handleTableChange = (table) => setForm(prev => ({...prev, tables: prev.tables.includes(table) ? prev.tables.filter(t => t !== table) : [...prev.tables, table]}));
+  const handleInputChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  
+  // FIXED "SELECT ALL" LOGIC
+  const handleSelectAllTables = (e) => {
+      if (e.target.checked) {
+          setForm(prev => ({...prev, tables: [...availableTables]}));
+      } else {
+          setForm(prev => ({...prev, tables: []}));
       }
-    ]);
-    setForm({
-      username: "",
-      privileges: [],
-      tables: []
-    });
+  };
+
+  const handleAddRole = async (e) => {
+      e.preventDefault();
+      if (!form.roleName || form.privileges.length === 0) return;
+      try {
+          await apiService.createRole(form.roleName);
+          if (form.tables.length > 0) {
+              for (const table of form.tables) {
+                  await apiService.grantPermissionsToRole({ roleName: form.roleName, permissions: form.privileges, tableName: table });
+              }
+          } else {
+               await apiService.grantPermissionsToRole({ roleName: form.roleName, permissions: form.privileges });
+          }
+          setAlert({ show: true, message: `Role '${form.roleName}' created and permissions granted.`, type: 'success' });
+          setForm({ roleName: "", privileges: [], tables: [] });
+          fetchInitialData();
+      } catch (err) {
+          setAlert({ show: true, message: err.message, type: 'error' });
+      }
+  };
+  
+  const handleDeleteRole = async (roleName) => {
+      if(window.confirm(`Are you sure you want to delete the role '${roleName}'?`)){
+          try {
+              await apiService.dropRole(roleName);
+              setAlert({ show: true, message: `Role '${roleName}' deleted.`, type: 'success' });
+              fetchInitialData();
+          } catch(err) {
+              setAlert({ show: true, message: err.message, type: 'error' });
+          }
+      }
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Role Management</h2>
-      {/* User Input Form */}
-      <form onSubmit={handleAddUser} className="flex flex-col gap-4 mb-8">
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">Role Management</h2>
+      <AlertBox message={alert.message} type={alert.type} onClose={() => setAlert({ show: false })} />
+      <form onSubmit={handleAddRole} className="bg-white p-6 rounded-lg shadow-md mb-8 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-1">Username</label>
-          <input
-            name="username"
-            value={form.username}
-            onChange={handleInputChange}
-            className="px-3 py-2 border rounded-md"
-            placeholder="Enter username"
-            required
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">Role Name</label>
+          <input name="roleName" value={form.roleName} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500" placeholder="Enter role name" required />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Privileges</label>
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 font-semibold">
-              <input
-                type="checkbox"
-                checked={form.privileges.length === privilegeOptions.length}
-                onChange={e => handleSelectAllPrivileges(e.target.checked)}
-              />
-              All
-            </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Privileges</label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {privilegeOptions.map(priv => (
-              <label key={priv} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={form.privileges.includes(priv)}
-                  onChange={() => handlePrivilegeChange(priv)}
-                />
+              <label key={priv} className="flex items-center gap-2 text-sm text-gray-600">
+                <input type="checkbox" checked={form.privileges.includes(priv)} onChange={() => handlePrivilegeChange(priv)} className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"/>
                 {priv}
               </label>
             ))}
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Tables</label>
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 font-semibold">
-              <input
-                type="checkbox"
-                checked={form.tables.length === tableOptions.length}
-                onChange={e => handleSelectAllTables(e.target.checked)}
-              />
-              All
-            </label>
-            {tableOptions.map(table => (
-              <label key={table} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={form.tables.includes(table)}
-                  onChange={() => handleTableChange(table)}
-                />
-                {table}
-              </label>
-            ))}
-          </div>
+           <label className="block text-sm font-medium text-gray-700 mb-2">Grant on Tables (Optional, grants to all if none selected)</label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                    <input type="checkbox" 
+                        onChange={handleSelectAllTables}
+                        checked={availableTables.length > 0 && form.tables.length === availableTables.length}
+                        className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"/>
+                    All Tables
+                </label>
+                 {availableTables.map(table => (
+                    <label key={table} className="flex items-center gap-2 text-sm text-gray-600">
+                      <input type="checkbox" checked={form.tables.includes(table)} onChange={() => handleTableChange(table)} className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"/>
+                      {table}
+                    </label>
+                ))}
+            </div>
         </div>
-        <button
-          type="submit"
-          className="px-5 py-2 bg-orange-500 text-white rounded-md font-semibold hover:bg-orange-600 w-fit"
-        >
-          Add User Role
-        </button>
+        <button type="submit" className="px-6 py-2 bg-orange-500 text-white rounded-md font-semibold hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">Add Role & Grant</button>
       </form>
-
-      {/* User Table */}
-      <div className="overflow-x-auto bg-white rounded-lg shadow">
+      <div className="overflow-x-auto bg-white rounded-lg shadow-md">
         <table className="min-w-full text-sm">
-          <thead>
-            <tr className="bg-gray-100 text-gray-700">
-              <th className="p-3 text-left">Username</th>
-              <th className="p-3 text-left">Privileges</th>
-              <th className="p-3 text-left">Tables</th>
-              <th className="p-3 text-left">Action</th>
+          <thead className="bg-gray-100">
+            <tr className="text-gray-700">
+              <th className="p-4 text-left font-semibold">Role Name</th>
+              <th className="p-4 text-left font-semibold">Assigned Permissions</th>
+              <th className="p-4 text-left font-semibold">Action</th>
             </tr>
           </thead>
-          <tbody>
-            {users.map(user => (
-              <tr key={user.id} className="border-b hover:bg-gray-50">
-                <td className="p-3">{user.username}</td>
-                <td className="p-3">{user.privileges.join(", ")}</td>
-                <td className="p-3">{user.tables.join(", ")}</td>
-                <td className="p-3">
-                  <button className="px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200">Delete</button>
-                </td>
+          <tbody className="divide-y divide-gray-200">
+            {loading ? (
+                <tr><td colSpan="3" className="p-4 text-center">Loading...</td></tr>
+            ) : roles.map(role => (
+              <tr key={role.roleName} className="hover:bg-gray-50">
+                <td className="p-4 font-medium text-gray-800">{role.roleName}</td>
+                <td className="p-4 text-gray-600"><pre className="whitespace-pre-wrap text-xs font-mono">{permissions[role.roleName] ? permissions[role.roleName].join('\n') : 'No permissions'}</pre></td>
+                <td className="p-4"><button onClick={() => handleDeleteRole(role.roleName)} className="px-4 py-1 bg-red-100 text-red-600 rounded-md hover:bg-red-200 font-medium transition-colors">Delete</button></td>
               </tr>
             ))}
           </tbody>

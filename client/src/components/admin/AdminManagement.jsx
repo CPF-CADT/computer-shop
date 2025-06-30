@@ -1,177 +1,108 @@
-import React, { useState } from "react";
-
-const roleOptions = [
-  "Admin",
-  "Backend Developer",
-  "Frontend Developer",
-  "Editor",
-  "Viewer"
-];
+import { useState,useCallback ,useEffect } from "react";
+import { apiService } from "../../service/api";
+import AlertBox from "./AlertBox";
 const expireOptions = [
-  { label: "3 Months", value: 90 },
-  { label: "6 Months", value: 180 },
-  { label: "12 Months", value: 365 },
-  { label: "24 Months", value: 730 }
+  { label: "3 Months", value: 90 }, { label: "6 Months", value: 180 },
+  { label: "12 Months", value: 365 }, { label: "24 Months", value: 730 }
 ];
 
-// Helper to get a future date string
-function getExpireDate(days) {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-// Helper to calculate days left
 function getDaysLeft(expireDate) {
-  const today = new Date();
-  const exp = new Date(expireDate);
-  const diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
-  return diff > 0 ? diff : 0;
+    if (!expireDate) return 'N/A';
+    const today = new Date();
+    const exp = new Date(expireDate);
+    const diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? `${diff} days` : 'Expired';
 }
-
-const mockUsers = [
-  {
-    id: 1,
-    username: "Alice Smith",
-    role: "Admin",
-    expireDate: getExpireDate(90),
-    createdAt: new Date().toISOString().slice(0, 10)
-  },
-  {
-    id: 2,
-    username: "Bob Johnson",
-    role: "Backend Developer",
-    expireDate: getExpireDate(180),
-    createdAt: new Date().toISOString().slice(0, 10)
-  },
-  {
-    id: 3,
-    username: "Charlie Lee",
-    role: "Frontend Developer",
-    expireDate: getExpireDate(365),
-    createdAt: new Date().toISOString().slice(0, 10)
-  }
-];
 
 export default function AdminManagement() {
-  const [users, setUsers] = useState(mockUsers);
-  const [form, setForm] = useState({
-    username: "",
-    password: "",
-    role: "Viewer",
-    expireDays: 90 // default to 3 months
-  });
+  const [users, setUsers] = useState([]);
+  const [availableRoles, setAvailableRoles] = useState([]);
+  const [form, setForm] = useState({ username: "", password: "", role: "", expireDays: 90 });
+  const [loading, setLoading] = useState(true);
+  const [alert, setAlert] = useState({ show: false, message: '', type: 'success' });
 
-  const handleInputChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setAlert({ show: false });
+      const [fetchedUsers, fetchedRoles] = await Promise.all([apiService.getUsers(), apiService.getRoles()]);
+      setUsers(fetchedUsers);
+      setAvailableRoles(fetchedRoles);
+      if (fetchedRoles.length > 0) {
+        setForm(prev => ({...prev, role: fetchedRoles[0].roleName}));
+      }
+    } catch (err) {
+      setAlert({ show: true, message: err.message, type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleInputChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    if (!form.username || !form.password || !form.role) return;
+    try {
+      await apiService.createUser({ username: form.username, password: form.password, expireDays: Number(form.expireDays), host: '%' });
+      await apiService.grantRoleToUser(form.role, form.username);
+      setAlert({ show: true, message: `User '${form.username}' created and role '${form.role}' assigned.`, type: 'success' });
+      setForm({ username: "", password: "", role: availableRoles[0]?.roleName || "", expireDays: 90 });
+      fetchData();
+    } catch (err) {
+      setAlert({ show: true, message: err.message, type: 'error' });
+    }
   };
 
-  const handleAddUser = (e) => {
-    e.preventDefault();
-    if (!form.username || !form.password || !form.expireDays) return;
-    const expireDate = getExpireDate(Number(form.expireDays));
-    setUsers([
-      ...users,
-      {
-        id: users.length + 1,
-        username: form.username,
-        role: form.role,
-        expireDate,
-        createdAt: new Date().toISOString().slice(0, 10)
+  const handleDeleteUser = async (username, host) => {
+    if (window.confirm(`Are you sure you want to delete the user '${username}'?`)) {
+      try {
+        await apiService.dropUser(username, host);
+        setAlert({ show: true, message: `User '${username}' deleted.`, type: 'success' });
+        fetchData();
+      } catch (err) {
+        setAlert({ show: true, message: err.message, type: 'error' });
       }
-    ]);
-    setForm({
-      username: "",
-      password: "",
-      role: "Viewer",
-      expireDays: 90
-    });
+    }
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">User Management</h2>
-      {/* User Input Form */}
-      <form onSubmit={handleAddUser} className="flex flex-wrap gap-4 mb-8 items-end">
-        <div>
-          <label className="block text-sm font-medium mb-1">Username</label>
-          <input
-            name="username"
-            value={form.username}
-            onChange={handleInputChange}
-            className="px-3 py-2 border rounded-md"
-            placeholder="Enter username"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Password</label>
-          <input
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleInputChange}
-            className="px-3 py-2 border rounded-md"
-            placeholder="Enter password"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Role</label>
-          <select
-            name="role"
-            value={form.role}
-            onChange={handleInputChange}
-            className="px-3 py-2 border rounded-md"
-          >
-            {roleOptions.map(opt => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Expire Date</label>
-          <select
-            name="expireDays"
-            value={form.expireDays}
-            onChange={handleInputChange}
-            className="px-3 py-2 border rounded-md"
-          >
-            {expireOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-        <button
-          type="submit"
-          className="px-5 py-2 bg-orange-500 text-white rounded-md font-semibold hover:bg-orange-600"
-        >
-          Add User
-        </button>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">User Management</h2>
+      <AlertBox message={alert.message} type={alert.type} onClose={() => setAlert({ show: false })} />
+      
+      <form onSubmit={handleAddUser} className="bg-white p-6 rounded-lg shadow-md mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        {/* Form fields... */}
+        <div className="lg:col-span-1"><label className="block text-sm font-medium text-gray-700 mb-1">Username</label><input name="username" value={form.username} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500" placeholder="Enter username" required/></div>
+        <div className="lg:col-span-1"><label className="block text-sm font-medium text-gray-700 mb-1">Password</label><input name="password" type="password" value={form.password} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500" placeholder="Enter password" required/></div>
+        <div className="lg:col-span-1"><label className="block text-sm font-medium text-gray-700 mb-1">Role</label><select name="role" value={form.role} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">{availableRoles.map(r => <option key={r.roleName} value={r.roleName}>{r.roleName}</option>)}</select></div>
+        <div className="lg:col-span-1"><label className="block text-sm font-medium text-gray-700 mb-1">Expire In</label><select name="expireDays" value={form.expireDays} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">{expireOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select></div>
+        <div className="lg:col-span-1"><button type="submit" className="w-full px-6 py-2 bg-orange-500 text-white rounded-md font-semibold hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">Add User</button></div>
       </form>
-
-      {/* User Table */}
-      <div className="overflow-x-auto bg-white rounded-lg shadow">
+      
+      <div className="overflow-x-auto bg-white rounded-lg shadow-md">
         <table className="min-w-full text-sm">
-          <thead>
-            <tr className="bg-gray-100 text-gray-700">
-              <th className="p-3 text-left">Username</th>
-              <th className="p-3 text-left">Role</th>
-              <th className="p-3 text-left">Expire Date</th>
-              <th className="p-3 text-left">Days Left</th>
-              <th className="p-3 text-left">Action</th>
+          <thead className="bg-gray-100">
+            <tr className="text-gray-700">
+              <th className="p-4 text-left font-semibold">Username</th>
+              <th className="p-4 text-left font-semibold">Assigned Role(s)</th>
+              <th className="p-4 text-left font-semibold">Expires On</th>
+              <th className="p-4 text-left font-semibold">Time Left</th>
+              <th className="p-4 text-left font-semibold">Action</th>
             </tr>
           </thead>
-          <tbody>
-            {users.map(user => (
-              <tr key={user.id} className="border-b hover:bg-gray-50">
-                <td className="p-3">{user.username}</td>
-                <td className="p-3">{user.role}</td>
-                <td className="p-3">{user.expireDate}</td>
-                <td className="p-3">{getDaysLeft(user.expireDate)} days</td>
-                <td className="p-3">
-                  <button className="px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200">Delete</button>
-                </td>
+          <tbody className="divide-y divide-gray-200">
+            {loading ? (
+                <tr><td colSpan="5" className="p-4 text-center">Loading users...</td></tr>
+            ) : users.map(user => (
+              <tr key={`${user.User}-${user.Host}`} className="hover:bg-gray-50">
+                <td className="p-4 font-medium text-gray-800">{user.User}</td>
+                <td className="p-4 text-gray-600">{user.roles?.join(', ') || 'N/A'}</td>
+                <td className="p-4 text-gray-600">{user.expireDate}</td>
+                <td className="p-4 text-gray-600">{getDaysLeft(user.expireDate)}</td>
+                <td className="p-4"><button onClick={() => handleDeleteUser(user.User, user.Host)} className="px-4 py-1 bg-red-100 text-red-600 rounded-md hover:bg-red-200 font-medium transition-colors">Delete</button></td>
               </tr>
             ))}
           </tbody>
