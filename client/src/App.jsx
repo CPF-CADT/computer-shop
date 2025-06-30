@@ -14,7 +14,7 @@ import ProductDetails from './components/ProductDetails/ProductDetails';
 import CartLayout from './components/cart/CartLayout'; 
 import ShoppingCartPage from './components/cart/ShoppingCartPage';
 import CheckoutPage from "./components/checkout/CheckoutPage";
-
+import AdminDash from './components/admin/AdminDash';
 function App() {
   return (
     <>
@@ -31,6 +31,7 @@ function App() {
           <Route element={<CartLayout />}> 
             <Route path="/cart" element={<ShoppingCartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/Admin" element={<div><AdminDash/></div>} />
           </Route>
         </Routes>
       </div>
