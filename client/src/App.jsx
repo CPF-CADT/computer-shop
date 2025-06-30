@@ -15,6 +15,8 @@ import CartLayout from './components/cart/CartLayout';
 import ShoppingCartPage from './components/cart/ShoppingCartPage';
 import CheckoutPage from "./components/checkout/CheckoutPage";
 import AdminDash from './components/admin/AdminDash';
+import AdminManagement from './components/admin/AdminManagement';
+import AdminManageRole from './components/admin/AdminManageRole';
 function App() {
   return (
     <>
@@ -32,7 +34,8 @@ function App() {
             <Route path="/cart" element={<ShoppingCartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/Admin" element={<div><AdminDash/></div>} />
-          </Route>
+            <Route path="/Management" element={<div><AdminManagement/></div>} /></Route>
+            <Route path="/Role" element={<div><AdminManageRole/></div>} />
         </Routes>
       </div>
     </>
