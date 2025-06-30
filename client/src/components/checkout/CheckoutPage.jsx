@@ -17,7 +17,7 @@ const CheckoutPage = ({ onBackToCart, onOrderPlaced }) => {
   const [currentStep, setCurrentStep] = useState(1);
 
   const [shippingAddress, setShippingAddress] = useState({
-    email: '', firstName: '', lastName: '', address: '', city: '', zipCode: '', country: 'United States', phone: ''
+     address: '', city: '', country: 'United States',stateProvince:''
   });
   const [shippingMethod, setShippingMethod] = useState(mockShippingMethods[0]);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
