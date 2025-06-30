@@ -18,11 +18,11 @@ app.use(cors());
 app.use(express.json());
 const PORT = process.env.PORT;
   const botMessage = new TelegramBot();
-  botMessage.startPolling();
+  // botMessage.startPolling();
 (async () => {
   try {
     await connectToDatabase();
-    // console.log(getExpiryDate(15));
+    // console.log(getExpiryDate(15))
     app.use('/api/product', productRouter);
     app.use('/api/category', categoryRouter);
     app.use('/api/type-product', typeProducRouter);
