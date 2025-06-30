@@ -9,6 +9,8 @@ import { CartItemRouter } from './routes/CartItemRoute';
 import {AddressRouter } from './routes/AddressRouter'
 import { CheckoutRouter } from './routes/CheckoutRoutes';
 import { TelegramBot } from './service/TelgramBot';
+import { UserManagement } from './repositories/UserManagement';
+import {userManagementRouter} from './routes/userManagementRoute';
 // import { getExpiryDate, sentVerifyCodeViaSMS } from './service/TwoFA';\
 
 // import JWT from './logic/JWT';
@@ -19,10 +21,11 @@ app.use(express.json());
 const PORT = process.env.PORT;
   const botMessage = new TelegramBot();
   // botMessage.startPolling();
+ 
+
 (async () => {
   try {
     await connectToDatabase();
-    // console.log(getExpiryDate(15))
     app.use('/api/product', productRouter);
     app.use('/api/category', categoryRouter);
     app.use('/api/type-product', typeProducRouter);
@@ -31,6 +34,7 @@ const PORT = process.env.PORT;
     app.use('/api/cart-item',CartItemRouter)
     app.use('/api/address-customer',AddressRouter)
     app.use('/api/checkout',CheckoutRouter)
+    app.use('/api/db',userManagementRouter)
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on http://localhost:${PORT}`);
     });
