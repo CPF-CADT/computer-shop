@@ -1,5 +1,5 @@
 import { FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
-import { useCart } from './CartContext'; // <-- fix import
+import { useCart } from '../../context/CartContext';
 
 const CartItem = ({ item }) => {
   const { updateQuantity, removeFromCart } = useCart();
@@ -14,9 +14,7 @@ const CartItem = ({ item }) => {
           <FaTrash className="inline mr-1" /> Remove
         </button>
       </div>
-      <div className="font-semibold text-gray-700 w-20 text-center text-sm md:text-base my-2 sm:my-0">
-        ${parseFloat(item.price?.amount ?? item.price).toFixed(2)}
-      </div>
+      <div className="font-semibold text-gray-700 w-20 text-center text-sm md:text-base my-2 sm:my-0">${item.price.toFixed(2)}</div>
       <div className="flex items-center justify-center mx-4 my-2 sm:my-0">
         <button onClick={() => updateQuantity(item.id, item.qty - 1)} className="p-1.5 border rounded hover:bg-gray-100">
           <FaMinus size={12} />
@@ -27,7 +25,7 @@ const CartItem = ({ item }) => {
         </button>
       </div>
       <div className="font-bold text-brand-orange w-24 text-center sm:text-right text-sm md:text-base">
-        ${(parseFloat(item.price?.amount ?? item.price) * item.qty).toFixed(2)}
+        ${(item.price * item.qty).toFixed(2)}
       </div>
     </div>
   );

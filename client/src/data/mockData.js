@@ -93,7 +93,6 @@ export const mockLaptop = [
     type: { id: 1, title: "Gaming Laptop" },
     discount: { type: "Percentage", value: "5.00" },
     feedback: { rating: "4.8", totalReview: 12 },
-    stock: 10,
   },
     {
     product_code: "ROG-STRIX-G17",
@@ -106,7 +105,6 @@ export const mockLaptop = [
     type: { id: 1, title: "Gaming Laptop" },
     discount: { type: "Percentage", value: "5.00" },
     feedback: { rating: "4.8", totalReview: 12 },
-    stock: 10,
   },
   {
     product_code: "ROG-ZEPHYRUS",
@@ -119,7 +117,6 @@ export const mockLaptop = [
     type: { id: 1, title: "Gaming Laptop" },
     discount: { type: "Percentage", value: "12.00" },
     feedback: { rating: "4.7", totalReview: 8 },
-    stock: 5,
   },
   {
     product_code: "ROG-STRIX-SCAR",
@@ -147,7 +144,6 @@ export const mockLaptop = [
       rating: "4.2",
       totalReview: 3,
     },
-    stock: 8,
   },
   {
     product_code: "ASUS-TUF-A15",
@@ -160,7 +156,6 @@ export const mockLaptop = [
     type: { id: 1, title: "Gaming Laptop" },
     discount: { type: "Percentage", value: "15.00" },
     feedback: { rating: "4.6", totalReview: 15 },
-    stock: 7,
   },
   {
     product_code: "MSI-RAIDER",
@@ -173,7 +168,6 @@ export const mockLaptop = [
     type: { id: 1, title: "Gaming Laptop" },
     discount: { type: "Percentage", value: "7.00" },
     feedback: { rating: "4.8", totalReview: 6 },
-    stock: 4,
   }
 ];
 
@@ -234,7 +228,6 @@ export const mockPC = [
       rating: "5.0",
       totalReview: 12,
     },
-    stock: 3,
   },
   {
     product_code: "PC-STREAMER",
@@ -262,7 +255,6 @@ export const mockPC = [
       rating: "4.8",
       totalReview: 7,
     },
-    stock: 5,
   },
   {
     product_code: "PC-BUDGET",
@@ -290,7 +282,6 @@ export const mockPC = [
       rating: "4.0",
       totalReview: 2,
     },
-    stock: 8,
   },
   
   {
@@ -304,7 +295,6 @@ export const mockPC = [
     type: { id: 4, title: "Workstation" },
     discount: { type: "Percentage", value: "7.00" },
     feedback: { rating: "4.9", totalReview: 4 },
-    stock: 2,
   },
   {
     product_code: "PC-ENTRY",
@@ -317,15 +307,11 @@ export const mockPC = [
     type: { id: 5, title: "Entry Level" },
     discount: { type: "Percentage", value: "2.00" },
     feedback: { rating: "3.8", totalReview: 1 },
-    stock: 10,
   },
 ];
 
 // Combined products for cart and checkout
-export const mockProducts = [...mockLaptop, ...mockPC].map(p => ({
-  ...p,
-  id: p.product_code, // <-- Add id property for cart compatibility
-}));
+export const mockProducts = [...mockLaptop, ...mockPC];
 export const mockShippingMethods = [
   { id: 'standard', name: 'Standard Shipping (5-7 Days)', price: 5.00 },
   { id: 'express', name: 'Express Shipping (2-3 Days)', price: 15.00 },

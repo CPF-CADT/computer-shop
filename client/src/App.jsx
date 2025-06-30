@@ -14,11 +14,12 @@ import ProductDetails from './components/ProductDetails/ProductDetails';
 import CartLayout from './components/cart/CartLayout'; 
 import ShoppingCartPage from './components/cart/ShoppingCartPage';
 import CheckoutPage from "./components/checkout/CheckoutPage";
-import { CartProvider } from './components/cart/CartContext'; // <-- use client CartProvider
-
+import AdminDash from './components/admin/AdminDash';
+import AdminManagement from './components/admin/AdminManagement';
+import AdminManageRole from './components/admin/AdminManageRole';
 function App() {
   return (
-    <CartProvider>
+    <>
       <Head /> 
       <Nav />  
       <div className="pt-4 pb-8 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -32,10 +33,12 @@ function App() {
           <Route element={<CartLayout />}> 
             <Route path="/cart" element={<ShoppingCartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
-          </Route>
+            <Route path="/admin" element={<div><AdminDash/></div>} />
+            <Route path="/management" element={<div><AdminManagement/></div>} /></Route>
+            <Route path="/role" element={<div><AdminManageRole/></div>} />
         </Routes>
       </div>
-    </CartProvider>
+    </>
   );
 }
 

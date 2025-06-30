@@ -1,7 +1,7 @@
 // src/components/cart/CartSummary.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from './CartContext'; // <-- fix import
+import { useCart } from '../../context/CartContext';
 
 const CartSummary = () => {
   const { cartTotal, itemCount } = useCart();
@@ -67,7 +67,7 @@ const CartSummary = () => {
         disabled={itemCount === 0}
         className="mt-6 w-full bg-brand-orange text-white py-3 rounded-md font-semibold hover:bg-brand-orange-dark transition duration-150 disabled:opacity-50"
       >
-        Checkout
+        Proceed to Checkout
       </button>
     </div>
   );

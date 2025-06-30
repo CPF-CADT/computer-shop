@@ -1,13 +1,8 @@
 import mainLogo from "../assets/gear-tech.png";
 import { FaSearch } from "react-icons/fa";
 import { BsCart2 } from "react-icons/bs";
-import { Link, useNavigate } from "react-router-dom";
-import { useCart } from "./cart/CartContext"; // <-- import useCart
-
+import { Link } from "react-router-dom";
 export default function Nav() {
-  const navigate = useNavigate();
-  const { itemCount } = useCart(); // <-- get itemCount from cart
-
   return (
     <nav className="h-14 max-w-[1200px] flex flex-row mx-auto items-center justify-between mt-5">
       <img src={mainLogo} alt="gear-tech" className="h-[50px]" />
@@ -24,17 +19,9 @@ export default function Nav() {
           <FaSearch />
         </button>
       </form>
-      <button
-        className="relative border-1 border-gray-400 rounded-full w-[150px] h-full text-lg flex flex-row items-center justify-between px-6"
-        onClick={() => navigate('/cart')}
-      >
+      <button className="border-1 border-gray-400 rounded-full w-[150px] h-full text-lg flex flex-row items-center justify-between px-6 ">
         <BsCart2 size={26} />
         <span>My Cart</span>
-        {itemCount > 0 && (
-          <span className="absolute -top-2 -right-2 bg-orange-500 text-white rounded-full px-2 py-0.5 text-xs font-bold">
-            {itemCount}
-          </span>
-        )}
       </button>
       <div className="border-1 flex felx-row justify-between items-center px-3  border-gray-400 rounded-full w-[180px] h-full text-lg ml-7 text-center">
         <Link to={'/register'} className="hover:font-bold"> 
