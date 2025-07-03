@@ -9,23 +9,18 @@ import { CartItemRouter } from './routes/CartItemRoute';
 import {AddressRouter } from './routes/AddressRouter'
 import { CheckoutRouter } from './routes/CheckoutRoutes';
 import { TelegramBot } from './service/TelgramBot';
-import { UserManagement } from './repositories/UserManagement';
 import {userManagementRouter} from './routes/userManagementRoute';
-// import { getExpiryDate, sentVerifyCodeViaSMS } from './service/TwoFA';\
-
 // import JWT from './logic/JWT';
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
 const PORT = process.env.PORT;
-  const botMessage = new TelegramBot();
-  // botMessage.startPolling();
- 
-
+const bot = new TelegramBot();
 (async () => {
   try {
     await connectToDatabase();
+    bot.startPolling();
     app.use('/api/product', productRouter);
     app.use('/api/category', categoryRouter);
     app.use('/api/type-product', typeProducRouter);

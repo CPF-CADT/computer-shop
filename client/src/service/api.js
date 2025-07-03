@@ -32,7 +32,7 @@ export const apiService = {
         }
         return response.json();
     },
-    dropUser: async (username, host = '%') => {
+    dropUser: async (username, host = 'localhost') => {
         const response = await fetch(`${API_BASE_URL}/users/${username}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
@@ -44,7 +44,7 @@ export const apiService = {
         }
         return response.json();
     },
-    grantRoleToUser: async (roleName, username, host = '%') => {
+    grantRoleToUser: async (roleName, username, host = 'localhost') => {
         const response = await fetch(`${API_BASE_URL}/users/grant-role`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -56,7 +56,7 @@ export const apiService = {
         }
         return response.json();
     },
-    getUserPermissions: async (username, host = '%') => {
+    getUserPermissions: async (username, host = 'localhost') => {
         const response = await fetch(`${API_BASE_URL}/users/${username}/permissions?host=${host}`);
         if (!response.ok) return [];
         const data = await response.json();

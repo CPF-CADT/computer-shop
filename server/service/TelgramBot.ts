@@ -92,8 +92,6 @@ export class TelegramBot {
       }
 
     } catch (err: any) {
-      console.error('Polling error:', err.message);
-      if (err.response) console.error(err.response.data);
     }
   }
 }
