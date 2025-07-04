@@ -9,6 +9,7 @@ import { CartItemRouter } from './routes/CartItemRoute';
 import {AddressRouter } from './routes/AddressRouter'
 import { CheckoutRouter } from './routes/CheckoutRoutes';
 import { TelegramBot } from './service/TelgramBot';
+import ServiceRouter from './routes/ServiceRoute'
 import {userManagementRouter} from './routes/userManagementRoute';
 // import JWT from './logic/JWT';
 dotenv.config();
@@ -27,6 +28,7 @@ const bot = new TelegramBot();
     app.use('/api/brand', BrandRouter);
     app.use('/api/user', customerRouter);
     app.use('/api/cart-item',CartItemRouter)
+    app.use('/api/service',ServiceRouter)
     app.use('/api/address-customer',AddressRouter)
     app.use('/api/checkout',CheckoutRouter)
     app.use('/api/db',userManagementRouter)

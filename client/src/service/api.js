@@ -1,120 +1,207 @@
-const API_BASE_URL = 'http://localhost:3000/api/db'; // Adjust if your backend runs elsewhere
+import axios from 'axios';
+// Create a pre-configured instance of axios
+const apiClient = axios.create({
+  baseURL: 'http://localhost:3000/api/',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB
 
 export const apiService = {
-    // --- User API Calls ---
-    getUsers: async () => {
-        const response = await fetch(`${API_BASE_URL}/users`);
-        if (!response.ok) throw new Error('Failed to fetch users');
-        // This assumes the backend is updated to provide roles and expiry info
-        const users = await response.json();
-        // Mocking the backend logic for demonstration since we can't change it from here
+
+  // --- Generic Data Fetching ---
+  getAllCategories: async () => {
+    try {
+      const response = await apiClient.get('category');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch categories");
+    }
+  },        
+
+  getAllTypeProducts: async () => {
+    try {
+      const response = await apiClient.get('type-product');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch type products");
+    }
+  },
+
+  getAllBrands: async () => {
+    try {
+      const response = await apiClient.get('brand');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch brands");
+    }
+  },    
+
+  // --- File Upload Service ---
+  uploadFileInChunksService: async (file, { onProgress, onStatusChange, onSuccess, onError }) => {
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    const uploadId = crypto.randomUUID();       
+
+    onStatusChange('Starting upload...');
+
+    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+      const start = chunkIndex * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, file.size);
+      const chunk = file.slice(start, end);
+
+      try {
+        onStatusChange(`Uploading chunk ${chunkIndex + 1} of ${totalChunks}...`);
+
+        // Using axios for the chunk upload
+        const response = await apiClient.post('/service/upload', chunk, {
+          headers: {
+            'Content-Type': 'application/octet-stream',
+            'x-unique-upload-id': uploadId,
+            'content-range': `bytes ${start}-${end - 1}/${file.size}`,
+          },
+        });
+
+        const newProgress = ((chunkIndex + 1) / totalChunks) * 100;
+        onProgress(newProgress);
+
+        const result = response.data;
+
+        if (result.url) {
+          const transformedUrl = result.url.replace('/upload/', '/upload/w_400/');
+          onSuccess(transformedUrl);
+          onStatusChange('Upload complete! File available on Cloudinary.');
+          return; // Exit the loop and function
+        } else {
+          onStatusChange(`Chunk ${chunkIndex + 1} uploaded. Server status: ${result.status}`);
+        }
+      } catch (error) {
+        console.error('Error uploading chunk:', error);
+        const errorMessage = error.response?.data?.error || error.message || 'Chunk upload failed';
+        onError(new Error(errorMessage));
+        onStatusChange(`Error: ${errorMessage}`);
+        return; // Stop the upload on error
+      }
+    }
+  },
+
+  // --- User API Calls ---
+  getUsers: async () => {
+    try {
+        const response = await apiClient.get('/db/users');
+        const users = response.data;
+
+        // The logic to augment users with permissions remains the same
         const augmentedUsers = await Promise.all(users.map(async (user) => {
-             const perms = await apiService.getUserPermissions(user.User, user.Host);
-             const roles = perms
+            const perms = await apiService.getUserPermissions(user.User, user.Host);
+            const roles = perms
                 .filter(p => p.toUpperCase().startsWith('GRANT `'))
                 .map(p => p.match(/`([^`]+)`/)[1]);
-            // This is a simplified expiry calculation. A real backend would provide a concrete date.
             const expireDate = new Date();
-            expireDate.setDate(expireDate.getDate() + 90); // Mocking a 90-day expiry
-             return { ...user, roles, expireDate: expireDate.toISOString().slice(0, 10) };
+            expireDate.setDate(expireDate.getDate() + 90);
+            return { ...user, roles, expireDate: expireDate.toISOString().slice(0, 10) };
         }));
         return augmentedUsers;
-    },
-    createUser: async (userData) => {
-        const response = await fetch(`${API_BASE_URL}/users`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData),
-        });
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.message || 'Failed to create user');
-        }
-        return response.json();
-    },
-    dropUser: async (username, host = 'localhost') => {
-        const response = await fetch(`${API_BASE_URL}/users/${username}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ host }),
-        });
-         if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.message || 'Failed to delete user');
-        }
-        return response.json();
-    },
-    grantRoleToUser: async (roleName, username, host = 'localhost') => {
-        const response = await fetch(`${API_BASE_URL}/users/grant-role`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ roleName, username, host }),
-        });
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.message || 'Failed to grant role');
-        }
-        return response.json();
-    },
-    getUserPermissions: async (username, host = 'localhost') => {
-        const response = await fetch(`${API_BASE_URL}/users/${username}/permissions?host=${host}`);
-        if (!response.ok) return [];
-        const data = await response.json();
-        return data.grants ? data.grants.map(g => Object.values(g)[0]) : [];
-    },
-
-    // --- Role API Calls ---
-    getRoles: async () => {
-        const response = await fetch(`${API_BASE_URL}/roles`);
-        if (!response.ok) throw new Error('Failed to fetch roles');
-        return response.json();
-    },
-    createRole: async (roleName) => {
-        const response = await fetch(`${API_BASE_URL}/roles`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ roleName }),
-        });
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.message || 'Failed to create role');
-        }
-        return response.json();
-    },
-    dropRole: async (roleName) => {
-        const response = await fetch(`${API_BASE_URL}/roles/${roleName}`, {
-            method: 'DELETE',
-        });
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.message || 'Failed to delete role');
-        }
-        return response.json();
-    },
-    grantPermissionsToRole: async (data) => {
-        const response = await fetch(`${API_BASE_URL}/roles/grant-permissions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        });
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.message || 'Failed to grant permissions');
-        }
-        return response.json();
-    },
-     getRolePermissions: async (roleName) => {
-        const response = await fetch(`${API_BASE_URL}/roles/${roleName}/permissions`);
-        if (!response.ok) {
-            console.error(`Could not fetch permissions for role: ${roleName}`);
-            return [];
-        }
-        const data = await response.json();
-        return data.grants ? data.grants.map(g => Object.values(g)[0]) : [];
-    },
-    getTables: async () => { 
-        const response = await fetch(`${API_BASE_URL}/tables`);
-        if (!response.ok) throw new Error('Failed to fetch tables');
-        return response.json();
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to fetch users');
     }
+  },
+
+  createUser: async (userData) => {
+    try {
+        const response = await apiClient.post('/db/users', userData);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to create user');
+    }
+  },
+
+  dropUser: async (username, host = '%') => {
+    try {
+        // For DELETE with body, axios uses the 'data' property in the config object
+        const response = await apiClient.delete(`/db/users/${username}`, { data: { host } });
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to delete user');
+    }
+  },
+
+  grantRoleToUser: async (roleName, username, host = '%') => {
+    try {
+        const response = await apiClient.post('/db/users/grant-role', { roleName, username, host });
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to grant role');
+    }
+  },
+
+  getUserPermissions: async (username, host = '%') => {
+    try {
+        const response = await apiClient.get(`/db/users/${username}/permissions`, { params: { host } });
+        const data = response.data;
+        return data.grants ? data.grants.map(g => Object.values(g)[0]) : [];
+    } catch (error) {
+        // Gracefully return an empty array on failure, as in the original code
+        console.error(`Could not fetch permissions for user: ${username}`, error);
+        return [];
+    }
+  },
+
+  // --- Role API Calls ---
+  getRoles: async () => {
+    try {
+        const response = await apiClient.get('/db/roles');
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to fetch roles');
+    }
+  },
+
+  createRole: async (roleName) => {
+    try {
+        const response = await apiClient.post('/db/roles', { roleName });
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to create role');
+    }
+  },
+
+  dropRole: async (roleName) => {
+    try {
+        const response = await apiClient.delete(`/db/roles/${roleName}`);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to delete role');
+    }
+  },
+
+  grantPermissionsToRole: async (data) => {
+    try {
+        const response = await apiClient.post('/db/roles/grant-permissions', data);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to grant permissions');
+    }
+  },
+
+  getRolePermissions: async (roleName) => {
+    try {
+        const response = await apiClient.get(`/db/roles/${roleName}/permissions`);
+        const data = response.data;
+        return data.grants ? data.grants.map(g => Object.values(g)[0]) : [];
+    } catch (error) {
+        console.error(`Could not fetch permissions for role: ${roleName}`, error);
+        return [];
+    }
+  },
+
+  getTables: async () => {
+    try {
+        const response = await apiClient.get('/db/tables');
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to fetch tables');
+    }
+  }
 };

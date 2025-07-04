@@ -1,23 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 
-const sampleProducts = [
-  {
-    id: 1,
-    name: "Gabriela Cashmere Blazer",
-    sku: "SKU-12345",
-    price: 120,
-    quantity: 24,
-    views: 320,
-    status: "Active",
-    image: "https://placehold.co/40x40/f0f0f0/333?text=IMG"
-  },
-  // ...add more sample products
-];
-
-export default function ProductTable() {
-  const [products] = useState(sampleProducts);
-
+// The component now receives `products` and an `onDelete` function as props
+export default function ProductTable({ products, onDelete }) {
   return (
     <div className="bg-white rounded-lg shadow overflow-x-auto">
       <table className="min-w-full text-sm">
@@ -56,7 +41,11 @@ export default function ProductTable() {
                 <button className="p-1 rounded hover:bg-purple-100 text-purple-700">
                   <FiEdit2 />
                 </button>
-                <button className="p-1 rounded hover:bg-red-100 text-red-600">
+                {/* The delete button now calls the onDelete function passed via props */}
+                <button
+                  onClick={() => onDelete(prod.id)}
+                  className="p-1 rounded hover:bg-red-100 text-red-600"
+                >
                   <FiTrash2 />
                 </button>
               </td>

@@ -1,6 +1,4 @@
-import React from "react";
-
-export default function ProductToolbar() {
+export default function ProductToolbar({onAddProductClick}) {
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
       <div className="flex gap-2">
@@ -15,9 +13,12 @@ export default function ProductToolbar() {
           Filter
         </button>
       </div>
-      <button className="px-6 py-2 rounded-md bg-[#FFA726] text-white font-semibold hover:bg-purple-800 transition">
-        + Add Product
+      <button
+        onClick={onAddProductClick}
+        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+      >
+        Add Product
       </button>
     </div>
   );
-}
+}   

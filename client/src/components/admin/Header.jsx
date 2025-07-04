@@ -2,7 +2,6 @@ import React from "react";
 import { AiOutlineSearch, AiOutlineBell, AiOutlineSetting, AiOutlineDown } from "react-icons/ai";
 
 export default function Header() {
-  // Example user info (replace with real data if available)
   const user = {
     name: "Estiaq Noor",
     avatar: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
@@ -23,7 +22,7 @@ export default function Header() {
       <div className="flex items-center gap-4">
         <button className="relative p-2 rounded-full hover:bg-purple-100">
           <AiOutlineBell className="text-xl text-gray-500" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-orange-400 rounded-ful"></span>
+          <span className="absolute top-1 right-1 w-2 h-2 bg-orange-400 rounded-full"></span>
         </button>
         <button className="p-2 rounded-full hover:bg-purple-100">
           <AiOutlineSetting className="text-xl text-gray-500" />
