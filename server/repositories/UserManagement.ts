@@ -1,16 +1,17 @@
 import { sequelize } from '../db/sequelize'; // Adjust path as needed
 import { QueryTypes } from 'sequelize';
-        const isValidIdentifier = (name: string): boolean => {
-            const regex = /^[a-zA-Z0-9_]+$/;
-            return regex.test(name);
-        };
+
+const isValidIdentifier = (name: string): boolean => {
+    const regex = /^[a-zA-Z0-9_]+$/;
+    return regex.test(name);
+};
 
 export class UserManagement {
-    
+
     static async createDatabaseUser(
         username: string,
         password: string,
-        host: string = 'localhost',
+        host: string = '%',         
         expireDays: number = 90
     ) {
         if (!isValidIdentifier(username)) {
@@ -26,7 +27,7 @@ export class UserManagement {
                 CREATE USER ${escapedUsername}@${escapedHost}
                 IDENTIFIED BY ${escapedPassword}
                 PASSWORD EXPIRE INTERVAL ${expireDays} DAY;
-                `;
+            `;
             await sequelize.query(query);
             console.log(`Database user '${username}'@'${host}' created successfully.`);
         } catch (error) {
@@ -40,7 +41,11 @@ export class UserManagement {
             throw new Error('Invalid role name. Only alphanumeric characters and underscores are allowed.');
         }
         try {
-            const query = `CREATE ROLE ${sequelize.escape(roleName)};`;
+            // Insert into roles table - note: no escape inside quotes here
+            const queryInsert = `INSERT INTO roles (role_name) VALUES (${sequelize.escape(roleName)});`;
+            await sequelize.query(queryInsert);
+
+            const query = `CREATE ROLE IF NOT EXISTS ${sequelize.escape(roleName)};`;
             await sequelize.query(query);
             console.log(`Database role '${roleName}' created successfully.`);
         } catch (error) {
@@ -73,8 +78,9 @@ export class UserManagement {
 
     static async getAllDatabaseUsers() {
         try {
+            // Fixed query to list all users from mysql.user
             const users = await sequelize.query(
-                "SELECT User, Host FROM mysql.user where Host = 'localhost';",
+                "SELECT User, Host FROM showDatabaseUser;",
                 { type: QueryTypes.SELECT }
             );
             return users;
@@ -87,7 +93,7 @@ export class UserManagement {
     static async getAllDatabaseRoles() {
         try {
             const roles = await sequelize.query(
-                "SELECT User AS roleName, Host FROM mysql.user where Host = '%' ",
+                "SELECT role_name as roleName FROM roles;",
                 { type: QueryTypes.SELECT }
             );
             return roles;
@@ -101,7 +107,7 @@ export class UserManagement {
         if (!isValidIdentifier(roleName)) { throw new Error('Invalid role name.'); }
         if (permissions.length === 0) { throw new Error('Permissions array cannot be empty.'); }
         if (tableName && !isValidIdentifier(tableName)) { throw new Error('Invalid table name format.'); }
-        
+
         const database = 'computer_shop';
         try {
             const permString = permissions.join(', ');
@@ -115,7 +121,7 @@ export class UserManagement {
             throw new Error(`Failed to grant permissions to role.`);
         }
     }
-    
+
     static async revokePermissionsFromRole(roleName: string, permissions: string[], tableName?: string) {
         if (!isValidIdentifier(roleName)) { throw new Error('Invalid role name.'); }
         if (permissions.length === 0) { throw new Error('Permissions array cannot be empty.'); }
@@ -148,7 +154,7 @@ export class UserManagement {
             throw new Error('Failed to drop database role.');
         }
     }
-    
+
     static async dropDatabaseUser(username: string, host: string = '%') {
         if (!isValidIdentifier(username)) {
             throw new Error('Invalid username.');
@@ -164,6 +170,7 @@ export class UserManagement {
             throw new Error('Failed to drop database user.');
         }
     }
+
     static async getPermissionsForRole(roleName: string) {
         if (!isValidIdentifier(roleName)) {
             throw new Error('Invalid role name.');
@@ -177,6 +184,7 @@ export class UserManagement {
             throw new Error('Failed to show grants for role.');
         }
     }
+
     static async getPermissionsForUser(username: string, host: string = '%') {
         if (!isValidIdentifier(username)) {
             throw new Error('Invalid username.');
@@ -192,17 +200,18 @@ export class UserManagement {
             throw new Error('Failed to show grants for user.');
         }
     }
+
     static async getAllTables() {
-    try {
-        const database = 'computer_shop';
-        const tables: any[] = await sequelize.query(`SHOW TABLES FROM \`${database}\`;`, {
-            type: QueryTypes.SELECT,
-        });
-        // Flatten the result into a simple array of strings
-        return tables.map(t => Object.values(t)[0] as string);
-    } catch (error) {
-        console.error('Error fetching all tables:', error);
-        throw new Error('Failed to retrieve tables.');
+        try {
+            const database = 'computer_shop';
+            const tables: any[] = await sequelize.query(`SHOW TABLES FROM \`${database}\`;`, {
+                type: QueryTypes.SELECT,
+            });
+            // Flatten the result into a simple array of strings
+            return tables.map(t => Object.values(t)[0] as string);
+        } catch (error) {
+            console.error('Error fetching all tables:', error);
+            throw new Error('Failed to retrieve tables.');
+        }
     }
-}
 }

@@ -125,7 +125,7 @@ export async function checkPayment(req: Request, res: Response) {
                             items: order_items.map(item => `${item.product_code} : ${item.price_at_purchase} x ${item.qty}`)
                         });
                     }
-                }
+                }   
             } catch (notificationError) {
                 console.error(`[checkPayment] Notification failed for order ${order_id}:`, notificationError);
             }

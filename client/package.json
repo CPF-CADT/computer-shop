@@ -8,9 +8,12 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
-  },  "dependencies": {
+  },
+  "dependencies": {
     "@heroicons/react": "^2.0.18",
     "@tailwindcss/vite": "^4.1.8",
+    "axios": "^1.10.0",
+    "cloudinary": "^2.7.0",
     "framer-motion": "^12.15.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

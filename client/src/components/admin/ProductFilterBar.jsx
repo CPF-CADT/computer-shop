@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function ProductFilterBar() {
   return (
     <div className="flex flex-wrap gap-3 mb-4">
