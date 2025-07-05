@@ -9,12 +9,12 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
 
     const [name, setName] = useState("");
     const [Code, setCode] = useState(""); // example Code default
-    const [price, setPrice] = useState("");
-    const [quantity, setQuantity] = useState("");
-    const [description, setDescription] = useState();
-    const [category, setCategory] = useState(0);
-    const [type_product, setTypeProduct] = useState(0);
-    const [brand, setBrand] = useState(0);
+    const [price, setPrice] = useState(0);
+    const [quantity, setQuantity] = useState(1);
+    const [description, setDescription] = useState("");
+    const [category, setCategory] = useState(1);
+    const [type_product, setTypeProduct] = useState(1);
+    const [brand, setBrand] = useState(1);
     
     const [progress, setProgress] = useState(0);
     const [status, setStatus] = useState("Ready to upload");

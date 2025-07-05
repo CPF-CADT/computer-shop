@@ -11,6 +11,8 @@ import { CheckoutRouter } from './routes/CheckoutRoutes';
 import { TelegramBot } from './service/TelgramBot';
 import ServiceRouter from './routes/ServiceRoute'
 import {userManagementRouter} from './routes/userManagementRoute';
+import {swaggerSpec} from './service/swaggerConfig'
+import swaggerUi from 'swagger-ui-express';
 // import JWT from './logic/JWT';
 dotenv.config();
 const app = express();
@@ -32,6 +34,7 @@ const bot = new TelegramBot();
     app.use('/api/address-customer',AddressRouter)
     app.use('/api/checkout',CheckoutRouter)
     app.use('/api/db',userManagementRouter)
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on http://localhost:${PORT}`);
     });
