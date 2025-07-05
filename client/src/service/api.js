@@ -10,6 +10,38 @@ const apiClient = axios.create({
 const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB
 
 export const apiService = {
+  // --- Product API
+  getProducts: async (query_param) => {
+    try {
+      const response = await apiClient.get('product',{ params:query_param });
+      console.log(response.status, response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch products:', error.message);
+      throw error;
+    }
+  },
+
+  addNewProduct: async (productData) => {
+    try {
+      const response = await apiClient.post('product', productData);
+      return response.data;
+    } catch (error) {
+      console.error('API error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to Create Product");
+    }
+  },
+
+  deleteProduct: async (productId) => {
+    try {
+     
+      const response = await apiClient.delete(`product/${productId}`);
+      return response.data;
+    } catch (error) {
+      console.error('API error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to delete product");
+    }
+  },
 
   // --- Generic Data Fetching ---
   getAllCategories: async () => {

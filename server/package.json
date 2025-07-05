@@ -25,6 +25,8 @@
     "pg-promise": "^11.14.0",
     "reflect-metadata": "^0.2.2",
     "sequelize-typescript": "^2.1.6",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "twilio": "^5.7.1"
   },
   "devDependencies": {
@@ -34,6 +36,8 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.15.31",
     "@types/sequelize": "^4.28.20",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
