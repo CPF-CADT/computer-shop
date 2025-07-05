@@ -78,7 +78,7 @@ export class Product extends Model {
   type?: TypeProduct;
 
   @HasMany(() => ProductFeedback)
-  feedbacks!: ProductFeedback[];
+  feedbacks!: ProductFeedback[];  
 
   @HasMany(() => InventoryLog)
   inventory_logs!: InventoryLog[];

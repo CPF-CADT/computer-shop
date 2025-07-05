@@ -1,23 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 
-const sampleProducts = [
-  {
-    id: 1,
-    name: "Gabriela Cashmere Blazer",
-    sku: "SKU-12345",
-    price: 120,
-    quantity: 24,
-    views: 320,
-    status: "Active",
-    image: "https://placehold.co/40x40/f0f0f0/333?text=IMG"
-  },
-  // ...add more sample products
-];
-
-export default function ProductTable() {
-  const [products] = useState(sampleProducts);
-
+// The component now receives `products` and an `onDelete` function as props
+export default function ProductTable({ products ={}, onDelete }) {
   return (
     <div className="bg-white rounded-lg shadow overflow-x-auto">
       <table className="min-w-full text-sm">
@@ -34,29 +19,40 @@ export default function ProductTable() {
         </thead>
         <tbody>
           {products.map((prod) => (
-            <tr key={prod.id} className="border-b hover:bg-gray-50">
-              <td className="p-3"><input type="checkbox" /></td>
+            <tr key={prod.product_code} className="border-b hover:bg-gray-50">
+              <td className="p-3">
+                <input type="checkbox" />
+              </td>
               <td className="p-3 flex items-center gap-3">
-                <img src={prod.image} alt="" className="w-10 h-10 rounded" />
+                <img
+                  src={prod.image_path}
+                  alt={prod.name}
+                  className="w-10 h-10 rounded object-cover"
+                />
                 <div>
                   <div className="font-medium">{prod.name}</div>
-                  <div className="text-xs text-gray-400">{prod.sku}</div>
+                  <div className="text-xs text-gray-400">Code: {prod.product_code}</div>
                 </div>
               </td>
-              <td className="p-3">${prod.price}</td>
-              <td className="p-3">{prod.quantity}</td>
-              <td className="p-3">{prod.views}</td>
+              <td className="p-3">
+                ${prod.price?.amount.toFixed(2)} {prod.price?.currency}
+              </td>
+              <td className="p-3">{prod.category?.title}</td>
+              <td className="p-3">{prod.type?.title}</td>
               <td className="p-3">
                 <span className="inline-flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                  <span>{prod.status}</span>
+                  <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                  <span>{prod.feedback?.rating} ⭐ ({prod.feedback?.totalReview} reviews)</span>
                 </span>
               </td>
               <td className="p-3 flex gap-2">
                 <button className="p-1 rounded hover:bg-purple-100 text-purple-700">
                   <FiEdit2 />
                 </button>
-                <button className="p-1 rounded hover:bg-red-100 text-red-600">
+                <button
+                  onClick={() => onDelete(prod.product_code)}
+                  className="p-1 rounded hover:bg-red-100 text-red-600"
+                >
                   <FiTrash2 />
                 </button>
               </td>

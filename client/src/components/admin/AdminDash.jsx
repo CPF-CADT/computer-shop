@@ -1,22 +1,37 @@
-import React from "react";
-import Sidebar from "./Sidebar";
-import Header from "./Header";
-import ProductToolbar from "./ProductToolbar";
-import ProductFilterBar from "./ProductFilterBar";
-import ProductTable from "./ProductTable";
-import Pagination from "./Pagination";
+import  { useState } from 'react';
+import Sidebar from './Sidebar';
+import Header from './Header';
+
+import DashboardPage from './DashboardPage';
+import OrdersPage from './OrdersPage';
+import ProductsPage from './ProductsPage';
+import UserManagement from './UserManagement';
 
 export default function AdminDash() {
+    const [activePage, setActivePage] = useState('Dashboard');
+    const renderPage = () => {
+    switch (activePage) {
+      case 'Dashboard':
+        return <DashboardPage />;
+      case 'Orders':
+        return <OrdersPage />;
+      case 'Products':
+        return <ProductsPage />;
+      case 'User Management':
+        return <UserManagement />;
+      default:
+        return <DashboardPage />; 
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
-      <Sidebar />
-      <div className="flex-1 flex flex-col ml-64">
+      <Sidebar activePage={activePage} setActivePage={setActivePage} />
+
+      <div className="flex-1 flex flex-col">
         <Header />
         <main className="p-6">
-          <ProductToolbar />
-          <ProductFilterBar />
-          <ProductTable />
-          <Pagination />
+          {renderPage()}
         </main>
       </div>
     </div>

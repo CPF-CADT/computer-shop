@@ -119,7 +119,7 @@ export class UserManagementController {
 
     static async showUserPermissions(req: Request, res: Response) {
         const { username } = req.params;
-        const { host } = req.query; // host can be passed as a query param
+        const { host } = req.query;
         try {
             const grants = await UserManagement.getPermissionsForUser(username, host as string | undefined);
             res.status(200).json({ grants });

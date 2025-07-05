@@ -9,32 +9,32 @@ import { CartItemRouter } from './routes/CartItemRoute';
 import {AddressRouter } from './routes/AddressRouter'
 import { CheckoutRouter } from './routes/CheckoutRoutes';
 import { TelegramBot } from './service/TelgramBot';
-import { UserManagement } from './repositories/UserManagement';
+import ServiceRouter from './routes/ServiceRoute'
 import {userManagementRouter} from './routes/userManagementRoute';
-// import { getExpiryDate, sentVerifyCodeViaSMS } from './service/TwoFA';\
-
+import {swaggerSpec} from './service/swaggerConfig'
+import swaggerUi from 'swagger-ui-express';
 // import JWT from './logic/JWT';
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
 const PORT = process.env.PORT;
-  const botMessage = new TelegramBot();
-  // botMessage.startPolling();
- 
-
+const bot = new TelegramBot();
 (async () => {
   try {
     await connectToDatabase();
+    bot.startPolling();
     app.use('/api/product', productRouter);
     app.use('/api/category', categoryRouter);
     app.use('/api/type-product', typeProducRouter);
     app.use('/api/brand', BrandRouter);
     app.use('/api/user', customerRouter);
     app.use('/api/cart-item',CartItemRouter)
+    app.use('/api/service',ServiceRouter)
     app.use('/api/address-customer',AddressRouter)
     app.use('/api/checkout',CheckoutRouter)
     app.use('/api/db',userManagementRouter)
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on http://localhost:${PORT}`);
     });
