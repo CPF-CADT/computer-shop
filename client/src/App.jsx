@@ -16,6 +16,8 @@ import ShoppingCartPage from './components/cart/ShoppingCartPage';
 import CheckoutPage from "./components/checkout/CheckoutPage";
 import AdminDash from './components/admin/AdminDash';
 import UserManagement from './components/admin/UserManagement';
+import Khqr from './components/checkout/khqr';
+import Success from './components/checkout/Success';
 function App() {
   return (
     <>
@@ -34,6 +36,9 @@ function App() {
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/admin" element={<div><AdminDash/></div>} />
             <Route path="/admin/user-manage" element={<div><UserManagement /></div>} /></Route>
+            <Route path="/khqr" element={<Khqr/>} />
+            <Route path="/khqr/success" element={<Success/>} />
+            
         </Routes>
       </div>
     </>

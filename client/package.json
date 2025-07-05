@@ -8,14 +8,17 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
-  },  "dependencies": {
+  },
+  "dependencies": {
     "@heroicons/react": "^2.0.18",
     "@tailwindcss/vite": "^4.1.8",
     "framer-motion": "^12.15.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-icon": "^1.0.0",
     "react-icons": "^5.5.0",
+    "react-qr-code": "^2.0.16",
     "react-router-dom": "^7.6.2"
   },
   "devDependencies": {
