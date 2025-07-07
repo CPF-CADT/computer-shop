@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon --watch . --ext ts --exec ts-node server.ts",
     "start": "ts- nodemon server.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +19,7 @@
     "crypto": "^1.0.1",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "jest": "^30.0.4",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.14.1",
     "pg": "^8.16.0",
@@ -30,6 +32,7 @@
     "twilio": "^5.7.1"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.27.1",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.3",
