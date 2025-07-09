@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { handleChunkedUpload } from '../controller/FileUploadController';
+import { handleChunkedUpload } from '../controller/fileUpload.controller';
 
 const ServiceRouter = Router();
 
