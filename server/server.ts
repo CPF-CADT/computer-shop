@@ -1,16 +1,16 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import productRouter from './routes/ProductRouter';
-import { customerRouter } from './routes/UserRoute';
-import { BrandRouter, categoryRouter, typeProducRouter } from './routes/CategoryTypeRoute';
+import productRouter from './routes/product.route';
+import { customerRouter } from './routes/user.route';
+import { BrandRouter, categoryRouter, typeProducRouter } from './routes/category.route';
 import { connectToDatabase } from './db/sequelize';
-import { CartItemRouter } from './routes/CartItemRoute';
-import {AddressRouter } from './routes/AddressRouter'
-import { CheckoutRouter } from './routes/CheckoutRoutes';
+import { CartItemRouter } from './routes/cartItem.route';
+import {AddressRouter } from './routes/address.route'
+import { CheckoutRouter } from './routes/checkout.route';
 import { TelegramBot } from './service/TelgramBot';
-import ServiceRouter from './routes/ServiceRoute'
-import {userManagementRouter} from './routes/userManagementRoute';
+import ServiceRouter from './routes/service.route'
+import {userManagementRouter} from './routes/userManagement.route';
 import {swaggerSpec} from './service/swaggerConfig'
 import swaggerUi from 'swagger-ui-express';
 // import JWT from './logic/JWT';

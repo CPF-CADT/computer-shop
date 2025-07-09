@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { UserManagement } from '../repositories/UserManagement'; 
+import { UserManagement } from '../repositories/userManagement.repository'; 
 export class UserManagementController {
     
     static async createUser(req: Request, res: Response) {
