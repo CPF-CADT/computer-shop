@@ -32,6 +32,9 @@ export default function Nav() {
           Login
         </Link>
       </div>
+      <ul className="flex flex-row space-x-4">
+        {/* ...existing menu items... */}
+      </ul>
     </nav>
   );
 }

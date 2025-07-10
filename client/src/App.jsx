@@ -10,6 +10,8 @@ import RegisterForm from "./components/Register";
 import Laptop from "./components/Laptop";
 import Desktop from "./components/Desktop";
 import ProductDetails from './components/ProductDetails/ProductDetails';
+import PCBuilderPage from "./components/CustomPC/PCBuilderPage";
+import Categories from "./components/Categories";
 
 import CartLayout from './components/cart/CartLayout'; 
 import ShoppingCartPage from './components/cart/ShoppingCartPage';
@@ -40,9 +42,30 @@ function App() {
             <Route path="/admin/user-manage" element={<div><UserManagement /></div>} /></Route>
             <Route path="/khqr" element={<Khqr/>} />
             <Route path="/khqr/success" element={<Success/>} />
+            <Route path="/build-pc" element={<PCBuilderPage />} />
+            <Route path="/custom-pc" element={<CustomPCPageWrapper />} />
         </Routes>
       </div>
     </>
+  );
+}
+
+function CustomPCPageWrapper() {
+  return (
+    <div className="flex gap-8">
+      <div className="flex-1">
+        <div className="mb-2">
+          <button
+            onClick={() => window.history.back()}
+            className="inline-block px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 text-sm font-semibold"
+          >
+            &larr; Back
+          </button>
+        </div>
+        <h1 className="text-2xl font-bold mb-4">Custom PC / Desktop Building</h1>
+        <PCBuilderPage />
+      </div>
+    </div>
   );
 }
 
