@@ -1,5 +1,38 @@
 import { Request, Response } from 'express';
 import { CartItemRepository } from '../repositories/cartItem.repository';
+/**
+ * @swagger
+ * tags:
+ *   name: Cart
+ *   description: Cart item operations
+ */
+
+/**
+ * @swagger
+ * /api/cart-item/get:
+ *   post:
+ *     summary: Get cart items for a customer
+ *     tags: [Cart]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - customer_id
+ *             properties:
+ *               customer_id:
+ *                 type: integer
+ *                 example: 1
+ *     responses:
+ *       200:
+ *         description: Cart items retrieved successfully
+ *       400:
+ *         description: Invalid Customer ID
+ *       500:
+ *         description: Server error
+ */
 
 export async function getCart(req: Request, res: Response) {
     try {
@@ -15,6 +48,43 @@ export async function getCart(req: Request, res: Response) {
         res.status(500).json({ message: (err as Error).message });
     }
 }
+
+/**
+ * @swagger
+ * /api/cart-item/update-qty:
+ *   put:
+ *     summary: Update quantity of a cart item
+ *     tags: [Cart]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - customer_id
+ *               - product_code
+ *               - qty
+ *             properties:
+ *               customer_id:
+ *                 type: integer
+ *                 example: 1
+ *               product_code:
+ *                 type: string
+ *                 example: MOUSE123
+ *               qty:
+ *                 type: integer
+ *                 example: 3
+ *     responses:
+ *       200:
+ *         description: Cart item updated successfully
+ *       400:
+ *         description: Invalid customer ID or quantity
+ *       404:
+ *         description: Cart not found
+ *       500:
+ *         description: Server error
+ */
 
 export async function updateQtyCartItem(req: Request, res: Response) {
     try {
@@ -37,6 +107,47 @@ export async function updateQtyCartItem(req: Request, res: Response) {
     }
 }
 
+/**
+ * @swagger
+ * /api/cart-item/add:
+ *   post:
+ *     summary: Add item to cart
+ *     tags: [Cart]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - customer_id
+ *               - product_code
+ *               - qty
+ *               - price_at_purchase
+ *             properties:
+ *               customer_id:
+ *                 type: integer
+ *                 example: 1
+ *               product_code:
+ *                 type: string
+ *                 example: LAPTOP001
+ *               qty:
+ *                 type: integer
+ *                 example: 2
+ *               price_at_purchase:
+ *                 type: number
+ *                 format: float
+ *                 example: 499.99
+ *     responses:
+ *       200:
+ *         description: Cart updated successfully
+ *       400:
+ *         description: Invalid input data
+ *       500:
+ *         description: Server error
+ */
+
+
 export async function addToCart(req: Request, res: Response) {
     try {
         const { customer_id, product_code, qty, price_at_purchase } = req.body;
@@ -57,6 +168,39 @@ export async function addToCart(req: Request, res: Response) {
         res.status(500).json({ message: (err as Error).message });
     }
 }
+
+/**
+ * @swagger
+ * /api/cart-item/remove:
+ *   delete:
+ *     summary: Remove an item from the cart
+ *     tags: [Cart]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - customer_id
+ *               - product_code
+ *             properties:
+ *               customer_id:
+ *                 type: integer
+ *                 example: 1
+ *               product_code:
+ *                 type: string
+ *                 example: KEYBOARD456
+ *     responses:
+ *       200:
+ *         description: Cart item removed successfully
+ *       400:
+ *         description: Invalid customer ID or product code
+ *       404:
+ *         description: Cart item not found
+ *       500:
+ *         description: Server error
+ */
 
 export async function removeCartItem(req: Request, res: Response) {
     try {

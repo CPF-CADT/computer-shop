@@ -118,6 +118,41 @@ class ProductRepository {
             return null;
         }
     }
+    
+    static async updateProduct(
+        productCode: string,
+        data: {
+            name?: string;
+            price?: number;
+            quantity?: number;
+            description?: string;
+            category?: number;
+            brand?: number;
+            type_product?: number;
+            image?: string;
+            is_active?: boolean;
+        }
+    ): Promise<boolean | null> {
+        try {
+            const updateData: any = { ...data }; 
+            updateData.last_restock_date = new Date();
+
+            const [affectedCount] = await ProductModel.update(
+                updateData,
+                {
+                    where: { product_code: productCode }
+                }
+            );
+
+            // Check if any rows were affected
+            return affectedCount > 0 ? true : false;
+        } catch (err) {
+            console.error(`Failed to update product with code ${productCode}:`, err);
+            return null;
+        }
+    }
+
+
 }
 
 
