@@ -9,6 +9,58 @@ import dotenv from 'dotenv';
 type Currency = 'USD' | 'KHR';
 dotenv.config()
 
+
+
+/**
+ * @swagger
+ * tags:
+ *   name: Checkout
+ *   description: Checkout Process for user and need to complete all step
+ */
+
+
+/**
+ * @swagger
+ * /api/checkout/place-order:
+ *   post:
+ *     summary: Place an order
+ *     tags: [Checkout]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - customer_id
+ *               - address_id
+ *             properties:
+ *               customer_id:
+ *                 type: integer
+ *                 example: 1
+ *               address_id:
+ *                 type: integer
+ *                 example: 3
+ *     responses:
+ *       200:
+ *         description: Order placed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 order_id:
+ *                   type: integer
+ *                 amount_pay:
+ *                   type: number
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid input data or order failed
+ *       500:
+ *         description: Internal server error
+ */
+
 export async function placeOrder(req: Request, res: Response) {
     try {
         const { customer_id, address_id } = req.body;
@@ -37,6 +89,57 @@ export async function placeOrder(req: Request, res: Response) {
         res.status(500).json({ message: (err as Error).message });
     }
 }
+
+/**
+ * @swagger
+ * /api/checkout/get-khqr:
+ *   post:
+ *     summary: Generate KHQR payment string
+ *     tags: [Checkout]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - order_id
+ *               - amount_pay
+ *               - typeCurrency
+ *             properties:
+ *               order_id:
+ *                 type: integer
+ *                 example: 123
+ *               amount_pay:
+ *                 type: number
+ *                 example: 50.00
+ *               typeCurrency:
+ *                 type: string
+ *                 enum: [USD, KHR]
+ *                 example: USD
+ *     responses:
+ *       200:
+ *         description: KHQR string generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 khqr_string:
+ *                   type: string
+ *                 unique_md5:
+ *                   type: string
+ *                 order_id:
+ *                   type: integer
+ *                 amount:
+ *                   type: number
+ *                 bill_number:
+ *                   type: string
+ *       400:
+ *         description: Invalid currency type or input
+ *       500:
+ *         description: Internal server error
+ */
 
 export async function createQrPayment(req: Request, res: Response) {
     try {
@@ -81,6 +184,47 @@ export async function createQrPayment(req: Request, res: Response) {
         res.status(500).json({ message: (err as Error).message });
     }
 }
+
+/**
+ * @swagger
+ * /api/checkout/check-payment:
+ *   post:
+ *     summary: Check payment status of an order
+ *     tags: [Checkout]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - unique_md5
+ *               - order_id
+ *             properties:
+ *               unique_md5:
+ *                 type: string
+ *                 example: "abc123md5hash"
+ *               order_id:
+ *                 type: integer
+ *                 example: 123
+ *     responses:
+ *       200:
+ *         description: Payment status response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 payment_status:
+ *                   type: string
+ *                   enum: [Completed, Pending]
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Payment transaction not found
+ *       500:
+ *         description: Internal server error while checking payment
+ */
 
 export async function checkPayment(req: Request, res: Response) {
     try {

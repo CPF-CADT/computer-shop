@@ -4,9 +4,55 @@ import { CategoryRepository, TypeProductRepository, BrandRepository } from '../r
 
 /**
  * 
- * getAllCategory Controller
+ * Category Controller
  * 
  */
+
+/**
+ * @swagger
+ * tags:
+ *   name: Category
+ *   description: Category management
+ */
+
+/**
+ * @swagger
+ * /api/category:
+ *   get:
+ *     summary: Get all categories
+ *     tags: [Category]
+ *     responses:
+ *       200:
+ *         description: A list of categories
+ *       404:
+ *         description: Categories not found
+ *
+ *   post:
+ *     summary: Create a new category
+ *     tags: [Category]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - description
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: Laptops
+ *               description:
+ *                 type: string
+ *                 example: Devices suitable for mobile computing
+ *     responses:
+ *       201:
+ *         description: Category created successfully
+ *       404:
+ *         description: Cannot get information of category
+ */
+
 
 export async function getAllCategory(req: Request, res: Response) {
     try {
@@ -34,6 +80,56 @@ export async function createCategory(req: Request, res: Response) {
         res.status(404).json({ message: (err as Error).message });
     }
 }
+
+/**
+ * @swagger
+ * /api/category/{id}:
+ *   put:
+ *     summary: Update a category by ID
+ *     tags: [Category]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Category ID
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Category updated successfully
+ *       400:
+ *         description: Invalid category ID or no update data
+ *       404:
+ *         description: Category not found
+ *
+ *   delete:
+ *     summary: Delete a category by ID
+ *     tags: [Category]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Category ID
+ *     responses:
+ *       200:
+ *         description: Category deleted successfully
+ *       400:
+ *         description: Invalid category ID
+ *       404:
+ *         description: Category not found
+ */
 
 export async function updateCategory(req: Request, res: Response) {
     try {
@@ -80,6 +176,60 @@ export async function deleteCategory(req: Request, res: Response) {
  * 
  */
 
+/**
+ * @swagger
+ * tags:
+ *   name: Brand
+ *   description: Brand management
+ */
+
+/**
+ * @swagger
+ * /api/brand:
+ *   get:
+ *     summary: Get all brands
+ *     tags: [Brand]
+ *     responses:
+ *       200:
+ *         description: A list of brands
+ *       404:
+ *         description: Brands not found
+ *
+ *   post:
+ *     summary: Create a new brand
+ *     tags: [Brand]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: ASUS
+ *               logo_url:
+ *                 type: string
+ *                 format: uri
+ *                 example: https://example.com/asus-logo.png
+ *               website:
+ *                 type: string
+ *                 format: uri
+ *                 example: https://www.asus.com
+ *               country:
+ *                 type: string
+ *                 example: Taiwan
+ *     responses:
+ *       201:
+ *         description: Brand created successfully
+ *       400:
+ *         description: Brand name is required
+ *       500:
+ *         description: Internal server error
+ */
+
 export async function getAllBrand(req: Request, res: Response) {
     try {
         const brand = await BrandRepository.getAllBrand();
@@ -103,6 +253,60 @@ export async function createBrand(req: Request, res: Response) {
         res.status(500).json({ message: (err as Error).message });
     }
 }
+
+/**
+ * @swagger
+ * /api/brand/{id}:
+ *   put:
+ *     summary: Update a brand by ID
+ *     tags: [Brand]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Brand ID
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               logo_url:
+ *                 type: string
+ *               website:
+ *                 type: string
+ *               country:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Brand updated successfully
+ *       400:
+ *         description: Invalid ID or no update data
+ *       404:
+ *         description: Brand not found
+ *
+ *   delete:
+ *     summary: Delete a brand by ID
+ *     tags: [Brand]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Brand ID
+ *     responses:
+ *       200:
+ *         description: Brand deleted successfully
+ *       400:
+ *         description: Invalid ID
+ *       404:
+ *         description: Brand not found
+ */
 
 export async function updateBrand(req: Request, res: Response) {
     try {
@@ -149,6 +353,52 @@ export async function deleteBrand(req: Request, res: Response) {
  * 
  */
 
+/**
+ * @swagger
+ * tags:
+ *   name: TypeProduct
+ *   description: Type product management
+ */
+
+/**
+ * @swagger
+ * /api/type-product:
+ *   get:
+ *     summary: Get all type products
+ *     tags: [TypeProduct]
+ *     responses:
+ *       200:
+ *         description: A list of type products
+ *       404:
+ *         description: Type products not found
+ *
+ *   post:
+ *     summary: Create a new type product
+ *     tags: [TypeProduct]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Accessories
+ *               description:
+ *                 type: string
+ *                 example: Additional items like mice, keyboards
+ *     responses:
+ *       201:
+ *         description: Type product created successfully
+ *       400:
+ *         description: Name is required
+ *       500:
+ *         description: Internal server error
+ */
+
 export async function getAllTypeProduct(req: Request, res: Response) {
     try {
         const typeProduct = await TypeProductRepository.getAllTypeProduct();
@@ -173,6 +423,56 @@ export async function createTypeProduct(req: Request, res: Response) {
         res.status(500).json({ message: (err as Error).message });
     }
 }
+
+/**
+ * @swagger
+ * /api/type-product/{id}:
+ *   put:
+ *     summary: Update a type product by ID
+ *     tags: [TypeProduct]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Type product ID
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Type product updated successfully
+ *       400:
+ *         description: Invalid ID or no update data
+ *       404:
+ *         description: Type product not found
+ *
+ *   delete:
+ *     summary: Delete a type product by ID
+ *     tags: [TypeProduct]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Type product ID
+ *     responses:
+ *       200:
+ *         description: Type product deleted successfully
+ *       400:
+ *         description: Invalid ID
+ *       404:
+ *         description: Type product not found
+ */
 
 export async function updateTypeProduct(req: Request, res: Response) {
     try {
