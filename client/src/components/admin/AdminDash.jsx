@@ -6,6 +6,7 @@ import DashboardPage from './DashboardPage';
 import OrdersPage from './OrdersPage';
 import ProductsPage from './ProductsPage';
 import UserManagement from './UserManagement';
+import DatabaseRestore from './DatabaseRestore';
 
 export default function AdminDash() {
     const [activePage, setActivePage] = useState('Dashboard');
@@ -19,6 +20,8 @@ export default function AdminDash() {
         return <ProductsPage />;
       case 'User Management':
         return <UserManagement />;
+      case 'Database Restore': 
+        return <DatabaseRestore />;
       default:
         return <DashboardPage />; 
     }

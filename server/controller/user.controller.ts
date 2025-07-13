@@ -5,6 +5,10 @@ import JWT from '../service/JWT';
 import { TwoFaTokenRepository } from '../repositories/user.repository';
 import { generate4DigitToken, getExpiryDate } from '../service/TwoFA';
 import { Customer } from '../db/models';
+import {sentSMS} from '../service/SentMessage'
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 /**
  * @swagger
@@ -141,18 +145,37 @@ export async function customerLogin(req: Request, res: Response) {
         } else if (!Encryption.verifyPassword(customer.password, password)) {
             res.status(400).json({ success: false, message: 'Password incorrect' });
         } else {
-            const token = JWT.create({customer_id:customer.id,customer_phone_number:customer.phone_number});
-            res.status(200).json({
-                success: true, 
-                message: 'Login successful', 
-                token, 
-                user: {
-                    id: customer.customer_id,
-                    phone_number: customer.phone_number,
-                    name: customer.name,
-                    profile_img_path:customer.profile_img_path
+            if(process.env.IS_CHECK_2FA==='1'){
+                if(customer.is_verifyed){
+                    const token = JWT.create({customer_id:customer.id,customer_phone_number:customer.phone_number});
+                    res.status(200).json({
+                        success: true, 
+                        message: 'Login successful', 
+                        token, 
+                        user: {
+                            id: customer.customer_id,
+                            phone_number: customer.phone_number,
+                            name: customer.name,
+                            profile_img_path:customer.profile_img_path
+                        }
+                    });
+                }else{
+                    res.status(400).json({ success: false, message: 'user need to verified' });
                 }
-            });
+            }else{
+                const token = JWT.create({customer_id:customer.id,customer_phone_number:customer.phone_number});
+                res.status(200).json({
+                    success: true, 
+                    message: 'Login successful', 
+                    token, 
+                    user: {
+                        id: customer.customer_id,
+                        phone_number: customer.phone_number,
+                        name: customer.name,
+                        profile_img_path:customer.profile_img_path
+                    }
+                });
+            }
         }
     }catch(err){
         res.status(500).json({message:(err as Error).message})
@@ -275,58 +298,176 @@ export async function updateCustomerInfor(req:Request,res:Response) {
     }
 }
 
-// export async function sendVerificationCode(req: Request, res: Response) {
-//     const body: {
-//         phone_number: string;
-//     } = req.body;
-//     const { phone_number } = body;
-//     try{
-//         const customer = await CusomerRepository.getUser(phone_number);
-//         if(customer){
-//             const code:string = generate4DigitToken();
-//             const exp_date:Date = getExpiryDate(15);
-//             await TwoFaTokenRepository.addToken(customer.customer_id,code,exp_date);
-//             res.status(201).json({message:'verify code is create successful'});
-//             // need to implement sent message to user
-//         }else{
-//             res.status(404).json({ message: 'phone number does not exixts' })
-//         }
-//     }catch(err){
-//             res.status(500).json({ err: 'sever fail ' + err })
-//     }
-// }
-// export async function verifyTwoFaCode(req: Request, res: Response) {
-//     const body: {
-//         phone_number: string;
-//         code:number;
-//     } = req.body;
-//     const { phone_number,code } = body;
-//     try{
-//         const customer = await CusomerRepository.getUser(phone_number);
-//         if(customer){
-//             const userToken =  await TwoFaTokenRepository.getToken(customer.customer_id);
-//             if(userToken){
-//                 const now = new Date();
-//                 if ( now < userToken.expire_at) {
-//                     if(userToken.is_used!==true){
-//                         const success: boolean = code.toString() === userToken.code;
-//                         if(success){
-//                             await TwoFaTokenRepository.markTokenAsUsed(customer.customer_id);
-//                             res.status(201).json({message:'verify code successful'});
-//                         }else{
-//                             res.status(401).json({message:'verify code is incorrect'});
-//                         }
-//                     }else{
-//                         res.status(401).json({message:'verify code is already used'});
-//                     }
-//                 }else{
-//                     res.status(401).json({message:'verify code is expired'});
-//                 }
-//             }
-//         }else{
-//             res.status(404).json({ message: 'phone number does not exixts' })
-//         }
-//     }catch(err){
-//             res.status(500).json({ err: 'sever fail ' + err })
-//     }
-// }
+/**
+ * @swagger
+ * /api/2fa/send-code:
+ *   post:
+ *     summary: Send a 4-digit verification code to a user's phone number
+ *     tags: [Customer]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - phone_number
+ *             properties:
+ *               phone_number:
+ *                 type: string
+ *                 example: "0123456789"
+ *     responses:
+ *       201:
+ *         description: Verification code created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: verify code is create successful
+ *       404:
+ *         description: Phone number not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: phone number does not exixts
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 err:
+ *                   type: string
+ *                   example: server fail + error message
+ */
+
+export async function sendVerificationCode(req: Request, res: Response) {
+    const body: {
+        phone_number: string;
+    } = req.body;
+    const { phone_number } = body;
+    try{
+        const customer = await CusomerRepository.getUser(phone_number);
+        if(customer){
+            const code:string = generate4DigitToken();
+            const exp_date:Date = getExpiryDate(15);
+            await TwoFaTokenRepository.addToken(customer.customer_id,code,exp_date);
+            res.status(201).json({message:'verify code is create successful'});
+            // need to implement sent message to user
+            sentSMS(phone_number,code)
+        }else{
+            res.status(404).json({ message: 'phone number does not exixts' })
+        }
+    }catch(err){
+            res.status(500).json({ err: 'sever fail ' + err })
+    }
+}
+
+/**
+ * @swagger
+ * /api/2fa/verify-code:
+ *   post:
+ *     summary: Verify the 4-digit two-factor authentication code
+ *     tags: [Customer]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - phone_number
+ *               - code
+ *             properties:
+ *               phone_number:
+ *                 type: string
+ *                 example: "0123456789"
+ *               code:
+ *                 type: integer
+ *                 example: 1234
+ *     responses:
+ *       201:
+ *         description: Verification successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: verify code successful
+ *       401:
+ *         description: Invalid, expired, or already-used code
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: verify code is expired
+ *       404:
+ *         description: Phone number not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: phone number does not exixts
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 err:
+ *                   type: string
+ *                   example: server fail + error message
+ */
+
+export async function verifyTwoFaCode(req: Request, res: Response) {
+    const body: {
+        phone_number: string;
+        code:number;
+    } = req.body;
+    const { phone_number,code } = body;
+    try{
+        const customer = await CusomerRepository.getUser(phone_number);
+        if(customer){
+            const userToken =  await TwoFaTokenRepository.getToken(customer.customer_id);
+            if(userToken){
+                const now = new Date();
+                if ( now < userToken.expire_at) {
+                    if(userToken.is_used!==true){
+                        const success: boolean = code.toString() === userToken.code;
+                        if(success){
+                            await TwoFaTokenRepository.markTokenAsUsed(customer.customer_id);
+                            res.status(201).json({message:'verify code successful'});
+                        }else{
+                            res.status(401).json({message:'verify code is incorrect'});
+                        }
+                    }else{
+                        res.status(401).json({message:'verify code is already used'});
+                    }
+                }else{
+                    res.status(401).json({message:'verify code is expired'});
+                }
+            }
+        }else{
+            res.status(404).json({ message: 'phone number does not exixts' })
+        }
+    }catch(err){
+            res.status(500).json({ err: 'sever fail ' + err })
+    }
+}

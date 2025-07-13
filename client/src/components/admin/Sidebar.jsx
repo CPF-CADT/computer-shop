@@ -12,6 +12,7 @@ const navItems = [
   { icon: <MdReceipt />, label: 'Invoice' },
   { icon: <MdLocalOffer />, label: 'Discount' },
   { icon: <MdDashboard />, label: 'User Management' },
+  { icon: <MdDashboard />, label: 'Database Restore' },
 ];
 
 // Receive activePage and setActivePage as props
