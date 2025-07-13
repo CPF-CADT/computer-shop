@@ -10,6 +10,24 @@ const apiClient = axios.create({
 const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB
 
 export const apiService = {
+  // Recovery API 
+  getFileRecovery:async () => {
+    try {
+      const response = await apiClient.get('recovery-db/file');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch type file");
+    }
+  },
+  startRecovery: async (fileList) => {
+    try {
+      // The body should be an object with the key 'fileRestoreList'
+      const response = await apiClient.post('recovery-db', { fileRestoreList: fileList });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to start database recovery");
+    }
+  },
   // --- Product API
   getProducts: async (query_param) => {
     try {

@@ -13,7 +13,9 @@ import ServiceRouter from './routes/service.route'
 import {userManagementRouter} from './routes/userManagement.route';
 import {swaggerSpec} from './service/swaggerConfig'
 import swaggerUi from 'swagger-ui-express';
-// import JWT from './logic/JWT';
+import {FileStructure, getFileNames} from './service/FilePreparation'
+import {recoveryDBRouter} from './routes/recovery.route'
+// import JWT from './logic/JWT'; 
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -34,6 +36,7 @@ const bot = new TelegramBot();
     app.use('/api/address-customer',AddressRouter)
     app.use('/api/checkout',CheckoutRouter)
     app.use('/api/db',userManagementRouter)
+    app.use('/api/recovery-db',recoveryDBRouter)
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on http://localhost:${PORT}`);
