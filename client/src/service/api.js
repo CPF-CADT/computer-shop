@@ -253,5 +253,49 @@ export const apiService = {
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Failed to fetch tables');
     }
+  },
+   grantPermissionsToUser: async (data) => {
+    try {
+      const response = await apiClient.post('/db/users/grant-permissions', data);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to grant user permissions');
+    }
+  },
+
+  /**
+   * Revokes specific permissions directly from a user.
+   */
+  revokePermissionsFromUser: async (data) => {
+    try {
+      const response = await apiClient.post('/db/users/revoke-permissions', data);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to revoke user permissions');
+    }
+  },
+
+  /**
+   * Updates the password expiration for a user.
+   */
+  updateUserExpiry: async (data) => {
+    try {
+      const response = await apiClient.post('/db/users/update-expiry', data);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to update user expiry');
+    }
+  },
+
+  /**
+   * Revokes permissions from a role. Ensure this exists for the "Edit Role" modal.
+   */
+  revokePermissionsFromRole: async (data) => {
+    try {
+      const response = await apiClient.post('/db/roles/revoke-permissions', data);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to revoke role permissions');
+    }
   }
 };

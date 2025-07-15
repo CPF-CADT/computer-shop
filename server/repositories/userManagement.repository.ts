@@ -77,18 +77,17 @@ export class UserManagement {
     }
 
     static async getAllDatabaseUsers() {
-        try {
-            // Fixed query to list all users from mysql.user
-            const users = await sequelize.query(
-                "SELECT User, Host FROM showDatabaseUser;",
-                { type: QueryTypes.SELECT }
-            );
-            return users;
-        } catch (error) {
-            console.error('Error fetching all database users:', error);
-            throw new Error('Failed to retrieve database users.');
-        }
+    try {
+        const users = await sequelize.query(
+            "SELECT User, Host FROM showDatabaseUser WHERE User NOT LIKE 'mysql.%';",
+            { type: QueryTypes.SELECT }
+        );
+        return users;
+    } catch (error) {
+        console.error('Error fetching all database users:', error);
+        throw new Error('Failed to retrieve database users.');
     }
+}
 
     static async getAllDatabaseRoles() {
         try {
@@ -145,13 +144,26 @@ export class UserManagement {
         if (!isValidIdentifier(roleName)) {
             throw new Error('Invalid role name.');
         }
+
+        const t = await sequelize.transaction(); 
+
         try {
             const query = `DROP ROLE ${sequelize.escape(roleName)};`;
-            await sequelize.query(query);
+            await sequelize.query(query, { transaction: t });
             console.log(`Database role '${roleName}' dropped successfully.`);
+
+            const deleteQuery = `DELETE FROM roles WHERE role_name = ?;`;
+            await sequelize.query(deleteQuery, {
+                replacements: [roleName],
+                transaction: t
+            });
+            console.log(`Record for role '${roleName}' deleted from 'roles' table.`);
+
+            await t.commit();
         } catch (error) {
-            console.error(`Error dropping database role '${roleName}':`, error);
-            throw new Error('Failed to drop database role.');
+            await t.rollback();
+            console.error(`Error dropping database role or deleting role record:`, error);
+            throw new Error('Failed to drop database role and delete role record.');
         }
     }
 
@@ -179,7 +191,11 @@ export class UserManagement {
             const query = `SHOW GRANTS FOR ${sequelize.escape(roleName)};`;
             const [results] = await sequelize.query(query);
             return results;
-        } catch (error) {
+        } catch (error: any) {
+            if (error.parent && error.parent.code === 'ER_NONEXISTING_GRANT') {
+                console.log(`Role '${roleName}' has no grants defined. Returning empty permissions.`);
+                return [];
+            }
             console.error(`Error showing grants for role '${roleName}':`, error);
             throw new Error('Failed to show grants for role.');
         }
@@ -195,7 +211,11 @@ export class UserManagement {
             const query = `SHOW GRANTS FOR ${escapedUsername}@${escapedHost};`;
             const [results] = await sequelize.query(query);
             return results;
-        } catch (error) {
+        } catch (error: any) {
+            if (error.parent && error.parent.code === 'ER_NONEXISTING_GRANT') {
+                console.log(`User '${username}' has no grants defined. Returning empty permissions.`);
+                return [];
+            }
             console.error(`Error showing grants for user '${username}':`, error);
             throw new Error('Failed to show grants for user.');
         }
@@ -214,4 +234,41 @@ export class UserManagement {
             throw new Error('Failed to retrieve tables.');
         }
     }
+    private static getOnClause(tableName?: string): string {
+    const database = 'computer_shop'; // Or from config
+    if (tableName && !isValidIdentifier(tableName)) {
+        throw new Error('Invalid table name format.');
+    }
+    return tableName ? `\`${database}\`.\`${tableName}\`` : `\`${database}\`.*`;
+}
+
+    private static async executePermissionQuery(action: 'GRANT' | 'REVOKE', entity: string, permissions: string[], onClause: string) {
+        if (permissions.length === 0) {
+            throw new Error('Permissions array cannot be empty.');
+        }
+        const permString = permissions.join(', ');
+        const fromOrTo = action === 'GRANT' ? 'TO' : 'FROM';
+        const query = `${action} ${permString} ON ${onClause} ${fromOrTo} ${entity};`;
+        await sequelize.query(query);
+    }
+
+    static async grantPermissionsToUser(username: string, permissions: string[], tableName?: string, host: string = '%') {
+        if (!isValidIdentifier(username)) throw new Error('Invalid username format.');
+        const userIdentifier = `${sequelize.escape(username)}@${sequelize.escape(host)}`;
+        await this.executePermissionQuery('GRANT', userIdentifier, permissions, this.getOnClause(tableName));
+    }
+
+    static async revokePermissionsFromUser(username: string, permissions: string[], tableName?: string, host: string = '%') {
+        if (!isValidIdentifier(username)) throw new Error('Invalid username format.');
+        const userIdentifier = `${sequelize.escape(username)}@${sequelize.escape(host)}`;
+        await this.executePermissionQuery('REVOKE', userIdentifier, permissions, this.getOnClause(tableName));
+    }
+
+    static async updateUserExpiry(username: string, host: string, expireDays: number) {
+        if (!isValidIdentifier(username)) throw new Error('Invalid username format.');
+        const userIdentifier = `${sequelize.escape(username)}@${sequelize.escape(host)}`;
+        const query = `ALTER USER ${userIdentifier} PASSWORD EXPIRE INTERVAL ${Number(expireDays)} DAY;`;
+        await sequelize.query(query);
+    }
+
 }

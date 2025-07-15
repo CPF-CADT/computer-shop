@@ -56,7 +56,7 @@ dotenv.config();
  */
 
 
-export async function createUser(req: Request, res: Response) {
+export async function createUser(req: Request, res: Response): Promise<void> {
     const body: {
         name: string;
         phone_number: string;
@@ -67,12 +67,15 @@ export async function createUser(req: Request, res: Response) {
     const { name, phone_number, profile_url, password } = body;
     if (!name || !phone_number || !password) {
         res.status(400).json({ error: 'cannot get the information of user' });
+        return;
     }
     try {
         await CusomerRepository.createNewUser(name, phone_number, (profile_url) ? profile_url : null, Encryption.hashPassword(password));
-        res.status(201).json({ message: 'user create success ' })
+        res.status(201).json({ message: 'user create success ' });
     } catch (error) {
-        res.status(400).json({ err: 'user create fail ' + error })
+        // It's good practice to log the actual error on the server for debugging
+        console.error("Error in createUser:", error);
+        res.status(400).json({ err: 'user create fail ' });
     }
 }
 
@@ -132,7 +135,7 @@ export async function createUser(req: Request, res: Response) {
  */
 
 
-export async function customerLogin(req: Request, res: Response) {
+export async function customerLogin(req: Request, res: Response): Promise<void> {
     const body: {
         phone_number: string,
         password: string,
@@ -160,7 +163,7 @@ export async function customerLogin(req: Request, res: Response) {
                         }
                     });
                 }else{
-                    res.status(400).json({ success: false, message: 'user need to verified' });
+                res.status(400).json({ success: false, message: 'user need to verified' });
                 }
             }else{
                 const token = JWT.create({customer_id:customer.id,customer_phone_number:customer.phone_number});
@@ -219,7 +222,7 @@ export async function customerLogin(req: Request, res: Response) {
  * 
  */
 
-export async function getAllCustomer(req:Request,res:Response) {
+export async function getAllCustomer(req:Request,res:Response):Promise<void>{
     const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 10;
     const page = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : 1;
     const sortType = (req.query.sort as string)  || 'ASC'
@@ -277,7 +280,7 @@ export async function getAllCustomer(req:Request,res:Response) {
  *         description: Server error
  */
 
-export async function updateCustomerInfor(req:Request,res:Response) {
+export async function updateCustomerInfor(req:Request,res:Response):Promise<void> {
     const body :{
         phone_number:string,
         password:string,
@@ -289,9 +292,9 @@ export async function updateCustomerInfor(req:Request,res:Response) {
         const {phone_number,password,name,profile_img_path} = body;
         const isUpdate:Boolean | null = await CusomerRepository.update(Number(customer_id),name,phone_number,profile_img_path,Encryption.hashPassword(password));
         if(isUpdate){
-            res.status(200).json({message:'User Update Successful'})
+        res.status(200).json({message:'User Update Successful'})
         }else{
-            res.status(204).json({message:'User update fial!'})
+        res.status(204).json({message:'User update fial!'})
         }
     }catch(err){
         res.status(500).json({message:(err as Error).message})
@@ -349,7 +352,7 @@ export async function updateCustomerInfor(req:Request,res:Response) {
  *                   example: server fail + error message
  */
 
-export async function sendVerificationCode(req: Request, res: Response) {
+export async function sendVerificationCode(req: Request, res: Response):Promise<void> {
     const body: {
         phone_number: string;
     } = req.body;
@@ -360,14 +363,13 @@ export async function sendVerificationCode(req: Request, res: Response) {
             const code:string = generate4DigitToken();
             const exp_date:Date = getExpiryDate(15);
             await TwoFaTokenRepository.addToken(customer.customer_id,code,exp_date);
-            res.status(201).json({message:'verify code is create successful'});
-            // need to implement sent message to user
             sentSMS(phone_number,code)
+            res.status(201).json({message:'send sms to verifycation code'});
         }else{
-            res.status(404).json({ message: 'phone number does not exixts' })
+        res.status(404).json({ message: 'phone number does not exixts' })
         }
     }catch(err){
-            res.status(500).json({ err: 'sever fail ' + err })
+        res.status(500).json({ err: 'sever fail ' + err })
     }
 }
 
@@ -436,7 +438,7 @@ export async function sendVerificationCode(req: Request, res: Response) {
  *                   example: server fail + error message
  */
 
-export async function verifyTwoFaCode(req: Request, res: Response) {
+export async function verifyTwoFaCode(req: Request, res: Response):Promise<void> {
     const body: {
         phone_number: string;
         code:number;
@@ -455,19 +457,20 @@ export async function verifyTwoFaCode(req: Request, res: Response) {
                             await TwoFaTokenRepository.markTokenAsUsed(customer.customer_id);
                             res.status(201).json({message:'verify code successful'});
                         }else{
-                            res.status(401).json({message:'verify code is incorrect'});
+                        res.status(401).json({message:'verify code is incorrect'});
                         }
                     }else{
-                        res.status(401).json({message:'verify code is already used'});
+                    res.status(401).json({message:'verify code is already used'});
                     }
                 }else{
-                    res.status(401).json({message:'verify code is expired'});
+                res.status(401).json({message:'verify code is expired'});
                 }
             }
         }else{
-            res.status(404).json({ message: 'phone number does not exixts' })
+        res.status(404).json({ message: 'phone number does not exixts' })
         }
+        res.status(400).json({ message: 'Invalid request or missing token' });
     }catch(err){
-            res.status(500).json({ err: 'sever fail ' + err })
+        res.status(500).json({ err: 'sever fail ' + err })
     }
 }
