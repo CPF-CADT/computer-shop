@@ -20,6 +20,9 @@ import AdminDash from './components/admin/AdminDash';
 import UserManagement from './components/admin/UserManagement';
 import Khqr from './components/checkout/khqr';
 import Success from './components/checkout/Success';
+import Service from "./pages/Service";
+import Promotion from "./pages/Promotion";
+import AboutUs from "./pages/AboutUs";
 function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -44,6 +47,9 @@ function App() {
             <Route path="/khqr/success" element={<Success/>} />
             <Route path="/build-pc" element={<PCBuilderPage />} />
             <Route path="/custom-pc" element={<CustomPCPageWrapper />} />
+            <Route path="/service" element={<Service />} />
+            <Route path="/promotion" element={<Promotion />} />
+            <Route path="/about-us" element={<AboutUs />} />
         </Routes>
       </div>
     </>
