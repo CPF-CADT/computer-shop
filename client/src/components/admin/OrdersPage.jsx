@@ -141,6 +141,58 @@ export default function OrdersPage() {
         paymentMethod: 'Credit Card',
         paymentStatus: 'refunded',
         trackingNumber: null
+      },
+      {
+        id: 'ORD-006',
+        customerName: 'David Brown',
+        customerEmail: 'david@example.com',
+        customerPhone: '+1 (555) 654-3210',
+        orderDate: '2025-07-13T11:45:00',
+        status: 'cancelled',
+        total: 299.99,
+        shipping: 15.00,
+        tax: 24.00,
+        subtotal: 260.99,
+        shippingAddress: {
+          street: '654 Maple Dr',
+          city: 'Seattle',
+          state: 'WA',
+          zipCode: '98101',
+          country: 'USA'
+        },
+        items: [
+          { name: 'Mechanical Keyboard RGB', quantity: 1, price: 129.99, sku: 'KEY-003' },
+          { name: 'Wireless Gaming Mouse', quantity: 1, price: 169.99, sku: 'MOU-005' }
+        ],
+        paymentMethod: 'Credit Card',
+        paymentStatus: 'refunded',
+        trackingNumber: null
+      },
+      {
+        id: 'ORD-007',
+        customerName: 'David Brown',
+        customerEmail: 'david@example.com',
+        customerPhone: '+1 (555) 654-3210',
+        orderDate: '2025-07-13T11:45:00',
+        status: 'cancelled',
+        total: 299.99,
+        shipping: 15.00,
+        tax: 24.00,
+        subtotal: 260.99,
+        shippingAddress: {
+          street: '654 Maple Dr',
+          city: 'Seattle',
+          state: 'WA',
+          zipCode: '98101',
+          country: 'USA'
+        },
+        items: [
+          { name: 'Mechanical Keyboard RGB', quantity: 1, price: 129.99, sku: 'KEY-003' },
+          { name: 'Wireless Gaming Mouse', quantity: 1, price: 169.99, sku: 'MOU-005' }
+        ],
+        paymentMethod: 'Credit Card',
+        paymentStatus: 'refunded',
+        trackingNumber: null
       }
     ];
     setOrders(mockOrders);
@@ -306,19 +358,24 @@ export default function OrdersPage() {
 
       {/* Orders Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+        </table>
+        <div
+          className="overflow-y-auto"
+          style={{ maxHeight: '425px' }} // Adjust height for ~5 rows
+        >
           <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50">

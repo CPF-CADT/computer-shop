@@ -6,6 +6,8 @@ export default function PaymentsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [showRefundModal, setShowRefundModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Mock payment data
   const payments = [
@@ -68,6 +70,30 @@ export default function PaymentsPage() {
       date: '2025-07-14T14:10:00',
       fee: -5.99,
       net: 0
+    },
+    {
+      id: 'PAY-006',
+      orderId: 'ORD-005',
+      customer: 'David Brown',
+      amount: 199.99,
+      status: 'refunded',
+      method: 'PayPal',
+      transactionId: 'PP555666777',
+      date: '2025-07-14T14:10:00',
+      fee: -5.99,
+      net: 0
+    },
+    {
+      id: 'PAY-007',
+      orderId: 'ORD-005',
+      customer: 'David Brown',
+      amount: 199.99,
+      status: 'refunded',
+      method: 'PayPal',
+      transactionId: 'PP555666777',
+      date: '2025-07-14T14:10:00',
+      fee: -5.99,
+      net: 0
     }
   ];
 
@@ -113,6 +139,16 @@ export default function PaymentsPage() {
     const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPayments = filteredPayments.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   const totalRevenue = payments
     .filter(p => p.status === 'completed')
@@ -278,7 +314,7 @@ export default function PaymentsPage() {
 
       {/* Payments Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
+        <div>
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
@@ -291,64 +327,171 @@ export default function PaymentsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPayments.map((payment) => (
-                <tr key={payment.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{payment.id}</div>
-                      <div className="text-sm text-gray-500">Order: {payment.orderId}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{payment.customer}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">${payment.amount}</div>
-                    <div className="text-sm text-gray-500">Fee: ${payment.fee}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{payment.method}</div>
-                    <div className="text-sm text-gray-500">{payment.transactionId}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(payment.status)}
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(payment.status)}`}>
-                        {payment.status}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(payment.date).toLocaleDateString()}
-                    <br />
-                    {new Date(payment.date).toLocaleTimeString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center gap-2">
-                      {payment.status === 'completed' && (
-                        <button
-                          onClick={() => {
-                            setSelectedTransaction(payment);
-                            setShowRefundModal(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Refund
-                        </button>
-                      )}
-                      {payment.status === 'failed' && (
-                        <button className="text-green-600 hover:text-green-900">
-                          Retry
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
           </table>
+          <div
+            className="overflow-y-auto"
+            style={{ maxHeight: '425px' }} // Show ~5 rows, only vertical scroll
+          >
+            <table className="w-full">
+              <tbody className="bg-white divide-y divide-gray-200">
+                {currentPayments.map((payment) => (
+                  <tr key={payment.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{payment.id}</div>
+                        <div className="text-sm text-gray-500">Order: {payment.orderId}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{payment.customer}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">${payment.amount}</div>
+                      <div className="text-sm text-gray-500">Fee: ${payment.fee}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{payment.method}</div>
+                      <div className="text-sm text-gray-500">{payment.transactionId}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(payment.status)}
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(payment.status)}`}>
+                          {payment.status}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(payment.date).toLocaleDateString()}
+                      <br />
+                      {new Date(payment.date).toLocaleTimeString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-2">
+                        {payment.status === 'completed' && (
+                          <button
+                            onClick={() => {
+                              setSelectedTransaction(payment);
+                              setShowRefundModal(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            Refund
+                          </button>
+                        )}
+                        {payment.status === 'failed' && (
+                          <button className="text-green-600 hover:text-green-900">
+                            Retry
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="bg-gray-50 px-6 py-3 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                PAGE {currentPage} OF {totalPages}
+              </div>
+              <div className="flex items-center space-x-2">
+                {/* First Page */}
+                <button
+                  onClick={() => handlePageChange(1)}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1 rounded ${
+                    currentPage === 1
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border'
+                  }`}
+                >
+                  1
+                </button>
+
+                {/* Previous Pages */}
+                {currentPage > 3 && (
+                  <>
+                    <span className="text-gray-500">...</span>
+                  </>
+                )}
+
+                {/* Current Page Range */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                  if (page <= 1 || page > totalPages) return null;
+                  
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-3 py-1 rounded ${
+                        currentPage === page
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 border'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+
+                {/* Next Pages */}
+                {currentPage < totalPages - 2 && (
+                  <>
+                    <span className="text-gray-500">...</span>
+                  </>
+                )}
+
+                {/* Last Page */}
+                {totalPages > 1 && (
+                  <button
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-1 rounded ${
+                      currentPage === totalPages
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-100 border'
+                    }`}
+                  >
+                    {totalPages}
+                  </button>
+                )}
+
+                {/* Next Button */}
+                <button
+                  onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1 rounded ${
+                    currentPage === totalPages
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border'
+                  }`}
+                >
+                  »
+                </button>
+
+                {/* Last Button */}
+                <button
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1 rounded ${
+                    currentPage === totalPages
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border'
+                  }`}
+                >
+                  LAST »
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Refund Modal */}
@@ -404,4 +547,3 @@ export default function PaymentsPage() {
     </div>
   );
 }
-  

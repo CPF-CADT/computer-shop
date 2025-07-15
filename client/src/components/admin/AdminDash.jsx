@@ -13,6 +13,7 @@ import PaymentsPage from './PaymentsPage';
 import PromotionsPage from './PromotionsPage';
 import CategoryManagement from './CategoryManagement';
 import InventoryPage from './InventoryPage';
+import StaffManagementPage from './StaffManagementPage';
 
 export default function AdminDash() {
     const [activePage, setActivePage] = useState('Dashboard');
@@ -36,6 +37,8 @@ export default function AdminDash() {
         return <CategoryManagement />;
       case 'Inventory':
         return <InventoryPage />;
+      case 'Staff Management':
+        return <StaffManagementPage />;
       case 'User Management':
         return <UserManagement />;
       case 'Database Restore': 

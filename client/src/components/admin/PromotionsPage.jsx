@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { MdAdd, MdEdit, MdDelete, MdLocalOffer, MdSchedule, MdVisibility, MdCode, MdPercent } from 'react-icons/md';
+import { MdAdd, MdEdit, MdDelete, MdLocalOffer, MdSchedule, MdVisibility, MdCode, MdPercent, MdSearch } from 'react-icons/md';
 
 export default function PromotionsPage() {
+  const [searchTerm, setSearchTerm] = useState('');
   const [promotions, setPromotions] = useState([
     {
       id: 1,
@@ -187,6 +188,12 @@ export default function PromotionsPage() {
     }
   };
 
+  const filteredPromotions = promotions.filter(promotion => 
+    promotion.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    promotion.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    promotion.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -251,6 +258,22 @@ export default function PromotionsPage() {
         </div>
       </div>
 
+      {/* Search Bar */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="flex items-center gap-4">
+          <div className="flex-1 relative">
+            <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search promotions by name, code, or description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Promotions Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
@@ -266,82 +289,89 @@ export default function PromotionsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {promotions.map((promotion) => (
-                <tr key={promotion.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      {getTypeIcon(promotion.type)}
-                      <div className="ml-3">
-                        <div className="text-sm font-medium text-gray-900">{promotion.name}</div>
-                        <div className="text-sm text-gray-500">{promotion.description}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-900">
-                      {promotion.code}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {promotion.type === 'percentage' && `${promotion.value}%`}
-                      {promotion.type === 'fixed' && `$${promotion.value}`}
-                      {promotion.type === 'shipping' && 'Free Shipping'}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Min: ${promotion.minAmount}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {promotion.usageCount} / {promotion.usageLimit}
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${(promotion.usageCount / promotion.usageLimit) * 100}%` }}
-                      ></div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div>{new Date(promotion.startDate).toLocaleDateString()}</div>
-                    <div>{new Date(promotion.endDate).toLocaleDateString()}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(promotion.status)}`}>
-                      {promotion.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEdit(promotion)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="Edit"
-                      >
-                        <MdEdit />
-                      </button>
-                      <button
-                        onClick={() => toggleStatus(promotion.id)}
-                        className="text-green-600 hover:text-green-900"
-                        title={promotion.status === 'active' ? 'Deactivate' : 'Activate'}
-                      >
-                        <MdVisibility />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(promotion.id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Delete"
-                      >
-                        <MdDelete />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
           </table>
+          <div
+            className="overflow-y-auto"
+            style={{ maxHeight: '425px' }} // Adjust height for ~5 rows
+          >
+            <table className="w-full">
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredPromotions.map((promotion) => (
+                  <tr key={promotion.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {getTypeIcon(promotion.type)}
+                        <div className="ml-3">
+                          <div className="text-sm font-medium text-gray-900">{promotion.name}</div>
+                          <div className="text-sm text-gray-500">{promotion.description}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-900">
+                        {promotion.code}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {promotion.type === 'percentage' && `${promotion.value}%`}
+                        {promotion.type === 'fixed' && `$${promotion.value}`}
+                        {promotion.type === 'shipping' && 'Free Shipping'}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Min: ${promotion.minAmount}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {promotion.usageCount} / {promotion.usageLimit}
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${(promotion.usageCount / promotion.usageLimit) * 100}%` }}
+                        ></div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div>{new Date(promotion.startDate).toLocaleDateString()}</div>
+                      <div>{new Date(promotion.endDate).toLocaleDateString()}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(promotion.status)}`}>
+                        {promotion.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEdit(promotion)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="Edit"
+                        >
+                          <MdEdit />
+                        </button>
+                        <button
+                          onClick={() => toggleStatus(promotion.id)}
+                          className="text-green-600 hover:text-green-900"
+                          title={promotion.status === 'active' ? 'Deactivate' : 'Activate'}
+                        >
+                          <MdVisibility />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(promotion.id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete"
+                        >
+                          <MdDelete />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
