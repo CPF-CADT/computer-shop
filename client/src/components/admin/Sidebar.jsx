@@ -1,4 +1,4 @@
-import { MdDashboard, MdShoppingCart, MdPeople, MdInventory, MdInsights, MdPayment, MdLocalOffer, MdCategory, MdWarehouse, MdSettings, MdMenu, MdClose } from 'react-icons/md';
+import { MdDashboard, MdShoppingCart, MdPeople, MdInventory, MdInsights, MdPayment, MdLocalOffer, MdCategory, MdWarehouse, MdSettings, MdMenu, MdClose, MdBackup } from 'react-icons/md';
 import { useState } from 'react';
 import mainLogo from "../../assets/gear-tech.png";
 
@@ -13,7 +13,7 @@ const navItems = [
   { icon: <MdLocalOffer />, label: 'Promotions' },
   { icon: <MdInsights />, label: 'Analytics' },
   { icon: <MdSettings />, label: 'User Management' },
-  { icon: <MdSettings />, label: 'Database Restore' },
+  { icon: <MdBackup />, label: 'Database Restore' },
 ];
 
 // Receive activePage and setActivePage as props
@@ -46,17 +46,17 @@ export default function Sidebar({ activePage, setActivePage }) {
       {/* Sidebar */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-40
-        w-64 bg-[#FFA726] text-white h-screen flex flex-col
+        w-64 bg-[#FFA726] text-white min-h-screen flex flex-col
         transform transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Logo */}
-        <div className="flex items-center gap-2 text-2xl font-bold p-6 bg-white">
+        <div className="flex items-center gap-2 text-2xl font-bold p-6 bg-white flex-shrink-0">
           <img src={mainLogo} alt="Logo" className="w-45 rounded" />
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 mt-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 mt-4 space-y-1 overflow-y-auto scrollbar-hide min-h-0">
           {navItems.map((item, idx) => (
             <div
               key={idx}
@@ -75,7 +75,7 @@ export default function Sidebar({ activePage, setActivePage }) {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-orange-400">
+        <div className="p-4 border-t border-orange-400 flex-shrink-0 mt-auto">
           <div className="text-xs text-orange-100 text-center">
             Computer Shop Admin v1.0
           </div>

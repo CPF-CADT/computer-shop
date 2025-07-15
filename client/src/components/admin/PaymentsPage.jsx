@@ -342,9 +342,6 @@ export default function PaymentsPage() {
                           Retry
                         </button>
                       )}
-                      <button className="text-gray-600 hover:text-gray-900">
-                        View
-                      </button>
                     </div>
                   </td>
                 </tr>
@@ -407,3 +404,4 @@ export default function PaymentsPage() {
     </div>
   );
 }
+  

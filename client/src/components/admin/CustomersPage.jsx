@@ -71,6 +71,18 @@ export default function CustomersPage() {
         joinDate: '2024-07-01',
         lastOrder: '2024-07-05',
         avatar: 'https://ui-avatars.com/api/?name=David+Brown&background=8b5cf6&color=fff'
+      },
+      {
+        id: 6,
+        name: 'David Brown',
+        email: 'david@example.com',
+        phone: '+1 (555) 654-3210',
+        status: 'inactive',
+        totalOrders: 2,
+        totalSpent: 199.99,
+        joinDate: '2024-07-01',
+        lastOrder: '2024-07-05',
+        avatar: 'https://ui-avatars.com/api/?name=David+Brown&background=8b5cf6&color=fff'
       }
     ];
     setCustomers(mockCustomers);
