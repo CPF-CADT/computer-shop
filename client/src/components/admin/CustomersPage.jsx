@@ -83,6 +83,30 @@ export default function CustomersPage() {
         joinDate: '2024-07-01',
         lastOrder: '2024-07-05',
         avatar: 'https://ui-avatars.com/api/?name=David+Brown&background=8b5cf6&color=fff'
+      },
+      {
+        id: 7,
+        name: 'David Brown',
+        email: 'david@example.com',
+        phone: '+1 (555) 654-3210',
+        status: 'inactive',
+        totalOrders: 2,
+        totalSpent: 199.99,
+        joinDate: '2024-07-01',
+        lastOrder: '2024-07-05',
+        avatar: 'https://ui-avatars.com/api/?name=David+Brown&background=8b5cf6&color=fff'
+      },
+      {
+        id: 8,
+        name: 'David Brown',
+        email: 'david@example.com',
+        phone: '+1 (555) 654-3210',
+        status: 'inactive',
+        totalOrders: 2,
+        totalSpent: 199.99,
+        joinDate: '2024-07-01',
+        lastOrder: '2024-07-05',
+        avatar: 'https://ui-avatars.com/api/?name=David+Brown&background=8b5cf6&color=fff'
       }
     ];
     setCustomers(mockCustomers);
@@ -194,72 +218,79 @@ export default function CustomersPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredCustomers.map((customer) => (
-                <tr key={customer.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <img className="h-10 w-10 rounded-full" src={customer.avatar} alt="" />
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{customer.name}</div>
-                        <div className="text-sm text-gray-500">Joined {new Date(customer.joinDate).toLocaleDateString()}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 flex items-center gap-1">
-                      <MdEmail className="text-gray-400" />
-                      {customer.email}
-                    </div>
-                    <div className="text-sm text-gray-500 flex items-center gap-1">
-                      <MdPhone className="text-gray-400" />
-                      {customer.phone}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{customer.totalOrders} orders</div>
-                    <div className="text-sm text-gray-500">Last: {new Date(customer.lastOrder).toLocaleDateString()}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">${customer.totalSpent.toLocaleString()}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      customer.status === 'active' ? 'bg-green-100 text-green-800' :
-                      customer.status === 'blocked' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {customer.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => openCustomerDetails(customer)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="View Details"
-                      >
-                        <MdHistory />
-                      </button>
-                      <button
-                        className="text-green-600 hover:text-green-900"
-                        title="Edit Customer"
-                      >
-                        <MdEdit />
-                      </button>
-                      <button
-                        onClick={() => handleStatusChange(customer.id, customer.status === 'blocked' ? 'active' : 'blocked')}
-                        className={`${customer.status === 'blocked' ? 'text-green-600 hover:text-green-900' : 'text-red-600 hover:text-red-900'}`}
-                        title={customer.status === 'blocked' ? 'Unblock Customer' : 'Block Customer'}
-                      >
-                        <MdBlock />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
           </table>
+          <div
+            className="overflow-y-auto"
+            style={{ maxHeight: '425px' }} // Adjust height for ~5 rows
+          >
+            <table className="w-full">
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredCustomers.map((customer) => (
+                  <tr key={customer.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <img className="h-10 w-10 rounded-full" src={customer.avatar} alt="" />
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{customer.name}</div>
+                          <div className="text-sm text-gray-500">Joined {new Date(customer.joinDate).toLocaleDateString()}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 flex items-center gap-1">
+                        <MdEmail className="text-gray-400" />
+                        {customer.email}
+                      </div>
+                      <div className="text-sm text-gray-500 flex items-center gap-1">
+                        <MdPhone className="text-gray-400" />
+                        {customer.phone}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{customer.totalOrders} orders</div>
+                      <div className="text-sm text-gray-500">Last: {new Date(customer.lastOrder).toLocaleDateString()}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">${customer.totalSpent.toLocaleString()}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        customer.status === 'active' ? 'bg-green-100 text-green-800' :
+                        customer.status === 'blocked' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {customer.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openCustomerDetails(customer)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="View Details"
+                        >
+                          <MdHistory />
+                        </button>
+                        <button
+                          className="text-green-600 hover:text-green-900"
+                          title="Edit Customer"
+                        >
+                          <MdEdit />
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(customer.id, customer.status === 'blocked' ? 'active' : 'blocked')}
+                          className={`${customer.status === 'blocked' ? 'text-green-600 hover:text-green-900' : 'text-red-600 hover:text-red-900'}`}
+                          title={customer.status === 'blocked' ? 'Unblock Customer' : 'Block Customer'}
+                        >
+                          <MdBlock />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

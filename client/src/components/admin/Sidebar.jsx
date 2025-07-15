@@ -1,4 +1,4 @@
-import { MdDashboard, MdShoppingCart, MdPeople, MdInventory, MdInsights, MdPayment, MdLocalOffer, MdCategory, MdWarehouse, MdSettings, MdMenu, MdClose, MdBackup } from 'react-icons/md';
+import { MdDashboard, MdShoppingCart, MdPeople, MdInventory, MdInsights, MdPayment, MdLocalOffer, MdCategory, MdWarehouse, MdSettings, MdMenu, MdClose, MdBackup, MdSupervisorAccount } from 'react-icons/md';
 import { useState } from 'react';
 import mainLogo from "../../assets/gear-tech.png";
 
@@ -12,6 +12,7 @@ const navItems = [
   { icon: <MdPayment />, label: 'Payments' },
   { icon: <MdLocalOffer />, label: 'Promotions' },
   { icon: <MdInsights />, label: 'Analytics' },
+  { icon: <MdSupervisorAccount />, label: 'Staff Management' },
   { icon: <MdSettings />, label: 'User Management' },
   { icon: <MdBackup />, label: 'Database Restore' },
 ];
