@@ -333,8 +333,8 @@ export default function CategoryManagement() {
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-white/70 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">
                 {editingItem ? `Edit ${getTabTitle().slice(0, -1)}` : `Add New ${getTabTitle().slice(0, -1)}`}
