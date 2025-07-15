@@ -11,6 +11,10 @@ userManagementRouter.post('/users/grant-role', UserManagementController.grantRol
 userManagementRouter.delete('/users/:username', UserManagementController.dropUser);
 userManagementRouter.get('/users/:username/permissions', UserManagementController.showUserPermissions); // NEW ROUTE
 userManagementRouter.get('/tables', UserManagementController.getAllTables); // NEW ROUTE
+userManagementRouter.post('/users/grant-permissions', UserManagementController.grantPermissionsToUser);
+userManagementRouter.post('/users/revoke-permissions', UserManagementController.revokePermissionsFromUser);
+userManagementRouter.post('/users/update-expiry', UserManagementController.updateUserExpiry);
+
 
 // --- Role Routes ---
 userManagementRouter.get('/roles', UserManagementController.getAllRoles);
@@ -19,3 +23,5 @@ userManagementRouter.post('/roles/grant-permissions', UserManagementController.g
 userManagementRouter.post('/roles/revoke-permissions', UserManagementController.revokePermissions);
 userManagementRouter.delete('/roles/:roleName', UserManagementController.dropRole);
 userManagementRouter.get('/roles/:roleName/permissions', UserManagementController.showRolePermissions); // NEW ROUTE
+userManagementRouter.post('/roles/revoke-permissions', UserManagementController.revokePermissions);
+
