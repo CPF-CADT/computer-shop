@@ -138,6 +138,6 @@
     "skipLibCheck": true
   },
   "include": [
-     "*.ts" 
+     "**/*.ts" 
   ] /* Specify which files to include in the compilation. */
 }

@@ -1,5 +1,5 @@
-import { Sequelize } from "sequelize-typescript";
 import { CartItem } from "../db/models/CartItem";
+
 export class CartItemRepository {
     static async getCart(customerId: number): Promise<CartItem[] | null> {
         try {
@@ -13,6 +13,7 @@ export class CartItemRepository {
             throw err;
         }
     }
+
     static async remove(customerId: number, productCode: string): Promise<boolean> {
         try {
             const affectedRows = await CartItem.destroy({
@@ -21,19 +22,21 @@ export class CartItemRepository {
                     product_code: productCode,
                 }
             });
-            if (affectedRows > 0) {
-                return true;
-            }
-            return false;
+            return affectedRows > 0;
         } catch (error) {
             throw error;
         }
     }
-    static async updateQuantity(customerId: number, productCode: string, changeAmount: number): Promise<boolean> {
+
+    static async setQuantity(customerId: number, productCode: string, newQuantity: number): Promise<boolean> {
         try {
+            if (newQuantity <= 0) {
+                return this.remove(customerId, productCode);
+            }
+
             const [affectedCount] = await CartItem.update(
                 {
-                    qty: Sequelize.literal(`qty + (${changeAmount})`),
+                    qty: newQuantity, 
                 },
                 {
                     where: {
@@ -47,20 +50,31 @@ export class CartItemRepository {
             throw error;
         }
     }
+
     static async addToCart(customerId:number,productCode:string,qty:number,priceAtPurchase:number):Promise<boolean> {
         try {
-            await CartItem.create({
-                customer_id:customerId,
-                product_code:productCode,
-                qty:qty,
-                price_at_purchase:priceAtPurchase,
-                added_at: new Date().toISOString(),
-            })
+            const existingItem = await CartItem.findOne({
+                where: { customer_id: customerId, product_code: productCode }
+            });
+
+            if (existingItem) {
+                const newQty = existingItem.qty + qty;
+                await this.setQuantity(customerId, productCode, newQty);
+            } else {
+                await CartItem.create({
+                    customer_id: customerId,
+                    product_code: productCode,
+                    qty: qty,
+                    price_at_purchase: priceAtPurchase,
+                    added_at: new Date().toISOString(),
+                });
+            }
             return true;
         } catch (error) {
             throw error;
         }
     }
+
     static async clearCart(customerId:number):Promise<boolean>{
         try {
             const affectedRows = await CartItem.destroy({
@@ -68,10 +82,7 @@ export class CartItemRepository {
                     customer_id: customerId,
                 }
             });
-            if (affectedRows > 0) {
-                return true;
-            }
-            return false;
+            return affectedRows > 0;
         } catch (error) {
             throw error;
         }

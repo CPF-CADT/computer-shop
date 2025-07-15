@@ -61,7 +61,7 @@ dotenv.config()
  *         description: Internal server error
  */
 
-export async function placeOrder(req: Request, res: Response) {
+export async function placeOrder(req: Request, res: Response):Promise<void> {
     try {
         const { customer_id, address_id } = req.body;
         const customer_id_int = parseInt(customer_id);
@@ -141,13 +141,13 @@ export async function placeOrder(req: Request, res: Response) {
  *         description: Internal server error
  */
 
-export async function createQrPayment(req: Request, res: Response) {
+export async function createQrPayment(req: Request, res: Response):Promise<void> {
     try {
         const { amount_pay, order_id, typeCurrency } = req.body;
         const orderID = parseInt(order_id);
         const billNumber: string = 'BILL' + generateBillNumber();
         if (typeCurrency !== 'USD' && typeCurrency !== 'KHR') {
-             res.status(400).json({ message: "Invalid currency type. Must be 'USD' or 'KHR'." });
+            res.status(400).json({ message: "Invalid currency type. Must be 'USD' or 'KHR'." });
         }
 
         if (Number.isNaN(orderID) || Number.isNaN(amount_pay)) {
@@ -166,12 +166,8 @@ export async function createQrPayment(req: Request, res: Response) {
             terminalLabel: "Online PAY",
             isStatic: false,
         });
-        console.log(billNumber)
-        
         const md5 = bakong.generateMD5(khqr);
-        console.log(md5)
         await PaymentTransactionRepositories.updatePaymentStatus(orderID, 'Pending');
-
         res.status(200).json({
             khqr_string: khqr,
             unique_md5: md5,
@@ -226,7 +222,7 @@ export async function createQrPayment(req: Request, res: Response) {
  *         description: Internal server error while checking payment
  */
 
-export async function checkPayment(req: Request, res: Response) {
+export async function checkPayment(req: Request, res: Response):Promise<void> {
     try {
         const { unique_md5, order_id } = req.body;
 

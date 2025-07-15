@@ -9,7 +9,7 @@ export function toCategoryStructure(row:any):CategoryStructure{
 export function toTypeProductStructure(row:any):TypeProductStructure{
     return {
         id:row.type_id,
-        title:row.name,
+        name:row.name,
         description:row.description
     }
 }
@@ -31,7 +31,7 @@ export interface CategoryStructure {
 }
 export interface TypeProductStructure {
     id: number;
-    title: string;
+    name: string;
     description?:string;
 }
 export interface BrandStructure {

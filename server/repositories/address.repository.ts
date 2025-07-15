@@ -30,13 +30,14 @@ export class AddressRepository {
 
     static async updateAddress(address_id: number, updates: Partial<AddressAtri>) {
         return await Address.update(updates, {
-            where: { id: address_id }
+            where: { address_id: address_id } 
         });
     }
 
     static async deleteAddress(address_id: number) {
+        // FIX: The where clause should use 'address_id'.
         return await Address.destroy({
-            where: { id: address_id }
+            where: { address_id: address_id }
         });
     }
 

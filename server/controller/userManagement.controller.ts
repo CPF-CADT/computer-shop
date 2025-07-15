@@ -429,6 +429,46 @@ export class UserManagementController {
             res.status(500).json({ message: 'Error dropping role.', error: error.message });
         }
     }
+
+    
+    static async grantPermissionsToUser(req: Request, res: Response) {
+        const { username, permissions, tableName, host } = req.body;
+        if (!username || !permissions || !Array.isArray(permissions)) {
+            res.status(400).json({ message: 'A username and an array of permissions are required.' });
+        }
+        try {
+            await UserManagement.grantPermissionsToUser(username, permissions, tableName, host);
+            res.status(200).json({ message: `Permissions granted to user '${username}'.` });
+        } catch (error: any) {
+            res.status(500).json({ message: 'Error granting permissions to user.', error: error.message });
+        }
+    }
+
+    static async revokePermissionsFromUser(req: Request, res: Response) {
+        const { username, permissions, tableName, host } = req.body;
+        if (!username || !permissions || !Array.isArray(permissions)) {
+            res.status(400).json({ message: 'A username and an array of permissions are required.' });
+        }
+        try {
+            await UserManagement.revokePermissionsFromUser(username, permissions, tableName, host);
+            res.status(200).json({ message: `Permissions revoked from user '${username}'.` });
+        } catch (error: any) {
+            res.status(500).json({ message: 'Error revoking permissions from user.', error: error.message });
+        }
+    }
+
+    static async updateUserExpiry(req: Request, res: Response) {
+        const { username, host, expireDays } = req.body;
+        if (!username || !host || expireDays === undefined) {
+            res.status(400).json({ message: 'Username, host, and expireDays are required.' });
+        }
+        try {
+            await UserManagement.updateUserExpiry(username, host, expireDays);
+            res.status(200).json({ message: `Expiry for user '${username}' updated successfully.` });
+        } catch (error: any) {
+            res.status(500).json({ message: 'Error updating user expiry.', error: error.message });
+        }
+    }
 }
 
 

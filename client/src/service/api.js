@@ -91,6 +91,90 @@ export const apiService = {
     }
   },    
 
+  // --- Category Management ---
+  createCategory: async (categoryData) => {
+    try {
+      const response = await apiClient.post('category', categoryData);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to create category");
+    }
+  },
+
+  updateCategory: async (id, categoryData) => {
+    try {
+      const response = await apiClient.put(`category/${id}`, categoryData);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to update category");
+    }
+  },
+
+  deleteCategory: async (id) => {
+    try {
+      const response = await apiClient.delete(`category/${id}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to delete category");
+    }
+  },
+
+  // --- Brand Management ---
+  createBrand: async (brandData) => {
+    try {
+      const response = await apiClient.post('brand', brandData);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to create brand");
+    }
+  },
+
+  updateBrand: async (id, brandData) => {
+    try {
+      const response = await apiClient.put(`brand/${id}`, brandData);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to update brand");
+    }
+  },
+
+  deleteBrand: async (id) => {
+    try {
+      const response = await apiClient.delete(`brand/${id}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to delete brand");
+    }
+  },
+
+  // --- Type Product Management ---
+  createTypeProduct: async (typeData) => {
+    try {
+      const response = await apiClient.post('type-product', typeData);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to create type product");
+    }
+  },
+
+  updateTypeProduct: async (id, typeData) => {
+    try {
+      const response = await apiClient.put(`type-product/${id}`, typeData);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to update type product");
+    }
+  },
+
+  deleteTypeProduct: async (id) => {
+    try {
+      const response = await apiClient.delete(`type-product/${id}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to delete type product");
+    }
+  },    
+
   // --- File Upload Service ---
   uploadFileInChunksService: async (file, { onProgress, onStatusChange, onSuccess, onError }) => {
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
@@ -254,6 +338,50 @@ export const apiService = {
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Failed to fetch tables');
+    }
+  },
+   grantPermissionsToUser: async (data) => {
+    try {
+      const response = await apiClient.post('/db/users/grant-permissions', data);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to grant user permissions');
+    }
+  },
+
+  /**
+   * Revokes specific permissions directly from a user.
+   */
+  revokePermissionsFromUser: async (data) => {
+    try {
+      const response = await apiClient.post('/db/users/revoke-permissions', data);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to revoke user permissions');
+    }
+  },
+
+  /**
+   * Updates the password expiration for a user.
+   */
+  updateUserExpiry: async (data) => {
+    try {
+      const response = await apiClient.post('/db/users/update-expiry', data);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to update user expiry');
+    }
+  },
+
+  /**
+   * Revokes permissions from a role. Ensure this exists for the "Edit Role" modal.
+   */
+  revokePermissionsFromRole: async (data) => {
+    try {
+      const response = await apiClient.post('/db/roles/revoke-permissions', data);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to revoke role permissions');
     }
   }
 };
