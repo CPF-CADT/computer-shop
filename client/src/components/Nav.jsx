@@ -1,8 +1,9 @@
 import mainLogo from "../assets/gear-tech.png";
 import { FaSearch } from "react-icons/fa";
 import { BsCart2 } from "react-icons/bs";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 export default function Nav() {
+  const navigate = useNavigate();
   return (
     <nav className="h-14 max-w-[1200px] flex flex-row mx-auto items-center justify-between mt-5">
       <img src={mainLogo} alt="gear-tech" className="h-[50px]" />
@@ -19,7 +20,10 @@ export default function Nav() {
           <FaSearch />
         </button>
       </form>
-      <button className="border-1 border-gray-400 rounded-full w-[150px] h-full text-lg flex flex-row items-center justify-between px-6 ">
+      <button
+        className="border-1 border-gray-400 rounded-full w-[150px] h-full text-lg flex flex-row items-center justify-between px-6 "
+        onClick={() => navigate('/cart')}
+      >
         <BsCart2 size={26} />
         <span>My Cart</span>
       </button>
