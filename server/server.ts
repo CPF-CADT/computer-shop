@@ -18,6 +18,8 @@ import { connectToDatabase } from './db/sequelize';
 import { TelegramBot } from './service/TelgramBot';
 import { PromotionRouter } from './routes/promotion.route';
 import { staffRouter } from './routes/staff.route';
+import {storeInforRouter} from './routes/store.infor.route'
+import ordersRoute from './routes/orders.route';
 
 dotenv.config();
 
@@ -52,7 +54,9 @@ try {
     app.use('/api/service', ServiceRouter);
     app.use('/api/service', PromotionRouter);
     app.use('/api/staff',staffRouter );
+    app.use('/api/store-infor', storeInforRouter);
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+    app.use('/api/order',ordersRoute)
 
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
