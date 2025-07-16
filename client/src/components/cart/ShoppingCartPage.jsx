@@ -2,6 +2,7 @@
 import React from 'react';
 import { FaPlus, FaMinus, FaTrash, FaArrowLeft, FaShoppingCart } from 'react-icons/fa';
 import { useCart } from './CartContext'; // Assuming CartContext is in the right place
+import { useNavigate } from 'react-router-dom';
 
 const ShoppingCartItem = ({ item, onUpdateQuantity, onRemoveItem }) => (
   <div className="flex flex-col sm:flex-row items-center py-4 sm:py-6 border-b last:border-b-0">
@@ -31,6 +32,7 @@ const ShoppingCartItem = ({ item, onUpdateQuantity, onRemoveItem }) => (
 
 const ShoppingCartPage = ({ onProceedToCheckout, onContinueShopping }) => {
   const { cartItems, updateQuantity, removeFromCart, clearCart, cartTotal, itemCount } = useCart();
+  const navigate = useNavigate();
 
   if (!cartItems) { // Should be handled by useCart's fallback, but good for clarity
     return <div className="p-8 text-center">Loading cart...</div>;
@@ -74,7 +76,7 @@ const ShoppingCartPage = ({ onProceedToCheckout, onContinueShopping }) => {
               </div>
               {cartItems.map((item) => (
                 <ShoppingCartItem
-                  key={item.id}
+                  key={item.id} // id is now unique and always present
                   item={item}
                   onUpdateQuantity={updateQuantity}
                   onRemoveItem={removeFromCart}
@@ -120,15 +122,13 @@ const ShoppingCartPage = ({ onProceedToCheckout, onContinueShopping }) => {
                     <span>${(cartTotal + 5.00 + (cartTotal * 0.07)).toFixed(2)}</span>
                   </div>
                 </div>
-                {onProceedToCheckout && (
-                    <button
-                        onClick={onProceedToCheckout}
-                        disabled={itemCount === 0}
-                        className="mt-8 w-full bg-orange-500 text-white py-3.5 rounded-md font-semibold hover:bg-orange-600 transition text-base disabled:opacity-60"
-                    >
-                        Proceed to Checkout
-                    </button>
-                )}
+                <button
+                  onClick={() => navigate('/checkout')}
+                  disabled={itemCount === 0}
+                  className="mt-8 w-full bg-orange-500 text-white py-3.5 rounded-md font-semibold hover:bg-orange-600 transition text-base disabled:opacity-60"
+                >
+                  Proceed to Checkout
+                </button>
               </div>
             </div>
           </div>

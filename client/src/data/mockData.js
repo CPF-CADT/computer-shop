@@ -443,7 +443,11 @@ export const mockCases = [
 ];
 
 // Combined products for cart and checkout
-export const mockProducts = [...mockLaptop, ...mockPC];
+export const mockProducts = [...mockLaptop, ...mockPC].map(p => ({
+  ...p,
+  id: p.product_code,
+  price: typeof p.price === "object" ? Number(p.price.amount) : Number(p.price),
+}));
 export const mockShippingMethods = [
   { id: 'standard', name: 'Standard Shipping (5-7 Days)', price: 5.00 },
   { id: 'express', name: 'Express Shipping (2-3 Days)', price: 15.00 },
@@ -876,4 +880,86 @@ export const builderFans = [
     brand: 'NZXT',
     description: 'RGB fan for cases and radiators.',
   },
+];
+
+export const mockPeripherals = [
+  {
+    product_code: "MOUSE-001",
+    name: "Razer DeathAdder V2",
+    description: "Ergonomic Wired Gaming Mouse",
+    image_path: "/assets/Mouse/razer-deathadder-v2.png",
+    price: 59.99,
+    oldPrice: 79.99,
+    reviews: 120,
+    rating: 4.8,
+    type: "mouse",
+    year: 2024,
+    isNew: true,
+  },
+  {
+    product_code: "MOUSE-002",
+    name: "Logitech G Pro X Superlight",
+    description: "Ultra-light Wireless Mouse",
+    image_path: "/assets/Mouse/logitech-gpro-x.png",
+    price: 129.99,
+    oldPrice: 149.99,
+    reviews: 98,
+    rating: 4.7,
+    type: "mouse",
+    year: 2023,
+    isNew: false,
+  },
+  {
+    product_code: "KEY-001",
+    name: "SteelSeries Apex Pro",
+    description: "Mechanical RGB Gaming Keyboard",
+    image_path: "/assets/Keyboard/apex-pro.png",
+    price: 199.99,
+    oldPrice: 229.99,
+    reviews: 65,
+    rating: 4.6,
+    type: "keyboard",
+    year: 2024,
+    isNew: true,
+  },
+  {
+    product_code: "KEY-002",
+    name: "Razer BlackWidow V4",
+    description: "Mechanical Keyboard with Chroma RGB",
+    image_path: "/assets/Keyboard/blackwidow-v4.png",
+    price: 169.99,
+    oldPrice: 189.99,
+    reviews: 80,
+    rating: 4.5,
+    type: "keyboard",
+    year: 2023,
+    isNew: false,
+  },
+  {
+    product_code: "HEADSET-001",
+    name: "HyperX Cloud II",
+    description: "7.1 Surround Sound Gaming Headset",
+    image_path: "/assets/Headset/hyperx-cloud-ii.png",
+    price: 99.99,
+    oldPrice: 129.99,
+    reviews: 150,
+    rating: 4.9,
+    type: "headset",
+    year: 2024,
+    isNew: true,
+  },
+  {
+    product_code: "HEADSET-002",
+    name: "Logitech G733 Lightspeed",
+    description: "Wireless RGB Gaming Headset",
+    image_path: "/assets/Headset/g733.png",
+    price: 139.99,
+    oldPrice: 159.99,
+    reviews: 60,
+    rating: 4.6,
+    type: "headset",
+    year: 2023,
+    isNew: false,
+  },
+  // Example: No network products yet
 ];
