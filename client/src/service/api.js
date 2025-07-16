@@ -10,11 +10,28 @@ const apiClient = axios.create({
 const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB
 
 export const apiService = {
+
+  getOrderSummary:async ()=>{
+    try {
+      const response = await apiClient.get('/order/summary');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch Order stats");
+    }
+  },
   getOrders: async ({ page = 1, limit = 10, sortBy = 'date', sortType = 'ASC',includeItem=false }) => {
     try {
       const response = await apiClient.get('/order', {
         params: { page, limit, sortBy, sortType,includeItem }
       });
+      return response.data; 
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch orders");
+    }
+  },
+  getUserOrderdetail:async(order_id)=>{
+    try {
+      const response = await apiClient.get(`/order/${order_id}`)
       return response.data; 
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to fetch orders");
