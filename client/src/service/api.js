@@ -10,6 +10,33 @@ const apiClient = axios.create({
 const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB
 
 export const apiService = {
+  getOrders: async ({ page = 1, limit = 10, sortBy = 'date', sortType = 'ASC',includeItem=false }) => {
+    try {
+      const response = await apiClient.get('/order', {
+        params: { page, limit, sortBy, sortType,includeItem }
+      });
+      return response.data; 
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch orders");
+    }
+  },
+  getStoreStatsCount: async (tables) => {
+    try {
+      const response = await apiClient.post('/store-infor/counts', tables);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch dashboard stats");
+    }
+  },
+  getStoreSaleInfor:async (topProduct)=>{
+    try {
+      const response = await apiClient.get(`store-infor/sales?top=${topProduct}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch type file");
+    }
+  }
+  ,
   // Recovery API 
   getFileRecovery:async () => {
     try {
