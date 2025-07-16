@@ -358,28 +358,23 @@ export default function OrdersPage() {
 
       {/* Orders Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-        </table>
-        <div
-          className="overflow-y-auto"
-          style={{ maxHeight: '425px' }} // Adjust height for ~5 rows
-        >
-          <table className="w-full">
+        <div className="overflow-x-auto" style={{ maxHeight: '425px', overflowY: 'auto' }}>
+          <table className="w-full table-fixed">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="w-56 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
+                <th className="w-56 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="w-40 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                <th className="w-40 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                <tr key={order.id} className="hover:bg-gray-50 text-left align-middle">
+                  <td className="w-56 px-6 py-4 whitespace-nowrap align-middle">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{order.id}</div>
                       {order.trackingNumber && (
@@ -387,22 +382,22 @@ export default function OrdersPage() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="w-56 px-6 py-4 whitespace-nowrap align-middle">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{order.customerName}</div>
                       <div className="text-sm text-gray-500">{order.customerEmail}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="w-32 px-6 py-4 whitespace-nowrap align-middle">
                     <div className="text-sm font-medium text-gray-900">${order.total.toFixed(2)}</div>
                     <div className="text-sm text-gray-500">{order.items.length} item(s)</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="w-32 px-6 py-4 whitespace-nowrap align-middle">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
                       {order.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="w-40 px-6 py-4 whitespace-nowrap align-middle">
                     <div>
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPaymentStatusColor(order.paymentStatus)}`}>
                         {order.paymentStatus}
@@ -410,12 +405,12 @@ export default function OrdersPage() {
                       <div className="text-sm text-gray-500">{order.paymentMethod}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="w-40 px-6 py-4 whitespace-nowrap align-middle text-sm text-gray-500">
                     {new Date(order.orderDate).toLocaleDateString()}
                     <br />
                     {new Date(order.orderDate).toLocaleTimeString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="w-32 px-6 py-4 whitespace-nowrap align-middle text-sm font-medium">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openOrderDetails(order)}
@@ -452,8 +447,8 @@ export default function OrdersPage() {
 
       {/* Order Details Modal */}
       {showOrderModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-center z-50 fixed inset-0 pointer-events-none">
+          <div className="bg-white rounded-lg p-6 w-full max-w-xl max-h-[80vh] overflow-y-auto shadow-2xl pointer-events-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Order Details - {selectedOrder.id}</h2>
               <button
@@ -579,8 +574,8 @@ export default function OrdersPage() {
 
       {/* Status Update Modal */}
       {showStatusModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="flex items-center justify-center z-50 fixed inset-0 pointer-events-none">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl pointer-events-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Update Order Status</h2>
               <button

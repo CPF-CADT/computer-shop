@@ -314,7 +314,7 @@ export default function PaymentsPage() {
 
       {/* Payments Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div>
+        <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
@@ -327,69 +327,68 @@ export default function PaymentsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {currentPayments.map((payment) => (
+                <tr key={payment.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{payment.id}</div>
+                      <div className="text-sm text-gray-500">Order: {payment.orderId}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{payment.customer}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">${payment.amount}</div>
+                    <div className="text-sm text-gray-500">Fee: ${payment.fee}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{payment.method}</div>
+                    <div className="text-sm text-gray-500">{payment.transactionId}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(payment.status)}
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(payment.status)}`}>
+                        {payment.status}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(payment.date).toLocaleDateString()}
+                    <br />
+                    {new Date(payment.date).toLocaleTimeString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      {payment.status === 'completed' && (
+                        <button
+                          onClick={() => {
+                            setSelectedTransaction(payment);
+                            setShowRefundModal(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Refund
+                        </button>
+                      )}
+                      {payment.status === 'failed' && (
+                        <button className="text-green-600 hover:text-green-900">
+                          Retry
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
           <div
             className="overflow-y-auto"
             style={{ maxHeight: '425px' }} // Show ~5 rows, only vertical scroll
           >
-            <table className="w-full">
-              <tbody className="bg-white divide-y divide-gray-200">
-                {currentPayments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{payment.id}</div>
-                        <div className="text-sm text-gray-500">Order: {payment.orderId}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{payment.customer}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">${payment.amount}</div>
-                      <div className="text-sm text-gray-500">Fee: ${payment.fee}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{payment.method}</div>
-                      <div className="text-sm text-gray-500">{payment.transactionId}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(payment.status)}
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(payment.status)}`}>
-                          {payment.status}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(payment.date).toLocaleDateString()}
-                      <br />
-                      {new Date(payment.date).toLocaleTimeString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-2">
-                        {payment.status === 'completed' && (
-                          <button
-                            onClick={() => {
-                              setSelectedTransaction(payment);
-                              setShowRefundModal(true);
-                            }}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            Refund
-                          </button>
-                        )}
-                        {payment.status === 'failed' && (
-                          <button className="text-green-600 hover:text-green-900">
-                            Retry
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {/* ...existing code for scrollable content if needed... */}
           </div>
         </div>
 
@@ -423,9 +422,9 @@ export default function PaymentsPage() {
 
                 {/* Current Page Range */}
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                  if (page <= 1 || page > totalPages) return null;
-                  
+                  const firstPage = Math.max(1, Math.min(totalPages - 4, currentPage - 2));
+                  const page = firstPage + i;
+                  if (page < 1 || page > totalPages) return null;
                   return (
                     <button
                       key={page}
@@ -547,3 +546,4 @@ export default function PaymentsPage() {
     </div>
   );
 }
+
