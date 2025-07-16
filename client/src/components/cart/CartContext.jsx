@@ -13,12 +13,27 @@ export const CartProvider = ({ children }) => {
     if (mockProducts && mockProducts.length >= 2) {
       // Create new objects for the cart, ensuring 'qty' is present if not in original mockProduct for listing
       const initialCart = [
-        { ...mockProducts[0], qty: mockProducts[0].qty || 1 }, // Ensure qty, default to 1
-        { ...mockProducts[1], qty: mockProducts[1].qty || 1 }, // Ensure qty, default to 1
+        {
+          ...mockProducts[0],
+          qty: mockProducts[0].qty || 1,
+          id: mockProducts[0].product_code, // Ensure unique id
+          price: typeof mockProducts[0].price === "object" ? Number(mockProducts[0].price.amount) : Number(mockProducts[0].price),
+        },
+        {
+          ...mockProducts[1],
+          qty: mockProducts[1].qty || 1,
+          id: mockProducts[1].product_code,
+          price: typeof mockProducts[1].price === "object" ? Number(mockProducts[1].price.amount) : Number(mockProducts[1].price),
+        },
       ];
       return initialCart;
     } else if (mockProducts && mockProducts.length === 1) {
-      return [{ ...mockProducts[0], qty: mockProducts[0].qty || 1 }];
+      return [{
+        ...mockProducts[0],
+        qty: mockProducts[0].qty || 1,
+        id: mockProducts[0].product_code,
+        price: typeof mockProducts[0].price === "object" ? Number(mockProducts[0].price.amount) : Number(mockProducts[0].price),
+      }];
     }
     return []; // Default to an empty cart
   });

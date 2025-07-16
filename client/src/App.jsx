@@ -22,6 +22,7 @@ import Success from './components/checkout/Success';
 import Service from "./pages/Service";
 import Promotion from "./pages/Promotion";
 import AboutUs from "./pages/AboutUs";
+import Peripherals from "./pages/Peripherals";
 function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -49,6 +50,7 @@ function App() {
             <Route path="/service" element={<Service />} />
             <Route path="/promotion" element={<Promotion />} />
             <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/peripherals" element={<Peripherals />} />
         </Routes>
       </div>
     </>

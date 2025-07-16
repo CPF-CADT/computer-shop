@@ -6,7 +6,7 @@ const CartItem = ({ item }) => {
 
   return (
     <div className="flex flex-col sm:flex-row items-center py-4 border-b border-gray-200">
-      <img src={item.image} alt={item.name} className="w-24 h-24 object-contain rounded mr-0 mb-3 sm:mr-4 sm:mb-0" />
+      <img src={item.image_path || item.image} alt={item.name} className="w-24 h-24 object-contain rounded mr-0 mb-3 sm:mr-4 sm:mb-0" />
       <div className="flex-grow text-center sm:text-left">
         <h3 className="font-semibold text-gray-800 text-sm md:text-base">{item.name}</h3>
         <p className="text-xs text-gray-500 truncate-2-lines">{item.description}</p>
@@ -14,7 +14,7 @@ const CartItem = ({ item }) => {
           <FaTrash className="inline mr-1" /> Remove
         </button>
       </div>
-      <div className="font-semibold text-gray-700 w-20 text-center text-sm md:text-base my-2 sm:my-0">${item.price.toFixed(2)}</div>
+      <div className="font-semibold text-gray-700 w-20 text-center text-sm md:text-base my-2 sm:my-0">${Number(item.price).toFixed(2)}</div>
       <div className="flex items-center justify-center mx-4 my-2 sm:my-0">
         <button onClick={() => updateQuantity(item.id, item.qty - 1)} className="p-1.5 border rounded hover:bg-gray-100">
           <FaMinus size={12} />
@@ -25,7 +25,7 @@ const CartItem = ({ item }) => {
         </button>
       </div>
       <div className="font-bold text-brand-orange w-24 text-center sm:text-right text-sm md:text-base">
-        ${(item.price * item.qty).toFixed(2)}
+        ${(Number(item.price) * item.qty).toFixed(2)}
       </div>
     </div>
   );
