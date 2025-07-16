@@ -1,0 +1,15 @@
+import express from 'express';
+import { 
+  createPromotion,
+  updatePromotion,
+  deletePromotion,
+  applyPromotionToProduct,
+  revokePromotionFromProduct
+} from '../controller/promotion.controller';
+
+export const PromotionRouter = express.Router();
+PromotionRouter.post('/', createPromotion);
+PromotionRouter.put('/:id', updatePromotion);
+PromotionRouter.delete('/:id', deletePromotion);
+PromotionRouter.post('/apply', applyPromotionToProduct);
+PromotionRouter.delete('/:promotionId/product/:productCode', revokePromotionFromProduct);

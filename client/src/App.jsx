@@ -12,7 +12,6 @@ import Desktop from "./components/Desktop";
 import ProductDetails from './components/ProductDetails/ProductDetails';
 import PCBuilderPage from "./components/CustomPC/PCBuilderPage";
 import Categories from "./components/Categories";
-
 import CartLayout from './components/cart/CartLayout'; 
 import ShoppingCartPage from './components/cart/ShoppingCartPage';
 import CheckoutPage from "./components/checkout/CheckoutPage";

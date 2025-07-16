@@ -32,74 +32,50 @@ describe('Checkout Controller - Unit Tests', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-
         responseJson = jest.fn();
         responseStatus = jest.fn().mockReturnValue({ json: responseJson });
-        
         mockRequest = { params: {}, body: {} } as Request;
         mockResponse = { status: responseStatus, json: responseJson } as unknown as Response;
     });
 
-    // --- placeOrder ---
     describe('placeOrder', () => {
-        it('should place an order successfully and return order details', async () => {
-            // Arrange
+        it('[CO-001] should place an order successfully and return order details', async () => {
             mockRequest.body = { customer_id: 1, address_id: 1 };
-            
-            // Mock data that the controller will use
             const fakeOrderItems = [
-                { order_id: 99, product_code: 'P1', qty: 2, price_at_purchase: 100 }, // Total 200
-                { order_id: 99, product_code: 'P2', qty: 1, price_at_purchase: 50 },  // Total 50
+                { order_id: 99, product_code: 'P1', qty: 2, price_at_purchase: 100 },
+                { order_id: 99, product_code: 'P2', qty: 1, price_at_purchase: 50 },
             ];
-            
             mockedCustomerModel.findByPk.mockResolvedValue({ name: 'Test' } as Customer);
             mockedAddressRepo.getAddressById.mockResolvedValue({} as Address);
             mockedOrderRepo.placeAnOrder.mockResolvedValue(fakeOrderItems as any[]);
-
-            // Act
             await CheckoutController.placeOrder(mockRequest, mockResponse);
-
-            // Assert
             expect(mockedOrderRepo.placeAnOrder).toHaveBeenCalledWith(1, 1);
             expect(responseStatus).toHaveBeenCalledWith(200);
             expect(responseJson).toHaveBeenCalledWith({
                 order_id: 99,
-                amount_pay: 250, // 2*100 + 1*50
+                amount_pay: 250,
                 message: 'Order placed successfully'
             });
         });
 
-        it('should return 400 if the order fails (e.g., empty cart)', async () => {
-            // Arrange
+        it('[CO-002] should return 400 if the order fails (e.g., empty cart)', async () => {
             mockRequest.body = { customer_id: 1, address_id: 1 };
-            mockedOrderRepo.placeAnOrder.mockResolvedValue(null); // Simulate failure
-
-            // Act
+            mockedOrderRepo.placeAnOrder.mockResolvedValue(null);
             await CheckoutController.placeOrder(mockRequest, mockResponse);
-
-            // Assert
             expect(responseStatus).toHaveBeenCalledWith(400);
             expect(responseJson).toHaveBeenCalledWith({ message: "Order failed. Please check customer, address, or cart items." });
         });
     });
 
-    // --- createQrPayment ---
     describe('createQrPayment', () => {
-        it('should generate a KHQR string and update transaction status', async () => {
-            // Arrange
+        it('[CO-003] should generate a KHQR string and update transaction status', async () => {
             mockRequest.body = { order_id: 1, amount_pay: 2400.00, typeCurrency: 'USD' };
-            
-            // Mock service behaviors
             mockedTwoFA.generateBillNumber.mockReturnValue('12345');
             mockedKHQR.prototype.createQR.mockReturnValue('mock_khqr_string');
             mockedKHQR.prototype.generateMD5.mockReturnValue('mock_md5_hash');
             mockedPaymentRepo.updatePaymentStatus.mockResolvedValue(true);
-
-            // Act
             await CheckoutController.createQrPayment(mockRequest, mockResponse);
-
-            // Assert
-            expect(mockedKHQR).toHaveBeenCalled(); // Check if KHQR class was instantiated
+            expect(mockedKHQR).toHaveBeenCalled();
             expect(mockedKHQR.prototype.createQR).toHaveBeenCalled();
             expect(mockedKHQR.prototype.generateMD5).toHaveBeenCalledWith('mock_khqr_string');
             expect(mockedPaymentRepo.updatePaymentStatus).toHaveBeenCalledWith(1, 'Pending');
@@ -113,58 +89,38 @@ describe('Checkout Controller - Unit Tests', () => {
             });
         });
 
-        it('should return 400 for an invalid currency type', async () => {
-            // Arrange
+        it('[CO-004] should return 400 for an invalid currency type', async () => {
             mockRequest.body = { order_id: 1, amount_pay: 2400, typeCurrency: 'EUR' };
-
-            // Act
             await CheckoutController.createQrPayment(mockRequest, mockResponse);
-
-            // Assert
             expect(responseStatus).toHaveBeenCalledWith(400);
             expect(responseJson).toHaveBeenCalledWith({ message: "Invalid currency type. Must be 'USD' or 'KHR'." });
         });
     });
 
-    // --- checkPayment ---
     describe('checkPayment', () => {
-        it('should confirm payment, update status, and send notification if PAID', async () => {
-            // Arrange
+        it('[CO-005] should confirm payment, update status, and send notification if PAID', async () => {
             mockRequest.body = { unique_md5: 'paid_md5_hash', order_id: 99 };
-            
-            // Mock repository and model responses
             mockedPaymentRepo.getTransactionByOrderId.mockResolvedValue({ status: 'Pending' } as any);
             mockedKHQR.prototype.checkPayment.mockResolvedValue('PAID');
             mockedPaymentRepo.updatePaymentStatus.mockResolvedValue(true);
-            
-            // Mock data needed for Telegram notification
             mockedOrdersModel.findByPk.mockResolvedValue({ customer_id: 1, address_id: 1 } as Orders);
             mockedCustomerModel.findByPk.mockResolvedValue({ name: 'Test User', phone_number: '0123' } as Customer);
             mockedAddressRepo.getAddressById.mockResolvedValue({ street_line: 'St 1', district: 'BKK', province: 'PP' } as Address);
             mockedOrderItemModel.findAll.mockResolvedValue([{ product_code: 'P1', price_at_purchase: 1200, qty: 2 }] as any[]);
-            
-            // Act
             await CheckoutController.checkPayment(mockRequest, mockResponse);
-
-            // Assert
             expect(mockedKHQR.prototype.checkPayment).toHaveBeenCalledWith('paid_md5_hash');
             expect(mockedPaymentRepo.updatePaymentStatus).toHaveBeenCalledWith(99, 'Completed');
-            expect(mockedTelegramBot).toHaveBeenCalled(); // Bot was instantiated
+            expect(mockedTelegramBot).toHaveBeenCalled();
             expect(mockedTelegramBot.prototype.sendOrderNotification).toHaveBeenCalled();
             expect(responseStatus).toHaveBeenCalledWith(200);
             expect(responseJson).toHaveBeenCalledWith({ payment_status: 'Completed' });
         });
 
-        it('should return Pending status if payment is UNPAID', async () => {
-            // Arrange
+        it('[CO-006] should return Pending status if payment is UNPAID', async () => {
             mockRequest.body = { unique_md5: 'unpaid_md5_hash', order_id: 100 };
             mockedPaymentRepo.getTransactionByOrderId.mockResolvedValue({ status: 'Pending' } as any);
             mockedKHQR.prototype.checkPayment.mockResolvedValue('UNPAID');
-
-            // Act
             await CheckoutController.checkPayment(mockRequest, mockResponse);
-            
-            // Assert
             expect(mockedKHQR.prototype.checkPayment).toHaveBeenCalledWith('unpaid_md5_hash');
             expect(mockedPaymentRepo.updatePaymentStatus).not.toHaveBeenCalled();
             expect(mockedTelegramBot.prototype.sendOrderNotification).not.toHaveBeenCalled();
@@ -172,15 +128,10 @@ describe('Checkout Controller - Unit Tests', () => {
             expect(responseJson).toHaveBeenCalledWith({ payment_status: 'Pending' });
         });
 
-        it('should return Completed if transaction is already marked as Completed in DB', async () => {
-            // Arrange
+        it('[CO-007] should return Completed if transaction is already marked as Completed in DB', async () => {
             mockRequest.body = { unique_md5: 'some_hash', order_id: 101 };
             mockedPaymentRepo.getTransactionByOrderId.mockResolvedValue({ status: 'Completed' } as any);
-
-            // Act
             await CheckoutController.checkPayment(mockRequest, mockResponse);
-
-            // Assert
             expect(responseStatus).toHaveBeenCalledWith(200);
             expect(responseJson).toHaveBeenCalledWith({
                 payment_status: 'Completed',

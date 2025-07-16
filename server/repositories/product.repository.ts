@@ -4,48 +4,73 @@ import { Product, ProductQueryParams, toProductStructure } from "../model/Produc
 import { Product as ProductModel, ProductFeedback } from "../db/models";
 
 class ProductRepository {
-    static async getAllProduct(nameProduct?:string,sortType:string ='ASC',sortColumn:string ='price',category?: string, typeProduct?: string, brand?: string,page:number = 1,limit:number=10 ): Promise<Product[] | null> {
-        try {
-            let query = 'SELECT * FROM productshowinformation';
-            const conditions: string[] = [];
-            const replacements: any = {};
+    static async getAllProduct(
+    nameProduct?: string,
+    sortType: string = 'ASC',
+    sortColumn: string = 'price',
+    category?: string,
+    typeProduct?: string,
+    brand?: string,
+    page: number = 1,
+    limit: number = 10
+    ): Promise<Product[] | null> {
+    try {
+        let query = 'SELECT * FROM productshowinformation';
+        const conditions: string[] = [];
+        const replacements: Record<string, any> = {};
 
-            if (nameProduct) {
-                conditions.push('name LIKE :product_name');
-                replacements.product_name = `%${nameProduct}%`;
-            }
-            if (category) {
-                conditions.push('category_title = :category');
-                replacements.category = category;
-            }
-            if (typeProduct) {
-                conditions.push('type_product = :typeProduct');
-                replacements.typeProduct = typeProduct;
-            }
-            if (brand) {
-                conditions.push('brand_name = :brandProduct');
-                replacements.brandProduct = brand;
-            }
-
-            if (conditions.length > 0) {
-                query += ' WHERE ' + conditions.join(' AND ');
-            }
-
-            query += ` ORDER BY ${sortColumn} ${sortType.toUpperCase()} `;
-
-            query += 'LIMIT :limit OFFSET :offset';
-            replacements.limit = limit;
-            replacements.offset = (page - 1) * limit;
-
-            const data = await sequelize.query(query, {
-                replacements,
-                type: QueryTypes.SELECT, 
-            });
-            return data.map(toProductStructure);
-        } catch (err) {
-            throw err;
+        if (nameProduct) {
+        conditions.push('name LIKE :product_name');
+        replacements.product_name = `%${nameProduct}%`;
         }
+        if (category) {
+        conditions.push('category_title = :category');
+        replacements.category = category;
+        }
+        if (typeProduct) {
+        conditions.push('type_product = :typeProduct');
+        replacements.typeProduct = typeProduct;
+        }
+        if (brand) {
+        conditions.push('brand_name = :brandProduct');
+        replacements.brandProduct = brand;
+        }
+
+        if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
+        }
+
+        // Whitelist allowed sort columns (adjust columns as per your DB)
+        const allowedSortColumns = ['price', 'name', 'category_title', 'brand_name'];
+        if (!allowedSortColumns.includes(sortColumn)) {
+        sortColumn = 'price'; // default fallback
+        }
+
+        // Whitelist sort types
+        const allowedSortTypes = ['ASC', 'DESC'];
+        if (!allowedSortTypes.includes(sortType.toUpperCase())) {
+        sortType = 'ASC';
+        } else {
+        sortType = sortType.toUpperCase();
+        }
+
+        query += ` ORDER BY ${sortColumn} ${sortType} `;
+
+        query += 'LIMIT :limit OFFSET :offset ';
+        replacements.limit = limit;
+        replacements.offset = (page - 1) * limit;
+
+        const data = await sequelize.query(query, {
+        replacements,
+        type: QueryTypes.SELECT,
+        });
+
+        return data.map(toProductStructure);
+    } catch (err) {
+        throw err;
     }
+    }
+
     static async getOneProduct(productCode: string): Promise<Product | null> {
         try {
             const data = await sequelize.query(

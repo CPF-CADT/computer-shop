@@ -1,6 +1,7 @@
 import ProductRepository from "../repositories/product.repository";
 import { Request, Response } from 'express';
 import { ProductFeedBackRepositories } from '../repositories/product.repository';
+import { Product } from "../db/models";
 
 /**
  * @swagger
@@ -8,6 +9,87 @@ import { ProductFeedBackRepositories } from '../repositories/product.repository'
  *   name: Product
  *   description: Product management
  */
+
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Product:
+ *       type: object
+ *       properties:
+ *         product_code:
+ *           type: string
+ *           example: "P1001"
+ *         name:
+ *           type: string
+ *           example: "Intel Core i7-11700K Processor"
+ *         image_path:
+ *           type: string
+ *           example: "/images/products/intel_i7_11700k.jpg"
+ *         price:
+ *           type: object
+ *           properties:
+ *             amount:
+ *               type: number
+ *               format: float
+ *               example: 289.99
+ *             currency:
+ *               type: string
+ *               example: "USD"
+ *         description:
+ *           type: string
+ *           example: "The Intel Core i7-11700K is an 11th Gen desktop processor designed for high-performance gaming and productivity workloads."
+ *         brand:
+ *           type: string
+ *           example: "Intel"
+ *         category:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *               example: 2
+ *             title:
+ *               type: string
+ *               example: "Processors"
+ *         type:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *               example: 1
+ *             title:
+ *               type: string
+ *               example: "CPU"
+ *         discount:
+ *           type: object
+ *           properties:
+ *             type:
+ *               type: string
+ *               example: "percentage"
+ *             value:
+ *               type: integer
+ *               example: 10
+ *         feedback:
+ *           type: object
+ *           properties:
+ *             rating:
+ *               type: string
+ *               example: "4.5"
+ *             totalReview:
+ *               type: integer
+ *               example: 152
+ *     Error:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: "No products found."
+ *         code:
+ *           type: integer
+ *           example: 404
+ */
+
 
 /**
  * @swagger
@@ -101,7 +183,16 @@ export async function getAllProduct(req: Request, res: Response): Promise<void> 
     const page = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : 1;
     try {
         const product = await ProductRepository.getAllProduct(nameProductSearch, sortType, sortColumn, category, type_product, brandProduct, page, limit);
-        res.status(200).send(product);
+        const totalItems = await Product.count();
+        const totalPages:number = Math.round(totalItems / limit);
+        res.status(200).json({
+            meta: {
+                totalItems,
+                page,
+                totalPages
+            },
+            data: product
+        });
         return;
     } catch (err) {
         res.status(404).json({ message: (err as Error).message });
@@ -149,7 +240,7 @@ export async function getOneProduct(req: Request, res: Response): Promise<void> 
 
 /**
  * @swagger
- * /api/products/{product_code}/detail:
+ * /api/product/{product_code}/detail:
  *   get:
  *     summary: Get detailed information for a single product
  *     tags: [Product]
@@ -190,7 +281,7 @@ export async function getProductDetail(req: Request, res: Response): Promise<voi
 
 /**
  * @swagger
- * /api/products:
+ * /api/product:
  *   post:
  *     summary: Add a new product
  *     tags: [Product]
@@ -276,7 +367,7 @@ export async function addNewProduct(req: Request, res: Response): Promise<void> 
 
 /**
  * @swagger
- * /api/products/{product_code}/feedback:
+ * /api/product/{product_code}/feedback:
  *   post:
  *     summary: Add feedback for a product
  *     tags: [Product]
@@ -350,7 +441,7 @@ export async function addProductFeedback(req: Request, res: Response): Promise<v
 
 /**
  * @swagger
- * /api/products/{productCode}:
+ * /api/product/{productCode}:
  *   put:
  *     summary: Update an existing product
  *     tags: [Product]
