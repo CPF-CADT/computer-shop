@@ -1,9 +1,7 @@
 import axios from 'axios';
 // Create a pre-configured instance of axios
 const apiClient = axios.create({
-  // baseURL: 'http://localhost:3000/api/',
- baseURL: 'https://dc17053c2edc.ngrok-free.app/api/',
-
+  baseURL: 'http://localhost:3000/api/',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -34,7 +32,17 @@ export const apiService = {
   getProducts: async (query_param) => {
     try {
       const response = await apiClient.get('product',{ params:query_param });
-      console.log(response.status, response.data);
+      console.log(query_param);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch products:', error.message);
+      throw error;
+    }
+  },
+
+  getOneProduct: async (product_id) => {
+    try {
+      const response = await apiClient.get(`product/${product_id}`);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch products:', error.message);
@@ -62,6 +70,16 @@ export const apiService = {
       throw new Error(error.response?.data?.message || "Failed to delete product");
     }
   },
+  updateProduct: async (productCode, updateData) => {
+    try {
+      const response = await apiClient.put(`product/${productCode}`, updateData);
+      return response.data;
+    } catch (error) {
+      console.error('API error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to update product");
+    }
+  },
+
 
   // --- Generic Data Fetching ---
   getAllCategories: async () => {

@@ -1,4 +1,4 @@
-import  { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
@@ -16,8 +16,20 @@ import InventoryPage from './InventoryPage';
 import StaffManagementPage from './StaffManagementPage';
 
 export default function AdminDash() {
-    const [activePage, setActivePage] = useState('Dashboard');
-    const renderPage = () => {
+  const [activePage, setActivePage] = useState('Dashboard');
+
+  useEffect(() => {
+    const savedPage = localStorage.getItem('adminActivePage');
+    if (savedPage) {
+      setActivePage(savedPage);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('adminActivePage', activePage);
+  }, [activePage]);
+
+  const renderPage = () => {
     switch (activePage) {
       case 'Dashboard':
         return <DashboardPage />;
@@ -41,17 +53,16 @@ export default function AdminDash() {
         return <StaffManagementPage />;
       case 'User Management':
         return <UserManagement />;
-      case 'Database Restore': 
+      case 'Database Restore':
         return <DatabaseRestore />;
       default:
-        return <DashboardPage />; 
+        return <DashboardPage />;
     }
   };
 
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
       <Sidebar activePage={activePage} setActivePage={setActivePage} />
-
       <div className="flex-1 flex flex-col lg:ml-0">
         <Header />
         <main className="p-4 lg:p-6 overflow-auto">

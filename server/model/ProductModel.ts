@@ -18,6 +18,12 @@ interface Type {
     title: string;
 }
 
+
+interface Brand {
+    id: number;
+    name: string;
+}
+
 interface Discount {
     type: "percentage" | "fixed" | string;
     value: number;
@@ -40,7 +46,7 @@ export interface Product {
     image_path: string;
     price: Price;
     description: string;
-    brand: string;
+    brand: Brand;
     category: Category;
     type: Type;
     feedback: ProductFeedback;
@@ -58,7 +64,10 @@ export function toProductStructure(row: any): Product {
             currency: 'USD',
         },
         description: row.description,
-        brand: row.brand_name,
+        brand: {
+            id:row.brand_id,
+            name:row.brand_name,
+        },
         category: {
             id: row.category_id,
             title: row.category_title,
