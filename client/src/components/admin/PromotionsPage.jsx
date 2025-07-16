@@ -89,14 +89,15 @@ export default function PromotionsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
+    title: '',
+    discount_type: 'percentage',
+    discount_value: 0,
+    start_date: '',
+    end_date: '',
+    // Keep existing fields for backward compatibility
     code: '',
-    type: 'percentage',
-    value: 0,
     minAmount: 0,
     maxDiscount: 0,
-    startDate: '',
-    endDate: '',
     usageLimit: 100,
     categories: [],
     description: ''
@@ -106,10 +107,28 @@ export default function PromotionsPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const apiData = {
+      title: formData.title,
+      discount_type: formData.discount_type,
+      discount_value: formData.discount_value,
+      start_date: formData.start_date,
+      end_date: formData.end_date
+    };
+    
     if (editingPromotion) {
       setPromotions(promotions.map(p => 
         p.id === editingPromotion.id 
-          ? { ...formData, id: editingPromotion.id, usageCount: editingPromotion.usageCount, status: 'active' }
+          ? { 
+              ...formData, 
+              id: editingPromotion.id, 
+              usageCount: editingPromotion.usageCount, 
+              status: 'active',
+              name: formData.title,
+              type: formData.discount_type,
+              value: formData.discount_value,
+              startDate: formData.start_date,
+              endDate: formData.end_date
+            }
           : p
       ));
     } else {
@@ -117,7 +136,12 @@ export default function PromotionsPage() {
         ...formData,
         id: Math.max(...promotions.map(p => p.id)) + 1,
         usageCount: 0,
-        status: 'active'
+        status: 'active',
+        name: formData.title,
+        type: formData.discount_type,
+        value: formData.discount_value,
+        startDate: formData.start_date,
+        endDate: formData.end_date
       };
       setPromotions([...promotions, newPromotion]);
     }
@@ -126,14 +150,14 @@ export default function PromotionsPage() {
 
   const resetForm = () => {
     setFormData({
-      name: '',
+      title: '',
+      discount_type: 'percentage',
+      discount_value: 0,
+      start_date: '',
+      end_date: '',
       code: '',
-      type: 'percentage',
-      value: 0,
       minAmount: 0,
       maxDiscount: 0,
-      startDate: '',
-      endDate: '',
       usageLimit: 100,
       categories: [],
       description: ''
@@ -143,7 +167,19 @@ export default function PromotionsPage() {
   };
 
   const handleEdit = (promotion) => {
-    setFormData(promotion);
+    setFormData({
+      title: promotion.name || promotion.title,
+      discount_type: promotion.type || promotion.discount_type,
+      discount_value: promotion.value || promotion.discount_value,
+      start_date: promotion.startDate || promotion.start_date,
+      end_date: promotion.endDate || promotion.end_date,
+      code: promotion.code || '',
+      minAmount: promotion.minAmount || 0,
+      maxDiscount: promotion.maxDiscount || 0,
+      usageLimit: promotion.usageLimit || 100,
+      categories: promotion.categories || [],
+      description: promotion.description || ''
+    });
     setEditingPromotion(promotion);
     setShowModal(true);
   };
@@ -377,8 +413,8 @@ export default function PromotionsPage() {
 
       {/* Create/Edit Promotion Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-white/70 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">
                 {editingPromotion ? 'Edit Promotion' : 'Create New Promotion'}
@@ -392,41 +428,29 @@ export default function PromotionsPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Promotion Name */}
+              {/* Promotion Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Promotion Name
+                  Promotion Title
                 </label>
                 <input
                   type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
 
-              {/* Code and Type */}
+              {/* Discount Type and Value */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Promotion Code
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Discount Type
                   </label>
                   <select
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    value={formData.discount_type}
+                    onChange={(e) => setFormData({ ...formData, discount_type: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="percentage">Percentage</option>
@@ -434,63 +458,33 @@ export default function PromotionsPage() {
                     <option value="shipping">Free Shipping</option>
                   </select>
                 </div>
-              </div>
-
-              {/* Value and Limits */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {formData.type === 'percentage' ? 'Percentage (%)' : 
-                     formData.type === 'fixed' ? 'Amount ($)' : 'Shipping Cost ($)'}
+                    {formData.discount_type === 'percentage' ? 'Percentage (%)' : 
+                     formData.discount_type === 'fixed' ? 'Amount ($)' : 'Shipping Cost ($)'}
                   </label>
                   <input
                     type="number"
-                    value={formData.value}
-                    onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) })}
+                    value={formData.discount_value}
+                    onChange={(e) => setFormData({ ...formData, discount_value: parseFloat(e.target.value) })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
                     step="0.01"
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Minimum Order ($)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.minAmount}
-                    onChange={(e) => setFormData({ ...formData, minAmount: parseFloat(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Max Discount ($)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.maxDiscount}
-                    onChange={(e) => setFormData({ ...formData, maxDiscount: parseFloat(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
               </div>
 
-              {/* Dates and Usage Limit */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Start and End Dates */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Start Date
                   </label>
                   <input
                     type="date"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    value={formData.start_date}
+                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
@@ -501,24 +495,25 @@ export default function PromotionsPage() {
                   </label>
                   <input
                     type="date"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    value={formData.end_date}
+                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Usage Limit
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.usageLimit}
-                    onChange={(e) => setFormData({ ...formData, usageLimit: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="1"
-                  />
-                </div>
+              </div>
+
+              {/* Optional fields */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Promotion Code (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
 
               {/* Categories */}
@@ -583,3 +578,4 @@ export default function PromotionsPage() {
     </div>
   );
 }
+       
