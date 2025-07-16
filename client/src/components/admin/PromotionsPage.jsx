@@ -325,88 +325,87 @@ export default function PromotionsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredPromotions.map((promotion) => (
+                <tr key={promotion.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      {getTypeIcon(promotion.type)}
+                      <div className="ml-3">
+                        <div className="text-sm font-medium text-gray-900">{promotion.name}</div>
+                        <div className="text-sm text-gray-500">{promotion.description}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-900">
+                      {promotion.code}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {promotion.type === 'percentage' && `${promotion.value}%`}
+                      {promotion.type === 'fixed' && `$${promotion.value}`}
+                      {promotion.type === 'shipping' && 'Free Shipping'}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Min: ${promotion.minAmount}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {promotion.usageCount} / {promotion.usageLimit}
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{ width: `${(promotion.usageCount / promotion.usageLimit) * 100}%` }}
+                      ></div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div>{new Date(promotion.startDate).toLocaleDateString()}</div>
+                    <div>{new Date(promotion.endDate).toLocaleDateString()}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(promotion.status)}`}>
+                      {promotion.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleEdit(promotion)}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="Edit"
+                      >
+                        <MdEdit />
+                      </button>
+                      <button
+                        onClick={() => toggleStatus(promotion.id)}
+                        className="text-green-600 hover:text-green-900"
+                        title={promotion.status === 'active' ? 'Deactivate' : 'Activate'}
+                      >
+                        <MdVisibility />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(promotion.id)}
+                        className="text-red-600 hover:text-red-900"
+                        title="Delete"
+                      >
+                        <MdDelete />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
           <div
             className="overflow-y-auto"
             style={{ maxHeight: '425px' }} // Adjust height for ~5 rows
           >
-            <table className="w-full">
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredPromotions.map((promotion) => (
-                  <tr key={promotion.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {getTypeIcon(promotion.type)}
-                        <div className="ml-3">
-                          <div className="text-sm font-medium text-gray-900">{promotion.name}</div>
-                          <div className="text-sm text-gray-500">{promotion.description}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-900">
-                        {promotion.code}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {promotion.type === 'percentage' && `${promotion.value}%`}
-                        {promotion.type === 'fixed' && `$${promotion.value}`}
-                        {promotion.type === 'shipping' && 'Free Shipping'}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        Min: ${promotion.minAmount}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {promotion.usageCount} / {promotion.usageLimit}
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full"
-                          style={{ width: `${(promotion.usageCount / promotion.usageLimit) * 100}%` }}
-                        ></div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div>{new Date(promotion.startDate).toLocaleDateString()}</div>
-                      <div>{new Date(promotion.endDate).toLocaleDateString()}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(promotion.status)}`}>
-                        {promotion.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleEdit(promotion)}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Edit"
-                        >
-                          <MdEdit />
-                        </button>
-                        <button
-                          onClick={() => toggleStatus(promotion.id)}
-                          className="text-green-600 hover:text-green-900"
-                          title={promotion.status === 'active' ? 'Deactivate' : 'Activate'}
-                        >
-                          <MdVisibility />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(promotion.id)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Delete"
-                        >
-                          <MdDelete />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {/* ...existing code for scrollable content if needed... */}
           </div>
         </div>
       </div>
@@ -578,4 +577,5 @@ export default function PromotionsPage() {
     </div>
   );
 }
+
        
