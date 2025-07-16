@@ -71,20 +71,6 @@ const [orderLoading, setOrderLoading] = useState(true);
 }, []);
 
 
-  // const recentOrders = [
-  //   { id: '#ORD-001', customer: 'John Doe', total: '$299.99', status: 'Shipped', date: '2025-07-15' },
-  //   { id: '#ORD-002', customer: 'Jane Smith', total: '$1,299.99', status: 'Processing', date: '2025-07-15' },
-  //   { id: '#ORD-003', customer: 'Mike Johnson', total: '$599.99', status: 'Delivered', date: '2025-07-14' },
-  //   { id: '#ORD-004', customer: 'Sarah Wilson', total: '$899.99', status: 'Pending', date: '2025-07-14' },
-  // ];
-
-  // const sssss = [
-  //   { name: 'Gaming Laptop ASUS ROG', sales: 45, revenue: '$67,455' },
-  //   { name: 'Mechanical Keyboard RGB', sales: 89, revenue: '$8,900' },
-  //   { name: 'Wireless Gaming Mouse', sales: 156, revenue: '$7,800' },
-  //   { name: '27" Gaming Monitor', sales: 23, revenue: '$11,500' },
-  // ];
-
   return (
     <div className="space-y-6">
       {/* Header */}

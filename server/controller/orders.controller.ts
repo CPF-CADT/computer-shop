@@ -3,9 +3,9 @@ import { Orders } from '../db/models/Orders';
 import { Customer } from '../db/models/Customer';
 import { Address } from '../db/models/Address';
 import { Product } from '../db/models/Product';
-import { OrderItem } from '../db/models/OrderItem';
 import {sequelize} from '../db/sequelize';
 import { QueryTypes } from 'sequelize';
+import { OrderStatus } from '../db/models/Enums';
 
 /**
  * @swagger
@@ -231,3 +231,75 @@ export async function getOrderById(req: Request, res: Response): Promise<void> {
     res.status(500).json({ message: 'Failed to fetch order' });
   }
 }
+
+/**
+ * @swagger
+ * /api/order/summary:
+ *   get:
+ *     summary: Get total number of orders and counts by order status
+ *     tags: [Order]
+ *     responses:
+ *       200:
+ *         description: Summary of orders with total count and counts by status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalOrders:
+ *                   type: integer
+ *                   example: 100
+ *                   description: Total number of orders
+ *                 counts:
+ *                   type: object
+ *                   description: Number of orders grouped by status
+ *                   additionalProperties:
+ *                     type: integer
+ *                   example:
+ *                     Pending: 20
+ *                     Processing: 30
+ *                     Delivered: 40
+ *                     Cancelled: 10
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Failed to fetch order summary
+ */
+export async function getOrderSummary(req: Request, res: Response): Promise<void> {
+  try {
+    const statusCountsRaw = await Orders.findAll({
+      attributes: [
+        'order_status',
+        [sequelize.fn('COUNT', sequelize.col('order_status')), 'count'],
+      ],
+      group: ['order_status'],
+    });
+
+    // Initialize counts with 0 for each status
+    const counts: Record<string, number> = {
+      [OrderStatus.PENDING]: 0,
+      [OrderStatus.PROCESSING]: 0,
+      [OrderStatus.DELIVERED]: 0,
+      [OrderStatus.CANCELLED]: 0,
+    };
+
+    statusCountsRaw.forEach((row: any) => {
+      const status = row.order_status;
+      counts[status] = Number(row.dataValues.count);
+    });
+
+    const totalOrders = await Orders.count();
+
+    res.status(200).json({ totalOrders, counts });
+  } catch (error) {
+    console.error('Error fetching order summary:', error);
+    res.status(500).json({ message: 'Failed to fetch order summary' });
+  }
+}
+
