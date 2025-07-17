@@ -14,86 +14,84 @@ const LoginForm = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4">
-      <h1 className="text-4xl font-bold text-gray-800 mb-8 self-start ml-[5%] md:ml-[10%] lg:ml-[15%] xl:ml-[calc(50%-32rem)]">
+      <h1 className="text-3xl font-bold text-gray-800 mb-6 self-start ml-2 sm:ml-8">
         Login
       </h1>
-
-      <div className="bg-white p-8 sm:p-10 md:p-12 rounded-lg shadow-xl w-full max-w-4xl flex flex-col md:flex-row relative">
-        {/* Orange decorative line - visible for the form section */}
-        <div className="absolute left-0 top-0 bottom-[calc(100%-theme(space.72))] md:bottom-0 w-1.5 bg-[#FFA726]  rounded-l-lg md:hidden"></div>
-         <div className="hidden md:block absolute left-0 top-0 bottom-0 w-1.5 bg-[#FFA726] rounded-l-lg"></div>
-
-
-        {/* Left Side: Form */}
-        <div className="w-full md:w-1/2 md:pr-10 relative pl-6 md:pl-10"> {/* Added pl-6 for mobile, pl-10 for md to make space for the line */}
-          
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">
-            Hello, Registered Customer, Wellcome back!
-          </h2>
-          <p className="text-sm text-gray-500 mb-8">
-            If you have a registered account, sign in with your email address or phone number.
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
-                Email <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Your Email / Phone Number"
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm placeholder-gray-400"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-xs font-medium text-gray-700 mb-1"
-              >
-                Password <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm placeholder-gray-400"
-                required
-              />
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 pt-2">
-              <button
-                type="submit"
-                className="w-full sm:w-auto bg-[#FFA726] hover:cursor-pointer text-white font-semibold py-2.5 px-8 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 transition duration-150"
-              >
-                Sign In
-              </button>
-              <a
-                href="#"
-                className="text-xs text-orange-500 hover:underline text-center sm:text-right"
-              >
-                Forgot Your Password?
-              </a>
-            </div>
-          </form>
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-md flex flex-col gap-6 relative">
+        {/* Animated lock icon */}
+        <div className="flex justify-center mb-2">
+          <svg
+            className="animate-bounce"
+            width="48"
+            height="48"
+            viewBox="0 0 48 48"
+            fill="none"
+          >
+            <rect x="12" y="20" width="24" height="18" rx="4" fill="#FFA726"/>
+            <rect x="18" y="14" width="12" height="10" rx="6" fill="#FFD699"/>
+            <circle cx="24" cy="29" r="2" fill="#fff"/>
+          </svg>
         </div>
-
-        {/* Right Side: Logo */}
-        <div className="w-full md:w-1/2 flex items-center justify-center mt-10 md:mt-0 md:pl-10">
-          <img src={mainLogo} alt="" />
+        <h2 className="text-lg font-semibold text-gray-700 mb-1 text-center">
+          Welcome back!
+        </h2>
+        <p className="text-xs text-gray-500 mb-4 text-center">
+          Sign in with your phone number and password to continue.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
+              Phone Number <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Your Phone Number"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 text-sm placeholder-gray-400"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">
+              Password <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 text-sm placeholder-gray-400"
+              required
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
+            <button
+              type="submit"
+              className="w-full sm:w-auto bg-[#FFA726] hover:bg-[#ff9800] text-white font-semibold py-2.5 px-8 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-[#FFA726] focus:ring-opacity-50 transition duration-150 shadow hover:scale-105 active:scale-95"
+            >
+              Sign In
+            </button>
+            <a
+              href="#"
+              className="text-xs font-semibold text-[#FFA726] hover:underline text-center sm:text-right transition-colors"
+              style={{ minWidth: 120 }}
+            >
+              Forgot Your Password?
+            </a>
+          </div>
+        </form>
+        <div className="mt-4 text-xs text-gray-600 text-center">
+          <div className="font-semibold mb-1">Don't have an account?</div>
+          <div>
+            <a href="/register" className="text-orange-500 hover:underline font-medium">
+              Register now
+            </a>
+          </div>
         </div>
       </div>
-
-      <p className="mt-10 text-lg font-semibold text-gray-800 self-start ml-[5%] md:ml-[10%] lg:ml-[15%] xl:ml-[calc(50%-32rem)]">
-        New Customer?
-      </p>
     </div>
   );
 };

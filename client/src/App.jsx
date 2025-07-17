@@ -23,6 +23,8 @@ import Service from "./pages/Service";
 import Promotion from "./pages/Promotion";
 import AboutUs from "./pages/AboutUs";
 import Peripherals from "./pages/Peripherals";
+import UserProfilePage from './components/UserProfilePage';
+
 function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -51,6 +53,7 @@ function App() {
             <Route path="/promotion" element={<Promotion />} />
             <Route path="/about-us" element={<AboutUs />} />
             <Route path="/peripherals" element={<Peripherals />} />
+            <Route path="/profile" element={<UserProfilePage />} />
         </Routes>
       </div>
     </>
