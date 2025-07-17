@@ -64,8 +64,8 @@ export default function Sidebar({ activePage, setActivePage }) {
               onClick={() => handleNavClick(item.label)}
               className={`flex items-center px-6 py-3 cursor-pointer rounded-lg transition mx-2
                 ${item.label === activePage 
-                  ? "bg-orange-500 text-white shadow-lg" 
-                  : "hover:bg-orange-400 hover:shadow-md"
+                  ? "bg-white-500 text-white shadow-lg" 
+                  : "hover:bg-white hover:text-orange-600 hover:shadow-md"
                 }
               `}
             >
