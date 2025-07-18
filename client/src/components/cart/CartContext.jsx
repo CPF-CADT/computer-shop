@@ -1,96 +1,132 @@
-// src/context/CartContext.js
-import React, { createContext, useState, useContext } from 'react';
-import { mockProducts } from '../../data/mockData'; // Using the exported mockProducts
+// src/context/CartContext.jsx
+
+import { createContext, useState, useContext, useMemo, useCallback, useEffect } from 'react';
+import { apiService } from '../../service/api'; 
+import { useAuth } from '../context/AuthContext';
+
+const normalizeCartItem = (apiItem) => {
+  if (!apiItem) return null;
+
+  // Ensure price_at_purchase is treated as a number
+  const price = Number(apiItem.price_at_purchase);
+  const quantity = Number(apiItem.qty);
+
+  return {
+    id: apiItem.product_code,
+    product_code: apiItem.product_code,
+    qty: isNaN(quantity) ? 1 : quantity, 
+    price: isNaN(price) ? 0 : price, 
+  };
+};
 
 const CartContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
-  console.log("CartProvider IS RENDERING (Using mockProducts)");
+  const [cartItems, setCartItems] = useState([]);
+  const { isAuthenticated, user } = useAuth(); // Get authentication status and user from AuthContext
+  const [isLoadingCart, setIsLoadingCart] = useState(false);
+  const [cartError, setCartError] = useState(null);
 
-  const [cartItems, setCartItems] = useState(() => {
-    // Initialize cartItems with a *copy* of some items from mockProducts or an empty array
-    // This prevents modifying the original mockProducts array if it's used elsewhere for a product listing.
-    if (mockProducts && mockProducts.length >= 2) {
-      // Create new objects for the cart, ensuring 'qty' is present if not in original mockProduct for listing
-      const initialCart = [
-        {
-          ...mockProducts[0],
-          qty: mockProducts[0].qty || 1,
-          id: mockProducts[0].product_code, // Ensure unique id
-          price: typeof mockProducts[0].price === "object" ? Number(mockProducts[0].price.amount) : Number(mockProducts[0].price),
-        },
-        {
-          ...mockProducts[1],
-          qty: mockProducts[1].qty || 1,
-          id: mockProducts[1].product_code,
-          price: typeof mockProducts[1].price === "object" ? Number(mockProducts[1].price.amount) : Number(mockProducts[1].price),
-        },
-      ];
-      return initialCart;
-    } else if (mockProducts && mockProducts.length === 1) {
-      return [{
-        ...mockProducts[0],
-        qty: mockProducts[0].qty || 1,
-        id: mockProducts[0].product_code,
-        price: typeof mockProducts[0].price === "object" ? Number(mockProducts[0].price.amount) : Number(mockProducts[0].price),
-      }];
-    }
-    return []; // Default to an empty cart
-  });
+  // --- DEBUG LOG #1 ---
+  console.log('%cCartProvider is Rendering. Current cartItems:', 'color: blue; font-weight: bold;', cartItems);
 
-  const addToCart = (product) => {
-    setCartItems((prevItems) => {
-      if (!Array.isArray(prevItems)) prevItems = [];
-      const existingItem = prevItems.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id ? { ...item, qty: (item.qty || 0) + 1 } : item
-        );
+  // Effect to fetch cart when user authenticates or user changes
+  useEffect(() => {
+    const fetchUserCart = async () => {
+      if (isAuthenticated && user?.id) { // Only fetch if authenticated and user ID is available
+        setIsLoadingCart(true);
+        setCartError(null);
+        console.log(`%cFecthing cart for customer ID: ${user.id}`, 'color: purple; font-weight: bold;');
+        try {
+          const response = await apiService.getCustoemrCart(user.id);
+          console.log('%cAPI Response for cart:', 'color: purple;', response);
+          if (Array.isArray(response)) {
+            // Normalize API response items to match your cart item structure
+            const normalizedItems = response.map(normalizeCartItem).filter(item => item !== null);
+            setCartItems(normalizedItems);
+            console.log('%cCart fetched and set:', 'color: purple; font-weight: bold;', normalizedItems);
+          } else {
+            console.warn('API did not return an array for cart items:', response);
+            setCartItems([]);
+          }
+        } catch (error) {
+          console.error('Error fetching customer cart:', error);
+          setCartError(error.message || 'Failed to load cart items.');
+          setCartItems([]); // Clear cart on error
+        } finally {
+          setIsLoadingCart(false);
+        }
+      } else {
+        // If not authenticated, clear the cart to reflect no user cart
+        console.log('%cUser not authenticated or user ID missing, clearing cart.', 'color: red;');
+        setCartItems([]);
       }
-      // When adding a new product, ensure it has a qty property
-      return [...prevItems, { ...product, qty: 1 }];
-    });
-  };
+    };
 
-  const removeFromCart = (productId) => {
+    fetchUserCart();
+  }, [isAuthenticated, user?.id]); // Depend on isAuthenticated and user.id
+
+  const addToCart = useCallback((product) => {
+    // --- DEBUG LOG #2 ---
+    console.log('%caddToCart called with product:', 'color: green;', product);
+
+    const itemToAdd = normalizeCartItem(product);
+    if (!itemToAdd || itemToAdd.price <= 0) {
+      console.error("Attempted to add an invalid product to cart:", product);
+      return;
+    }
+    const quantityToAdd = itemToAdd.qty || 1;
     setCartItems((prevItems) => {
-      if (!Array.isArray(prevItems)) return [];
-      return prevItems.filter((item) => item.id !== productId);
+      // --- DEBUG LOG #3 ---
+      console.log('%cUpdating state. Previous items:', 'color: orange;', prevItems);
+      const existingItem = prevItems.find((item) => item.id === itemToAdd.id);
+      if (existingItem) {
+        const newItems = prevItems.map((item) =>
+          item.id === itemToAdd.id
+            ? { ...item, qty: item.qty + quantityToAdd }
+            : item
+        );
+        // --- DEBUG LOG #4 ---
+        console.log('%cState updated. New items:', 'color: green; font-weight: bold;', newItems);
+        return newItems;
+      }
+      const newItems = [...prevItems, { ...itemToAdd, qty: quantityToAdd }];
+      // --- DEBUG LOG #4 ---
+      console.log('%cState updated. New items:', 'color: green; font-weight: bold;', newItems);
+      return newItems;
     });
-  };
+  }, []);
 
-  const updateQuantity = (productId, newQty) => {
+  const removeFromCart = useCallback((productId) => {
+    setCartItems((prevItems) => prevItems.filter((item) => item.id !== productId));
+  }, []);
+
+  const updateQuantity = useCallback((productId, newQty) => {
     const quantity = Number(newQty);
-    if (isNaN(quantity) || quantity < 0) return;
-
-    if (quantity < 1) {
+    if (isNaN(quantity) || quantity < 1) {
       removeFromCart(productId);
       return;
     }
-    setCartItems((prevItems) => {
-      if (!Array.isArray(prevItems)) return [];
-      return prevItems.map((item) =>
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
         item.id === productId ? { ...item, qty: quantity } : item
-      );
-    });
-  };
+      )
+    );
+  }, [removeFromCart]);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCartItems([]);
-  };
+  }, []);
 
-  const cartTotal = Array.isArray(cartItems) ? cartItems.reduce((total, item) => {
-    const price = Number(item?.price) || 0;
-    const qty = Number(item?.qty) || 0; // Ensure qty is treated as a number
-    return total + price * qty;
-  }, 0) : 0;
+  const cartTotal = useMemo(() => {
+    return cartItems.reduce((total, item) => total + item.price * item.qty, 0);
+  }, [cartItems]);
 
-  const itemCount = Array.isArray(cartItems) ? cartItems.reduce((count, item) => {
-    const qty = Number(item?.qty) || 0; // Ensure qty is treated as a number
-    return count + qty;
-  }, 0) : 0;
+  const itemCount = useMemo(() => {
+    return cartItems.reduce((count, item) => count + item.qty, 0);
+  }, [cartItems]);
 
-  const contextValue = {
+  const contextValue = useMemo(() => ({
     cartItems,
     addToCart,
     removeFromCart,
@@ -98,7 +134,9 @@ export const CartProvider = ({ children }) => {
     clearCart,
     cartTotal,
     itemCount,
-  };
+    isLoadingCart, // Expose loading state
+    cartError,     // Expose error state
+  }), [cartItems, cartTotal, itemCount, addToCart, removeFromCart, updateQuantity, clearCart, isLoadingCart, cartError]);
 
   return (
     <CartContext.Provider value={contextValue}>
@@ -109,19 +147,8 @@ export const CartProvider = ({ children }) => {
 
 export const useCart = () => {
   const context = useContext(CartContext);
-  if (context === undefined || context === null) {
-    console.error('useCart must be used within a CartProvider. Context is currently:', context);
-    // Fallback to a default structure to prevent immediate crashes in UI components during development
-    // if the provider is accidentally missed.
-    return {
-        cartItems: [],
-        addToCart: () => console.warn("addToCart called without CartProvider"),
-        removeFromCart: () => console.warn("removeFromCart called without CartProvider"),
-        updateQuantity: () => console.warn("updateQuantity called without CartProvider"),
-        clearCart: () => console.warn("clearCart called without CartProvider"),
-        cartTotal: 0,
-        itemCount: 0
-    };
+  if (context === null) {
+    throw new Error('useCart must be used within a CartProvider');
   }
   return context;
 };

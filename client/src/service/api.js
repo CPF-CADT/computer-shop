@@ -10,10 +10,18 @@ const apiClient = axios.create({
 const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB
 
 export const apiService = {
-
+  getCustoemrCart:async (custoemrId)=>{
+    try{
+      const response = await apiClient.get(`cart-item/${custoemrId}`)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch Order stats");
+    }
+  }
+  ,
   getOrderSummary:async ()=>{
     try {
-      const response = await apiClient.get('/order/summary');
+      const response = await apiClient.get('order/summary');
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to fetch Order stats");
@@ -21,7 +29,7 @@ export const apiService = {
   },
   getOrders: async ({ page = 1, limit = 10, sortBy = 'date', sortType = 'ASC',includeItem=false }) => {
     try {
-      const response = await apiClient.get('/order', {
+      const response = await apiClient.get('order', {
         params: { page, limit, sortBy, sortType,includeItem }
       });
       return response.data; 
@@ -31,7 +39,7 @@ export const apiService = {
   },
   getUserOrderdetail:async(order_id)=>{
     try {
-      const response = await apiClient.get(`/order/${order_id}`)
+      const response = await apiClient.get(`order/${order_id}`)
       return response.data; 
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to fetch orders");
@@ -39,7 +47,7 @@ export const apiService = {
   },
   getStoreStatsCount: async (tables) => {
     try {
-      const response = await apiClient.post('/store-infor/counts', tables);
+      const response = await apiClient.post('store-infor/counts', tables);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to fetch dashboard stats");
@@ -77,6 +85,15 @@ export const apiService = {
     try {
       const response = await apiClient.get('product',{ params:query_param });
       console.log(query_param);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch products:', error.message);
+      throw error;
+    }
+  },
+  getProductDetail: async (product_id) => {
+    try {
+      const response = await apiClient.get(`product/${product_id}/detail`);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch products:', error.message);

@@ -1,49 +1,41 @@
 // src/components/checkout/OrderSummaryCheckout.js
-import React from 'react';
 import { useCart } from '../cart/CartContext';
 
-const OrderSummaryCheckout = ({ shippingCost = 0 }) => { // shippingCost can be passed as prop
+const OrderSummaryCheckout = ({ shippingCost = 0, currency = "USD" }) => { // Added currency prop
   const { cartItems, cartTotal } = useCart();
 
-  const taxRate = 0.05; // 5%
+  const taxRate = 0.07; // Updated to 7% as per CheckoutPage calculation
   const taxAmount = cartTotal * taxRate;
-  const orderTotal = cartTotal + shippingCost + taxAmount;
+  const orderTotal = cartTotal;
+
+  // Helper to format currency
+  const formatCurrency = (amount) => {
+    return `${amount.toFixed(2)} ${currency}`;
+  };
 
   return (
-    <div className="bg-light-bg p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Order Summary</h2>
-      <div className="max-h-60 overflow-y-auto mb-4 pr-2"> {/* Scrollable item list */}
+    <div className="bg-white p-5 md:p-6 rounded-lg shadow-md sticky top-8"> {/* Adjusted bg-light-bg to bg-white */}
+      <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2.5">Order Summary</h3> {/* Adjusted h2 to h3, and styling */}
+      <div className="max-h-60 overflow-y-auto mb-3 pr-1 space-y-2.5"> {/* Adjusted styling */}
         {cartItems.map(item => (
-          <div key={item.id} className="flex justify-between items-start py-2 border-b last:border-b-0">
-            <div className="flex">
-              <img src={item.image} alt={item.name} className="w-12 h-12 object-contain rounded mr-3"/>
+          <div key={item.id} className="flex justify-between items-center text-xs"> {/* Adjusted styling */}
+            <div className="flex items-center">
+              <img src={item.image} alt={item.name} className="w-10 h-10 object-contain rounded mr-2.5 border"/> {/* Adjusted styling */}
               <div>
-                <p className="text-sm font-medium text-gray-700">{item.name}</p>
-                <p className="text-xs text-gray-500">Qty: {item.qty}</p>
+                <p className="font-medium text-gray-700 leading-tight">{item.name} (x{item.qty})</p>
+                <p className="text-gray-500">{formatCurrency(item.price)} each</p> {/* Use formatCurrency */}
               </div>
             </div>
-            <p className="text-sm text-gray-600">${(item.price * item.qty).toFixed(2)}</p>
+            <p className="text-gray-600 font-medium">{formatCurrency(item.price * item.qty)}</p> {/* Use formatCurrency */}
           </div>
         ))}
       </div>
-      <p className="text-sm text-gray-600 mb-2">{cartItems.length} items in cart</p>
-      
-      <div className="space-y-1 text-sm text-gray-700 mt-4 pt-4 border-t">
-        <div className="flex justify-between">
-          <span>Subtotal</span>
-          <span>${cartTotal.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Shipping</span>
-          <span>${shippingCost.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
-          <span>${taxAmount.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between font-bold text-gray-800 text-base pt-2 border-t mt-2">
-          <span>Order Total</span>
-          <span>${orderTotal.toFixed(2)}</span>
+      <div className="space-y-1.5 text-sm text-gray-700 mt-4 pt-3 border-t"> {/* Adjusted styling */}
+        <div className="flex justify-between"><span>Subtotal:</span><span className="font-medium">{formatCurrency(cartTotal)}</span></div> {/* Use formatCurrency */}
+        <div className="flex justify-between"><span>Shipping:</span><span className="font-medium">{formatCurrency(shippingCost)}</span></div> {/* Use formatCurrency */}
+        <div className="flex justify-between"><span>Tax (Est.):</span><span className="font-medium">{formatCurrency(taxAmount)}</span></div> {/* Use formatCurrency */}
+        <div className="flex justify-between font-bold text-gray-800 text-base pt-2.5 border-t mt-2.5"> {/* Adjusted styling */}
+          <span>Total:</span><span>{formatCurrency(orderTotal)}</span> {/* Use formatCurrency */}
         </div>
       </div>
     </div>

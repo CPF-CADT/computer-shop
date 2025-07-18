@@ -1,164 +1,145 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { apiService } from '../service/api';
+
+// Import Static Components and Assets
 import Categories from "./Categories";
 import Navigate from "./Navigate";
 import { OverlayHome, OverlayBrands } from "./Overlay";
+import ProductCard from "./Product/ProductCard";
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+
 import HotProduct from "./Product/HotProduct";
 import ServiceProvide from "./Advertise/ServiceProvide";
 import BannerGPU from "./Advertise/BannerGPU";
-import ProductCard from "./Product/ProductCard";
-import ProductSectionGroup from './Product/ProductSectionGroup';
-
 import GPU from '../assets/RTX3080.png';
 import Monitor from '../assets/Monitor/Rog Monitor.png';
 import Mouse from '../assets/Mouse/Rog Mouse.png';
 import Keyboard from '../assets/Keyboard/Keyboard Razer.png';
 
-// Import your mock data
-import { homePageLaptops, mockPC, mockLaptop } from "../data/mockData";
 
-export default function Home() {
+// Reusable Carousel Component for horizontal product lists with pagination
+const ProductCarousel = ({ title, products, productsPerPage = 4 }) => {
+  const scrollContainerRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(0);
+
+  const totalPages = Math.ceil(products.length / productsPerPage);
+
+  const handleNextPage = () => {
+    setCurrentPage((prevPage) => (prevPage + 1) % totalPages);
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prevPage) => (prevPage - 1 + totalPages) % totalPages);
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+    }
+  };
+
+  const startIndex = currentPage * productsPerPage;
+  const endIndex = startIndex + productsPerPage;
+  const displayedProducts = products.slice(startIndex, endIndex);
+
+  if (!products || products.length === 0) {
+    return null;
+  }
+
   return (
-    <>
-      <div className="max-w-[1200px] mx-auto">
-        <div className="flex flex-row gap-x-10 mt-6">
-          <Categories />
-          <div className="w-full flex flex-col ">
-            <Navigate />
-            <OverlayHome />
-          </div>
-        </div>
-        <div className="flex flex-col">
-          <h2 className="text-2xl font-bold my-5">All Brands</h2>
-          <OverlayBrands />
-          <span className="mt-5 mx-auto w-full bg-gray-50 rounded-md my-6 px-6 py-4 flex justify-center">
-            we provide all best computer with high quality original from company, cheap cheap, buy 1 free 1 for every PC
-          </span>
-        </div>
-        <div className="flex flex-row gap-10 justify-between">
-          <HotProduct brand_model={'NVIDIA GeForce RTX'} type_product={'Graphic Card'} slogan={'Huury Up, Limited time offer only!!'} box_width={610} image={GPU}/>
-          <HotProduct brand_model={'ROG 4K OLED'} type_product={'Monitor'} slogan={'Huury Up, Limited time offer only!!'} box_width={300} image={Monitor}/>
-          <HotProduct brand_model={'Razer Wire'} type_product={'Mouse'} slogan={'Huury Up, Limited time offer only!!'} box_width={100} image={Mouse}/>
-          <HotProduct brand_model={'Razer Wire'} type_product={'Keyboard'} slogan={'Huury Up, Limited time offer only!!'} box_width={100} image={Keyboard}/>
-        </div>
-      </div>
-      <div>
-        <h2 className="text-2xl font-bold my-6">New In</h2>
-        <div className="flex flex-row gap-9">
-          {homePageLaptops.map(product => (
-            <ProductCard
-              key={product.product_code}
-              productId={product.product_code}
-              image={product.image_path}
-              title={product.name}
-              description={product.description}
-              oldPrice={parseFloat(product.price.amount)}
-              newPrice={
-                product.discount && product.discount.type === "Percentage"
-                  ? (parseFloat(product.price.amount) * (1 - parseFloat(product.discount.value) / 100)).toFixed(2)
-                  : parseFloat(product.price.amount)
-              }
-              reviews={product.feedback.totalReview}
-              rating={parseFloat(product.feedback.rating)}
-            />
-          ))}
-        </div>
-      </div>
-      <div>
-        <div className="w-full bg-gray-50 rounded-md my-6 px-6 py-4 flex justify-center">
-          <span className="text-center text-base">
-            <span className="font-semibold text-orange-500">own</span> it now, up to 6 months interest free{' '}
-            <a href="#" className="text-indigo-900 underline text-sm font-medium">learn more</a>
-          </span>
-        </div>
-      </div>
-      <div>
-        <BannerGPU />
-      </div>
-
-      {/* Low End, High End, Used PC Section */}
-      <div className="flex flex-col mt-8">
-        <h3 className="font-bold text-lg mb-2">Low End</h3>
-        <div className="flex flex-row gap-9">
-          {mockPC.slice(0, 3).map(product => (
-            <ProductCard
-              key={product.product_code}
-              productId={product.product_code}
-              image={product.image_path}
-              title={product.name}
-              description={product.description}
-              oldPrice={parseFloat(product.price.amount) + 500}
-              newPrice={parseFloat(product.price.amount)}
-              reviews={product.feedback.totalReview}
-              rating={parseFloat(product.feedback.rating)}
-            />
-          ))}
-        </div>
-      </div>
-      {/* ROG O series Section */}
-      <div className="flex flex-col mt-8">
-        <h3 className="font-bold text-lg mb-2">ROG O series</h3>
-        <div className="relative">
-          <div className="flex overflow-x-auto gap-9 pb-2 
-            scrollbar-thin scrollbar-thumb-orange-400/60 scrollbar-track-gray-100/20 
-            hover:scrollbar-thumb-orange-500/80">
-            {mockLaptop.map(product => (
-              <div className="flex-none" key={product.product_code}>
+    <div className="flex flex-col mt-8">
+      <h3 className="font-bold text-xl mb-4">{title}</h3>
+      <div className="relative">
+        <div
+          ref={scrollContainerRef}
+          className="flex overflow-x-hidden gap-8 pb-4 scrollbar-hide" 
+        >
+          {displayedProducts.map(product => {
+            const originalPrice = parseFloat(product.price.amount);
+            let discountedPrice = originalPrice;
+            if (product.discount && product.discount.type === 'Percentage') {
+              discountedPrice = originalPrice * (1 - parseFloat(product.discount.value) / 100);
+            }
+            return (
+              <div className="flex-none w-1/4" key={product.product_code}> 
                 <ProductCard
                   productId={product.product_code}
                   image={product.image_path}
                   title={product.name}
                   description={product.description}
-                  oldPrice={parseFloat(product.price.amount) + 500}
-                  newPrice={parseFloat(product.price.amount)}
+                  oldPrice={originalPrice.toFixed(2)}
+                  newPrice={discountedPrice.toFixed(2)}
                   reviews={product.feedback.totalReview}
                   rating={parseFloat(product.feedback.rating)}
+                  imgClassName="w-full h-48 object-contain"
                 />
               </div>
-            ))}
-          </div>
+            )
+          })}
         </div>
+        {totalPages > 1 && ( // Only show buttons if there's more than one page
+          <>
+            <button onClick={handlePrevPage} className="absolute left-0 top-1/2 -translate-y-1/2 bg-orange-300 hover:bg-orange-500 p-3 rounded-full shadow-md transition z-10 opacity-75 hover:opacity-100" aria-label="Scroll left"><FaChevronLeft /></button>
+            <button onClick={handleNextPage} className="absolute right-0 top-1/2 -translate-y-1/2 bg-orange-300 hover:bg-orange-500 p-3 rounded-full shadow-md transition z-10 opacity-75 hover:opacity-100" aria-label="Scroll right"><FaChevronRight /></button>
+          </>
+        )}
       </div>
-      {/* Accessories Section Example */}
-      <div className="flex flex-col mt-8">
-        <h3 className="font-bold text-lg mb-2">Accessories</h3>
-        <div className="flex flex-row gap-9">
-          {/* Example static accessories, replace with mock data if available */}
-          {[1,2,3,4].map(idx => (
-            <ProductCard
-              key={idx}
-              productId={`accessory-${idx}`}
-              image={Keyboard}
-              title={"Razer Barracuda X Chrome Wireless Gaming Headset"}
-              description={"2.4GHz Wireless & Bluetooth"}
-              oldPrice={129.00}
-              newPrice={78.00}
-              reviews={4}
-              rating={4}
-            />
-          ))}
-        </div>
+    </div>
+  );
+};
+
+
+// Main Home Page Component
+export default function Home() {
+  const [newInProducts, setNewInProducts] = useState([]);
+  const [lowEndPCs, setLowEndPCs] = useState([]);
+  const [rogLaptops, setRogLaptops] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        // Increased limits to allow for pagination within carousels
+        const [newInResponse, lowEndResponse, rogResponse] = await Promise.all([
+          apiService.getProducts({ limit: 12, sort: 'desc', order_column: 'product_code' }), // Fetch more for pagination
+          apiService.getProducts({ limit: 12, type_product: 'VGA', sort: 'asc', order_column: 'price' }), // Fetch more for pagination
+          apiService.getProducts({ limit: 12, brand: 'ASUS', sort: 'asc', type_product: 'Labtop' }) // Fetch more for pagination
+        ]);
+        setNewInProducts(newInResponse.data);
+        setLowEndPCs(lowEndResponse.data);
+        setRogLaptops(rogResponse.data);
+      } catch (err) {
+        setError('Failed to load products. Please try again later.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHomeData();
+  }, []);
+
+  if (loading) return <div className="text-center py-20 text-xl font-semibold">Loading awesome gear...</div>;
+  if (error) return <div className="text-center py-20 text-xl font-semibold text-red-500">{error}</div>;
+
+  return (
+    <div className="max-w-[1200px] mx-auto">
+      <div className="flex flex-row gap-x-10 mt-6"><Categories /><div className="w-full flex flex-col "><Navigate /><OverlayHome /></div></div>
+      <div className="flex flex-col"><h2 className="text-2xl font-bold my-5">All Brands</h2><OverlayBrands /></div>
+      <div className="flex flex-row gap-10 justify-between">
+        <HotProduct brand_model={'NVIDIA GeForce RTX'} type_product={'Graphic Card'} slogan={'Hurry Up, Limited time offer!'} box_width={610} image={GPU}/>
+        <HotProduct brand_model={'ROG 4K OLED'} type_product={'Monitor'} slogan={'Hurry Up, Limited time offer!'} box_width={300} image={Monitor}/>
+        <HotProduct brand_model={'Razer Wireless'} type_product={'Mouse'} slogan={'Hurry Up, Limited time offer!'} box_width={100} image={Mouse}/>
+        <HotProduct brand_model={'Razer Wireless'} type_product={'Keyboard'} slogan={'Hurry Up, Limited time offer!'} box_width={100} image={Keyboard}/>
       </div>
-      {/* Monitor Section Example */}
-      <div className="flex flex-col mt-8">
-        <h3 className="font-bold text-lg mb-2">ROG Monitor</h3>
-        <div className="flex flex-row gap-9">
-          {[1,2,3].map(idx => (
-            <ProductCard
-              key={idx}
-              productId={`monitor-${idx}`}
-              image={Monitor}
-              title={"EX DISPLAY - ASUS ROG Swift"}
-              description={"Gaming Monitors"}
-              oldPrice={699.00}
-              newPrice={499.00}
-              reviews={2}
-              rating={5}
-            />
-          ))}
-        </div>
-      </div>
-        <div className="mt-10">
-            <ServiceProvide />
-        </div>
-    </>
+
+      <ProductCarousel title="New In" products={newInProducts} />
+      
+      <ProductCarousel title="Budget-Friendly Gaming PCs" products={lowEndPCs} />
+      
+      <div className="mt-8"><BannerGPU /></div>
+      <ProductCarousel title="ROG Series Laptops" products={rogLaptops} />
+      <div className="mt-10"><ServiceProvide /></div>
+    </div>
   );
 }

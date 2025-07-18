@@ -1,90 +1,197 @@
+// src/components/ProductDetails/ProductDetails.js (Corrected and Complete)
+
 import { useParams } from 'react-router-dom';
-import { useState } from 'react';
-import { mockLaptop, mockPC } from '../../data/mockData';
-import ProductQuantity from './ProductQuantity';
-import ProductReviews from './ProductReviews';
-import AddToCart from './AddToCart';
+import { useState, useEffect } from 'react';
+import { FaPlus, FaMinus, FaStar } from 'react-icons/fa';
+import { useCart } from '../cart/CartContext';
+import toast from 'react-hot-toast';
+import { apiService } from '../../service/api';
 import ProductBreadcrumb from './ProductBreadcrumb';
-import { useCart } from '../cart/CartContext'; // <-- Add this import
+
+const StarRating = ({ rating, size = 'text-xl' }) => {
+  const totalStars = 5;
+  const fullStars = Math.floor(rating);
+  return (
+    <div className={`flex items-center text-yellow-400 ${size}`}>
+      {[...Array(fullStars)].map((_, i) => <FaStar key={`full-${i}`} />)}
+      {[...Array(totalStars - fullStars)].map((_, i) => <FaStar key={`empty-${i}`} className="text-gray-300" />)}
+    </div>
+  );
+};
+
+// --- Sub-component for the new two-column review section ---
+const RatingsAndReviews = ({ product }) => {
+    const [newRating, setNewRating] = useState(5);
+    const [userName, setUserName] = useState('');
+    const [comment, setComment] = useState('');
+
+    const handleReviewSubmit = async (e) => {
+        e.preventDefault();
+        const reviewData = {
+            productId: product.product_code,
+            rating: newRating,
+            customerName: userName,
+            comment: comment
+        };
+        try {
+            // This is where you would call your API to save the review
+            // await apiService.submitReview(reviewData); 
+            toast.success("Thank you for your review!");
+            console.log("Submitting review:", reviewData);
+            setUserName('');
+            setComment('');
+            setNewRating(5);
+        } catch (error) {
+            toast.error("Could not submit your review. Please try again.");
+            console.error("Error submitting review:", error);
+        }
+    };
+
+    return (
+        <div className="mt-12 pt-8 border-t">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Ratings & Reviews</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+                {/* Left Column: Existing Reviews List */}
+                <div className="lg:col-span-3">
+                    <h3 className="text-lg font-semibold mb-4">What our customers are saying ({product.feedback.totalReview} Reviews)</h3>
+                    <div className="space-y-6">
+                        {product.customerFeedback && product.customerFeedback.length > 0 ? (
+                            product.customerFeedback.map(review => (
+                                <div key={review.feedback_id} className="pb-6 border-b last:border-b-0">
+                                    <div className="flex items-center gap-4 mb-2">
+                                        <StarRating rating={review.rating} size="text-lg" />
+                                        <p className="font-bold text-gray-800">{review.customerName}</p>
+                                    </div>
+                                    <p className="text-gray-600 mb-2">"{review.comment}"</p>
+                                    <p className="text-xs text-gray-400">
+                                        Reviewed on {new Date(review.feedbackDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                    </p>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-gray-500">There are no reviews for this product yet. Be the first!</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* Right Column: Submit Review Form */}
+                <div className="lg:col-span-2">
+                    <div className="bg-gray-50 p-6 rounded-lg sticky top-8">
+                         <h3 className="text-lg font-semibold mb-4">Write a review</h3>
+                        <form onSubmit={handleReviewSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Your Rating *</label>
+                                <div className="flex items-center gap-1">
+                                    {[...Array(5)].map((_, index) => {
+                                        const ratingValue = index + 1;
+                                        return (
+                                            <button type="button" key={ratingValue} onClick={() => setNewRating(ratingValue)} className="text-2xl focus:outline-none">
+                                                <FaStar className={ratingValue <= newRating ? 'text-yellow-400' : 'text-gray-300'} />
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                            <div>
+                                <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-1">Your name *</label>
+                                <input type="text" id="userName" value={userName} onChange={(e) => setUserName(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500" />
+                            </div>
+                             <div>
+                                <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-1">Your review for this product *</label>
+                                <textarea id="comment" rows="4" value={comment} onChange={(e) => setComment(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"></textarea>
+                            </div>
+                            <button type="submit" className="w-full bg-orange-500 text-white py-2.5 rounded-md font-semibold hover:bg-orange-600 transition">
+                                Submit Review
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 export default function ProductDetails() {
   const { productId } = useParams();
   const [quantity, setQuantity] = useState(1);
-  const { addToCart } = useCart(); // <-- Use cart context
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { addToCart } = useCart();
 
-  // Find product from all possible sources
-  const product = [...mockLaptop, ...mockPC].find(p => p.product_code === productId);
-
-  if (!product) {
-    return (
-      <div className="max-w-[1200px] mx-auto p-4">
-        <ProductBreadcrumb product={{ name: "Product Not Found" }} />
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
-          <p className="text-gray-600">This product is currently out of stock or unavailable.</p>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const result = await apiService.getProductDetail(productId);
+        setProduct(result);
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        setProduct(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [productId]);
 
   const handleAddToCart = () => {
-    addToCart({
-      ...product,
-      id: product.product_code,
-      qty: quantity,
-      price: typeof product.price === "object" ? Number(product.price.amount) : Number(product.price),
-      image: product.image_path,
-      name: product.name,
-      description: product.description,
-    });
+    addToCart({ ...product, qty: quantity });
+    toast.success(`${quantity} x ${product.name} added to cart!`);
   };
 
+  const handleQuantityChange = (amount) => {
+    setQuantity((prevQuantity) => Math.max(1, prevQuantity + amount));
+  };
+
+  if (loading) return <div className="text-center py-20 text-xl font-semibold">Loading product...</div>;
+  if (!product) return <div className="text-center py-20 text-xl font-semibold">Product Not Found</div>;
+
   return (
-    <div className="max-w-[1200px] mx-auto p-4">
+    <div className="max-w-6xl mx-auto p-4">
       <ProductBreadcrumb product={product} />
       
-      <div className="grid grid-cols-2 gap-8">
-        {/* Product Image */}
-        <div className="bg-white p-4 rounded-lg">
+      <div className="grid md:grid-cols-2 gap-8 mt-4">
+        <div className="bg-white p-4 rounded-lg shadow-sm">
           <img src={product.image_path} alt={product.name} className="w-full object-contain" />
         </div>
 
-        {/* Product Info */}
         <div>
-          <h1 className="text-2xl font-bold mb-4">{product.name}</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold mb-2">{product.name}</h1>
+          <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+              <span>Brand: <strong>{product.brand.name}</strong></span>
+              <span>Code: <strong>{product.product_code}</strong></span>
+          </div>
           <p className="text-gray-600 mb-4">{product.description}</p>
           
-          {/* Price */}
           <div className="mb-6">
-            <span className="text-3xl font-bold">
-              ${parseFloat(product.price.amount).toFixed(2)}
+            <span className="text-3xl font-bold text-gray-800">
+                ${parseFloat(product.price.amount).toFixed(2)}
             </span>
-            {product.discount && (
-              <span className="text-gray-500 line-through ml-2">
-                ${(parseFloat(product.price.amount) * (1 + 0.2)).toFixed(2)}
-              </span>
-            )}
           </div>
 
-          <ProductQuantity onQuantityChange={setQuantity} />
-          <AddToCart onAddToCart={handleAddToCart} />
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-center border rounded-md">
+              <button onClick={() => handleQuantityChange(-1)} className="p-3 text-gray-600 hover:bg-gray-100"><FaMinus size={12} /></button>
+              <span className="px-5 py-2 text-lg font-medium w-16 text-center">{quantity}</span>
+              <button onClick={() => handleQuantityChange(1)} className="p-3 text-gray-600 hover:bg-gray-100"><FaPlus size={12} /></button>
+            </div>
+            <button onClick={handleAddToCart} className="flex-grow bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 font-semibold">
+              Add to Cart
+            </button>
+          </div>
 
-          {/* Specifications */}
-          <div className="border-t pt-6">
-            <h2 className="font-bold mb-4">Specifications</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>Brand: {product.brand}</div>
-              <div>Category: {product.category.title}</div>
-              <div>Type: {product.type.title}</div>
+          <div className="border-t pt-6 text-sm">
+            <h2 className="font-semibold mb-2 text-base">Specifications</h2>
+            <div className="space-y-1">
+                <p><strong>Category:</strong> {product.category.title}</p>
+                <p><strong>Type:</strong> {product.type.title}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <ProductReviews 
-        productRating={product.feedback.rating} 
-        totalReviews={product.feedback.totalReview} 
-      />
+      {/* This now calls the correct component and passes all the necessary data */}
+      <RatingsAndReviews product={product} />
     </div>
   );
 }

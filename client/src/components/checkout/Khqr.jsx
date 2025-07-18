@@ -1,23 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import QRCode from 'react-qr-code';
 import { useNavigate } from 'react-router-dom';
 
-const Khqr = ({ name = "Rathanak", amount = 0 }) => {
-  const [paid, setPaid] = useState(false);
-  const qrValue = JSON.stringify({ name, amount });
+const Khqr = ({ name = "Rathanak", amount = 0, qrValue = "" }) => {
   const navigate = useNavigate();
 
-  // Simulate payment success for demo (replace with backend logic)
+  // This useEffect is removed as payment status is now handled by CheckoutPage polling
   // useEffect(() => { setTimeout(() => setPaid(true), 5000); }, []);
 
-  // Redirect to success page when paid
-  useEffect(() => {
-    if (paid) {
-      navigate('/success');
-    }
-  }, [paid, navigate]);
-
-  // Call setPaid(true) from backend logic when payment is confirmed
+  // The redirection to success page will be triggered by the parent CheckoutPage
+  // when the backend confirms payment success.
+  // useEffect(() => {
+  //   if (paid) {
+  //     navigate('/success');
+  //   }
+  // }, [paid, navigate]);
 
   return (
     <div className="max-w-lg mx-auto rounded-2xl overflow-hidden shadow-2xl border-2 border-gray-400">
@@ -29,14 +26,19 @@ const Khqr = ({ name = "Rathanak", amount = 0 }) => {
 
       {/* Name and Amount */}
       <div className="bg-white px-10 py-8 text-center border-b border-dashed">
-        <h2 className="text-3xl font-semibold">{name}</h2>
-        <p className="text-5xl font-bold mt-4">${amount}</p>
+        <h2 className="text-3xl text-black font-semibold">{name}</h2>
+        <p className="text-5xl text-black font-bold mt-4">R{amount.toFixed(2)}</p>
       </div>
 
       {/* QR Code */}
       <div className="bg-white p-10 flex flex-col items-center justify-center">
         <div className="relative">
-          <QRCode value={qrValue} size={300} />
+          {/* Use the qrValue prop directly */}
+          {qrValue ? (
+            <QRCode value={qrValue} size={300} />
+          ) : (
+            <div className="text-gray-500 text-center">Loading QR code...</div>
+          )}
         </div>
       </div>
     </div>
