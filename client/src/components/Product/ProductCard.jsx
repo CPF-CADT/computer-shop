@@ -18,7 +18,7 @@ export default function ProductCard({
     e.preventDefault();
     if (productId) {
       window.scrollTo({ top: 0, behavior: "smooth" });
-      navigate(`/product/${productId}`);
+      navigate(`/product/${productId}/detail`);
     }
   };
 
