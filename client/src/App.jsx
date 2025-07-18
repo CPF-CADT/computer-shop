@@ -25,6 +25,8 @@ import Peripherals from "./pages/Peripherals";
 import { CartProvider } from './components/cart/CartContext';
 import { Toaster } from 'react-hot-toast'; 
 import { AuthProvider } from './components/context/AuthContext';
+import UserProfilePage from './components/UserProfilePage';
+
 function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
