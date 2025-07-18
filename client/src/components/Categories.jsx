@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 const categories = [
   { name: "Laptop", path: "/laptop" },
   { name: "Desktop", path: "/desktop" },
-  { name: "PC Components", path: "/components" },
+  { name: "PC Components", path: "/pc-components" },
   { name: "Peripherals", path: "/peripherals" },
-  { name: "Networking", path: "/networking" },
+  { name: "Custom PC", path: "/custom-pc" }, // changed from Networking
   { name: "Monitors", path: "/monitors" },
 ];
 

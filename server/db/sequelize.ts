@@ -2,53 +2,16 @@ import { Sequelize } from 'sequelize-typescript';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Import your model classes
-import {
-  Customer,
-  Staff,
-  Category,
-  Brand,
-  Supplier,
-  Promotion,
-  PaymentMethod,
-  Address,
-  TypeProduct,
-  Product,
-  ProductFeedback,
-  InventoryLog,
-  Orders,
-  OrderItem,
-  PaymentTransaction,
-  ProductSupplier,
-  ProductPromotion,
-  CartItem,
-  TwoFaToken,
-} from './models'; // Adjust import path if needed
+import * as allModels from './models';
 
-export const sequelize = new Sequelize(process.env.DATABASE_URL!, {
+if (!process.env.DATABASE_URL) {
+  throw new Error('FATAL ERROR: DATABASE_URL environment variable is not set.');
+}
+
+export const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'mysql',
-  logging: false, // Set to true to log SQL queries
-  models: [
-    Customer,
-    Staff,
-    Category,
-    Brand,
-    Supplier,
-    Promotion,
-    PaymentMethod,
-    Address,
-    TypeProduct,
-    Product,
-    ProductFeedback,
-    InventoryLog,
-    Orders,
-    OrderItem,
-    PaymentTransaction,
-    ProductSupplier,
-    ProductPromotion,
-    CartItem,
-    TwoFaToken,
-  ],
+  logging: false,
+    models: Object.values(allModels),
 });
 
 export async function connectToDatabase() {
@@ -57,5 +20,6 @@ export async function connectToDatabase() {
         console.log('Connection successfully.');
     } catch (error) {
         console.error('Unable to connect : ', error);
+        throw error;
     }
 }

@@ -5,10 +5,12 @@ import ProductQuantity from './ProductQuantity';
 import ProductReviews from './ProductReviews';
 import AddToCart from './AddToCart';
 import ProductBreadcrumb from './ProductBreadcrumb';
+import { useCart } from '../cart/CartContext'; // <-- Add this import
 
 export default function ProductDetails() {
   const { productId } = useParams();
   const [quantity, setQuantity] = useState(1);
+  const { addToCart } = useCart(); // <-- Use cart context
 
   // Find product from all possible sources
   const product = [...mockLaptop, ...mockPC].find(p => p.product_code === productId);
@@ -26,8 +28,15 @@ export default function ProductDetails() {
   }
 
   const handleAddToCart = () => {
-    console.log('Adding to cart:', { product, quantity });
-    // Add your cart logic here
+    addToCart({
+      ...product,
+      id: product.product_code,
+      qty: quantity,
+      price: typeof product.price === "object" ? Number(product.price.amount) : Number(product.price),
+      image: product.image_path,
+      name: product.name,
+      description: product.description,
+    });
   };
 
   return (
