@@ -29,6 +29,9 @@ export default function Nav() {
 
       {isAuthenticated && user ? (
         <>     
+        {
+          console.log(user)
+        }
           <button
             className="border border-gray-200 rounded-full w-[150px] h-full text-lg flex flex-row items-center justify-center px-6 relative"
             onClick={() => navigate('/cart')}
@@ -43,9 +46,9 @@ export default function Nav() {
             )}
           </button>
           <div className="flex items-center space-x-3 ml-7">
-            <Link to={`/profile/${user.id}`} className="flex items-center space-x-2">
+            <Link to={`/user/profile/${user.id}`} className="flex items-center space-x-2">
               <img
-                src={user.profile_img_path || 'https://via.placeholder.com/40'}
+                src={user.profile_img_path || 'https://res.cloudinary.com/dokut37k6/image/upload/v1752849581/145857007_307ce493-b254-4b2d-8ba4-d12c080d6651_zppdms.svg'}
                 alt={user.name || 'User Profile'}
                 className="h-10 w-10 rounded-full object-cover border border-gray-300"
               />

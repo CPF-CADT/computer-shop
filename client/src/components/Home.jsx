@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { apiService } from '../service/api';
+import { useCategory } from './context/CategoryContext'; // Import useCategory hook
 
 // Import Static Components and Assets
-import Categories from "./Categories";
+import Categories from "./Categories"; // Assuming this component uses category data
 import Navigate from "./Navigate";
 import { OverlayHome, OverlayBrands } from "./Overlay";
 import ProductCard from "./Product/ProductCard";
@@ -52,7 +53,7 @@ const ProductCarousel = ({ title, products, productsPerPage = 4 }) => {
       <div className="relative">
         <div
           ref={scrollContainerRef}
-          className="flex overflow-x-hidden gap-8 pb-4 scrollbar-hide" 
+          className="flex overflow-x-hidden gap-8 pb-4 scrollbar-hide"
         >
           {displayedProducts.map(product => {
             const originalPrice = parseFloat(product.price.amount);
@@ -61,7 +62,7 @@ const ProductCarousel = ({ title, products, productsPerPage = 4 }) => {
               discountedPrice = originalPrice * (1 - parseFloat(product.discount.value) / 100);
             }
             return (
-              <div className="flex-none w-1/4" key={product.product_code}> 
+              <div className="flex-none w-1/4" key={product.product_code}>
                 <ProductCard
                   productId={product.product_code}
                   image={product.image_path}
@@ -94,12 +95,16 @@ export default function Home() {
   const [newInProducts, setNewInProducts] = useState([]);
   const [lowEndPCs, setLowEndPCs] = useState([]);
   const [rogLaptops, setRogLaptops] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loadingProducts, setLoadingProducts] = useState(true); // Renamed to avoid conflict
+  const [errorProducts, setErrorProducts] = useState(null); // Renamed to avoid conflict
+
+  const { loadingCategories, categoryError } = useCategory();
 
   useEffect(() => {
-    const fetchHomeData = async () => {
+    const fetchHomeProducts = async () => {
       try {
+        setLoadingProducts(true);
+        setErrorProducts(null);
         // Increased limits to allow for pagination within carousels
         const [newInResponse, lowEndResponse, rogResponse] = await Promise.all([
           apiService.getProducts({ limit: 12, sort: 'desc', order_column: 'product_code' }), // Fetch more for pagination
@@ -110,22 +115,39 @@ export default function Home() {
         setLowEndPCs(lowEndResponse.data);
         setRogLaptops(rogResponse.data);
       } catch (err) {
-        setError('Failed to load products. Please try again later.');
+        setErrorProducts('Failed to load products. Please try again later.');
         console.error(err);
       } finally {
-        setLoading(false);
+        setLoadingProducts(false);
       }
     };
-    fetchHomeData();
-  }, []);
+    fetchHomeProducts();
+  }, []); // This useEffect now only fetches products
 
-  if (loading) return <div className="text-center py-20 text-xl font-semibold">Loading awesome gear...</div>;
-  if (error) return <div className="text-center py-20 text-xl font-semibold text-red-500">{error}</div>;
+  // Combine loading states
+  const overallLoading = loadingProducts || loadingCategories;
+  // Combine error states
+  const overallError = errorProducts || categoryError;
+
+
+  if (overallLoading) return <div className="text-center py-20 text-xl font-semibold">Loading awesome gear...</div>;
+  if (overallError) return <div className="text-center py-20 text-xl font-semibold text-red-500">{overallError}</div>;
 
   return (
     <div className="max-w-[1200px] mx-auto">
-      <div className="flex flex-row gap-x-10 mt-6"><Categories /><div className="w-full flex flex-col "><Navigate /><OverlayHome /></div></div>
-      <div className="flex flex-col"><h2 className="text-2xl font-bold my-5">All Brands</h2><OverlayBrands /></div>
+      {/* Categories component can now receive categories data from context if it needs it */}
+      {/* For example: <Categories categories={categories} /> */}
+      <div className="flex flex-row gap-x-10 mt-6">
+        <Categories /> {/* Assuming Categories component internally uses useCategory or receives props */}
+        <div className="w-full flex flex-col gap-y-5 ">
+          <Navigate />
+          <OverlayHome />
+        </div>
+      </div>
+      <div className="flex flex-col mb-5">
+        <h2 className="text-2xl font-bold my-5">All Brands</h2>
+        <OverlayBrands />
+      </div>
       <div className="flex flex-row gap-10 justify-between">
         <HotProduct brand_model={'NVIDIA GeForce RTX'} type_product={'Graphic Card'} slogan={'Hurry Up, Limited time offer!'} box_width={610} image={GPU}/>
         <HotProduct brand_model={'ROG 4K OLED'} type_product={'Monitor'} slogan={'Hurry Up, Limited time offer!'} box_width={300} image={Monitor}/>
@@ -134,9 +156,9 @@ export default function Home() {
       </div>
 
       <ProductCarousel title="New In" products={newInProducts} />
-      
+
       <ProductCarousel title="Budget-Friendly Gaming PCs" products={lowEndPCs} />
-      
+
       <div className="mt-8"><BannerGPU /></div>
       <ProductCarousel title="ROG Series Laptops" products={rogLaptops} />
       <div className="mt-10"><ServiceProvide /></div>

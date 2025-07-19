@@ -21,12 +21,13 @@ export class TelegramBot {
     phoneNumber:string;
     address:string
     totalAmount: number;
+    expressHandle:string;
     items: string[];
     }) {
-    const { orderId, customerName,phoneNumber,address,totalAmount, items } = body;
+    const { orderId, customerName,phoneNumber,address,totalAmount, expressHandle ,items } = body;
     const itemList = items.map(item => `- ${item}`).join('\n');
 
-    const message = `🛒 *New Paid Order*\n👤 Customer: ${customerName}\n👤 Phone number: ${phoneNumber}\n📍 Address: ${address}\n🧾 Order ID: ${orderId}\n📦 Items:\n${itemList}\n💵 Total: $${totalAmount}`;
+    const message = `🛒 *New Paid Order*\n👤 Customer: ${customerName}\n👤 Phone number: ${phoneNumber}\n📍 Address: ${address} \n🚚 Express : ${expressHandle} \n🧾 Order ID: ${orderId}\n📦 Items:\n${itemList}\n💵 Total: $${totalAmount}`;
 
     await axios.post(`https://api.telegram.org/bot${this.botToken}/sendMessage`, {
       chat_id: this.groupId,

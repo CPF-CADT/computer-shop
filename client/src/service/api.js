@@ -10,12 +10,181 @@ const apiClient = axios.create({
 const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB
 
 export const apiService = {
-  getCustoemrCart:async (custoemrId)=>{
-    try{
-      const response = await apiClient.get(`cart-item/${custoemrId}`)
-      return response.data
+  getOrdersByCustomerId: async (customerId) => {
+    try {
+      const response = await apiClient.get(`user/${customerId}/orders`);
+      return response.data; 
     } catch (error) {
-      throw new Error(error.response?.data?.message || "Failed to fetch Order stats");
+      console.error("API Error (getOrdersByCustomerId):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to fetch customer orders");
+    }
+  },
+
+
+  getOneCustomer: async (customerId) => {
+    try {
+      const response = await apiClient.get(`user/all`, {
+        params: { customer_id: customerId },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('API Error (getOneCustomer):', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to fetch customer profile");
+    }
+  },
+
+  getAddressCustomer: async (customerId) => {
+    try {
+      const response = await apiClient.get(`address-customer/${customerId}`);
+      return response.data.data || []; // Assuming addresses are in response.data.data
+    } catch (error) {
+      console.error("API Error (getAddressCustomer):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to fetch user addresses");
+    }
+  },
+
+  addAddressCustomer: async (customerId, addressData) => {
+    try {
+      const response = await apiClient.post(`address-customer`, {
+        customer_id: customerId,
+        street_line: addressData.street_line || '',
+        commune: addressData.commune || '', // Ensure this matches your backend's expectation if not provided by form
+        district: addressData.district,
+        province: addressData.province,
+        google_map_link: addressData.google_map_link || null, // Ensure this matches your backend's expectation if not provided by form
+      });
+      return response.data;
+    } catch (error) {
+      console.error("API Error (addAddressCustomer):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to add new address");
+    }
+  },
+
+  updateAddressCustomer: async (addressId, updateData) => {
+    try {
+      const response = await apiClient.put(`address-customer/${addressId}`, updateData);
+      return response.data;
+    } catch (error) {
+      console.error("API Error (updateAddressCustomer):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to update address");
+    }
+  },
+
+
+  deleteAddressCustomer: async (addressId) => {
+    try {
+      const response = await apiClient.delete(`address-customer/${addressId}`);
+      return response.data;
+    } catch (error) {
+      console.error("API Error (deleteAddressCustomer):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to delete address");
+    }
+  },
+
+  placeOrder: async (customerId, addressId, expressHandle) => {
+    try {
+      const payload = {
+        customer_id: customerId,
+        address_id: addressId,
+        express_handle:expressHandle
+
+      };
+      const response = await apiClient.post(`checkout/place-order`, payload);
+      return response.data;
+    } catch (error) {
+      console.error("API Error (placeOrder):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to place order");
+    }
+  },
+
+  getKhqr: async (amountPay, orderId, typeCurrency) => {
+    try {
+      const response = await apiClient.post(`checkout/get-khqr`, {
+        amount_pay: amountPay,
+        order_id: orderId,
+        typeCurrency: typeCurrency,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("API Error (getKhqr):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to generate KHQR");
+    }
+  },
+  checkPaymentStatus: async (uniqueMd5, orderId) => {
+    try {
+      const response = await apiClient.post(`checkout/check-payment`, {
+        unique_md5: uniqueMd5,
+        order_id: orderId,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("API Error (checkPaymentStatus):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to check payment status");
+    }
+  },
+  userRegister:async (name,phone_number,password,profile_url='')=>{
+    try{
+      const response = await apiClient.post(`user/register`,{name,phone_number,password,profile_url})
+      return response.data
+    }catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch cart items");
+    }
+  }
+  ,
+  userLogin:async (phone_number,password)=>{
+    try{
+      const response = await apiClient.post(`user/login`,{phone_number,password})
+      return response.data
+    }catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch cart items");
+    }
+  },
+   getCartItems: async (customerId) => {
+    try {
+      const response = await apiClient.get(`cart-item/${customerId}`);
+      return response.data;
+    } catch (error) {
+      console.error("API Error (getCartItems):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to fetch cart items");
+    }
+  },
+
+  addToCartItem: async (customerId, productCode, qty, priceAtPurchase) => {
+    try {
+      const response = await apiClient.post(`cart-item/${customerId}`, {
+        product_code: productCode,
+        qty: qty,
+        price_at_purchase: priceAtPurchase,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("API Error (addToCartItem):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to add item to cart");
+    }
+  },
+
+  updateCartItemQuantity: async (customerId, productCode, qty) => {
+    try {
+      const response = await apiClient.put(`cart-item/${customerId}`, {
+        product_code: productCode,
+        qty: qty,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("API Error (updateCartItemQuantity):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to update cart item quantity");
+    }
+  },
+
+  removeCartItem: async (customerId, productCode) => {
+    try {
+      const response = await apiClient.delete(`cart-item/${customerId}`, {
+        data: { product_code: productCode },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("API Error (removeCartItem):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to remove item from cart");
     }
   }
   ,
@@ -82,15 +251,17 @@ export const apiService = {
   },
   // --- Product API
   getProducts: async (query_param) => {
-    try {
-      const response = await apiClient.get('product',{ params:query_param });
-      console.log(query_param);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch products:', error.message);
-      throw error;
-    }
-  },
+  try {
+    const response = await apiClient.get('product', {
+      params: query_param,
+    });
+    console.log("Sending query:", query_param);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch products:', error.message);
+    throw error;
+  }
+},
   getProductDetail: async (product_id) => {
     try {
       const response = await apiClient.get(`product/${product_id}/detail`);
@@ -270,7 +441,7 @@ export const apiService = {
         onStatusChange(`Uploading chunk ${chunkIndex + 1} of ${totalChunks}...`);
 
         // Using axios for the chunk upload
-        const response = await apiClient.post('/service/upload', chunk, {
+        const response = await apiClient.post('service/upload', chunk, {
           headers: {
             'Content-Type': 'application/octet-stream',
             'x-unique-upload-id': uploadId,
@@ -284,7 +455,7 @@ export const apiService = {
         const result = response.data;
 
         if (result.url) {
-          const transformedUrl = result.url.replace('/upload/', '/upload/w_400/');
+          const transformedUrl = result.url.replace('upload/', '/upload/w_400/');
           onSuccess(transformedUrl);
           onStatusChange('Upload complete! File available on Cloudinary.');
           return; // Exit the loop and function
@@ -304,7 +475,7 @@ export const apiService = {
   // --- User API Calls ---
   getUsers: async () => {
     try {
-        const response = await apiClient.get('/db/users');
+        const response = await apiClient.get('db/users');
         const users = response.data;
 
         // The logic to augment users with permissions remains the same
@@ -325,7 +496,7 @@ export const apiService = {
 
   createUser: async (userData) => {
     try {
-        const response = await apiClient.post('/db/users', userData);
+        const response = await apiClient.post('db/users', userData);
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Failed to create user');
@@ -335,7 +506,7 @@ export const apiService = {
   dropUser: async (username, host = '%') => {
     try {
         // For DELETE with body, axios uses the 'data' property in the config object
-        const response = await apiClient.delete(`/db/users/${username}`, { data: { host } });
+        const response = await apiClient.delete(`db/users/${username}`, { data: { host } });
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Failed to delete user');
@@ -344,7 +515,7 @@ export const apiService = {
 
   grantRoleToUser: async (roleName, username, host = '%') => {
     try {
-        const response = await apiClient.post('/db/users/grant-role', { roleName, username, host });
+        const response = await apiClient.post('db/users/grant-role', { roleName, username, host });
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Failed to grant role');
@@ -353,7 +524,7 @@ export const apiService = {
 
   getUserPermissions: async (username, host = '%') => {
     try {
-        const response = await apiClient.get(`/db/users/${username}/permissions`, { params: { host } });
+        const response = await apiClient.get(`db/users/${username}/permissions`, { params: { host } });
         const data = response.data;
         return data.grants ? data.grants.map(g => Object.values(g)[0]) : [];
     } catch (error) {
@@ -366,7 +537,7 @@ export const apiService = {
   // --- Role API Calls ---
   getRoles: async () => {
     try {
-        const response = await apiClient.get('/db/roles');
+        const response = await apiClient.get('db/roles');
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Failed to fetch roles');
@@ -375,7 +546,7 @@ export const apiService = {
 
   createRole: async (roleName) => {
     try {
-        const response = await apiClient.post('/db/roles', { roleName });
+        const response = await apiClient.post('db/roles', { roleName });
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Failed to create role');
@@ -384,7 +555,7 @@ export const apiService = {
 
   dropRole: async (roleName) => {
     try {
-        const response = await apiClient.delete(`/db/roles/${roleName}`);
+        const response = await apiClient.delete(`db/roles/${roleName}`);
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Failed to delete role');
@@ -393,7 +564,7 @@ export const apiService = {
 
   grantPermissionsToRole: async (data) => {
     try {
-        const response = await apiClient.post('/db/roles/grant-permissions', data);
+        const response = await apiClient.post('db/roles/grant-permissions', data);
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Failed to grant permissions');
@@ -402,7 +573,7 @@ export const apiService = {
 
   getRolePermissions: async (roleName) => {
     try {
-        const response = await apiClient.get(`/db/roles/${roleName}/permissions`);
+        const response = await apiClient.get(`db/roles/${roleName}/permissions`);
         const data = response.data;
         return data.grants ? data.grants.map(g => Object.values(g)[0]) : [];
     } catch (error) {
@@ -413,7 +584,7 @@ export const apiService = {
 
   getTables: async () => {
     try {
-        const response = await apiClient.get('/db/tables');
+        const response = await apiClient.get('db/tables');
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Failed to fetch tables');
@@ -421,7 +592,7 @@ export const apiService = {
   },
    grantPermissionsToUser: async (data) => {
     try {
-      const response = await apiClient.post('/db/users/grant-permissions', data);
+      const response = await apiClient.post('db/users/grant-permissions', data);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to grant user permissions');
@@ -433,7 +604,7 @@ export const apiService = {
    */
   revokePermissionsFromUser: async (data) => {
     try {
-      const response = await apiClient.post('/db/users/revoke-permissions', data);
+      const response = await apiClient.post('db/users/revoke-permissions', data);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to revoke user permissions');
@@ -445,7 +616,7 @@ export const apiService = {
    */
   updateUserExpiry: async (data) => {
     try {
-      const response = await apiClient.post('/db/users/update-expiry', data);
+      const response = await apiClient.post('db/users/update-expiry', data);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to update user expiry');
@@ -457,7 +628,7 @@ export const apiService = {
    */
   revokePermissionsFromRole: async (data) => {
     try {
-      const response = await apiClient.post('/db/roles/revoke-permissions', data);
+      const response = await apiClient.post('db/roles/revoke-permissions', data);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to revoke role permissions');

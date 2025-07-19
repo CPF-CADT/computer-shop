@@ -2,39 +2,40 @@ import { Orders, PaymentTransaction } from "../db/models";
 import { CartItemRepository } from "./cartItem.repository";
 import { OrderItem } from "../db/models/OrderItem";
 export class OrderRepositories {
-    static async placeAnOrder(customer_id: number, address_id: number): Promise<OrderItem[] | null> {
-      try {
-        const order = await Orders.create({
-          customer_id: customer_id,
-          address_id: address_id,
-        });
-        const orderId = order.order_id;
+    static async placeAnOrder(customer_id: number, address_id: number, express_handle: string | null | undefined): Promise<OrderItem[] | null> {
+    try {
+      const order = await Orders.create({
+        customer_id: customer_id,
+        address_id: address_id,
+        express_handle: express_handle || null 
+      });
+      const orderId = order.order_id;
+      const userCart = await CartItemRepository.getCart(customer_id);
 
-        const userCart = await CartItemRepository.getCart(customer_id);
+      if (userCart && userCart.length > 0) {
+        const createdOrderItems = await Promise.all(
+          userCart.map(cart =>
+            OrderItem.create({
+              order_id: orderId,
+              product_code: cart.product_code,
+              price_at_purchase: cart.price_at_purchase,
+              qty: cart.qty,
+            })
+          )
+        );
 
-        if (userCart && userCart.length > 0) {
-          const createdOrderItems = await Promise.all(
-            userCart.map(cart =>
-              OrderItem.create({
-                order_id: orderId,
-                product_code: cart.product_code,
-                price_at_purchase: cart.price_at_purchase,
-                qty: cart.qty,
-              })
-            )
-          );
+        await CartItemRepository.clearCart(customer_id);
 
-          await CartItemRepository.clearCart(customer_id);
-          
-          return createdOrderItems;
-        }
-        return null;
-
-      } catch (error) {
-        console.error("Error placing order:", error);
-        throw error;
+        return createdOrderItems;
       }
+      return null;
+
+    } catch (error) {
+      console.error("Error placing order:", error);
+      // Re-throw the error to be caught by the calling controller/service
+      throw error;
     }
+  }
 }
 export class PaymentTransactionRepositories{
    static async addPaymentDetail(orderId: number, paymentMethodID: number,amount_pay:number,status_pay:string): Promise<Boolean> {

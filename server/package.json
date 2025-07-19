@@ -8,8 +8,6 @@
     "start": "ts- nodemon server.ts",
     "test": "jest",
     "build": "tsc"
-    "build": "tsc",
-    "test": "jest"
   },
   "keywords": [],
   "author": "",

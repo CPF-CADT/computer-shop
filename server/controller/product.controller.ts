@@ -100,72 +100,109 @@ import { Product } from "../db/models";
  *     parameters:
  *       - in: query
  *         name: page
- *         schema: { type: integer, default: 1 }
+ *         schema:
+ *           type: integer
+ *           default: 1
  *         description: Page number
  *       - in: query
  *         name: limit
- *         schema: { type: integer, default: 10 }
+ *         schema:
+ *           type: integer
+ *           default: 10
  *         description: Number of items per page
  *       - in: query
  *         name: name
- *         schema: { type: string, default: '' }
- *         description: Search Product By similar name
+ *         schema:
+ *           type: string
+ *           default: ''
+ *         description: Search product by similar name
  *       - in: query
  *         name: sort
  *         schema:
  *           type: string
  *           enum: [asc, desc]
  *           default: asc
- *           description: Sort products by name — ascending (A-Z) or descending (Z-A)
-*       - in: query
+ *         description: Sort products by name — ascending (A-Z) or descending (Z-A)
+ *       - in: query
  *         name: order_column
- *         schema: { type: string, default: '' }
- *         description: Order By column
+ *         schema:
+ *           type: string
+ *           default: ''
+ *         description: Order by column name
  *       - in: query
  *         name: category
  *         schema:
  *           type: string
- *         description: The product category to filter by.
+ *         description: The product category to filter by
  *       - in: query
  *         name: type_product
  *         schema:
  *           type: string
- *         description: The product type to filter by.
+ *         description: The product type to filter by
  *       - in: query
  *         name: brand
  *         schema:
  *           type: string
- *         description: The product brand to filter by.
+ *         description: The product brand to filter by
+ *       - in: query
+ *         name: price_min
+ *         schema:
+ *           type: number
+ *         description: Minimum price to filter by
+ *       - in: query
+ *         name: price_max
+ *         schema:
+ *           type: number
+ *         description: Maximum price to filter by
  *     responses:
  *       '200':
- *         description: The product description by product code
+ *         description: A list of products
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Product'
+ *               type: object
+ *               properties:
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     totalItems:
+ *                       type: integer
+ *                     page:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
  *             example:
- *               product_code: "P1001"
- *               name: "Intel Core i7-11700K Processor"
- *               image_path: "/images/products/intel_i7_11700k.jpg"
- *               price:
- *                 amount: 289.99
- *                 currency: "USD"
- *               description: "The Intel Core i7-11700K is an 11th Gen desktop processor designed for high-performance gaming and productivity workloads."
- *               brand: "Intel"
- *               category:
- *                 id: 2
- *                 title: "Processors"
- *               type:
- *                 id: 1
- *                 title: "CPU"
- *               discount:
- *                 type: "percentage"
- *                 value: 10
- *               feedback:
- *                 rating: "4.5"
- *                 totalReview: 152
+ *               meta:
+ *                 totalItems: 100
+ *                 page: 1
+ *                 totalPages: 10
+ *               data:
+ *                 - product_code: "P1001"
+ *                   name: "Intel Core i7-11700K Processor"
+ *                   image_path: "/images/products/intel_i7_11700k.jpg"
+ *                   price:
+ *                     amount: 289.99
+ *                     currency: "USD"
+ *                   description: "The Intel Core i7-11700K is an 11th Gen desktop processor designed for high-performance gaming and productivity workloads."
+ *                   brand: "Intel"
+ *                   category:
+ *                     id: 2
+ *                     title: "Processors"
+ *                   type:
+ *                     id: 1
+ *                     title: "CPU"
+ *                   discount:
+ *                     type: "percentage"
+ *                     value: 10
+ *                   feedback:
+ *                     rating: "4.5"
+ *                     totalReview: 152
  *       '404':
- *         description: No products found.
+ *         description: No products found
  *         content:
  *           application/json:
  *             schema:
@@ -175,16 +212,33 @@ import { Product } from "../db/models";
 export async function getAllProduct(req: Request, res: Response): Promise<void> {
     const category = (req.query.category as string);
     const type_product = (req.query.type_product as string);
-    const brandProduct = (req.query.brand as string) ;
+    const brandProduct = (req.query.brand as string);
     const nameProductSearch = (req.query.name as string);
     const sortType = (req.query.sort as string) || 'asc';
     const sortColumn = (req.query.order_column as string) || 'name';
     const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 10;
     const page = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : 1;
+
+    // NEW: Extract price_min and price_max
+    const priceMin = typeof req.query.price_min === 'string' ? parseFloat(req.query.price_min) : undefined;
+    const priceMax = typeof req.query.price_max === 'string' ? parseFloat(req.query.price_max) : undefined;
+
     try {
-        const product = await ProductRepository.getAllProduct(nameProductSearch, sortType, sortColumn, category, type_product, brandProduct, page, limit);
+        // NEW: Pass priceMin and priceMax to the repository method
+        const product = await ProductRepository.getAllProduct(
+            nameProductSearch,
+            sortType,
+            sortColumn,
+            category,
+            type_product,
+            brandProduct,
+            priceMin, // NEW
+            priceMax, // NEW
+            page,
+            limit
+        );
         const totalItems = await Product.count();
-        const totalPages:number = Math.round(totalItems / limit);
+        const totalPages: number = Math.round(totalItems / limit);
         res.status(200).json({
             meta: {
                 totalItems,
@@ -199,6 +253,7 @@ export async function getAllProduct(req: Request, res: Response): Promise<void> 
         return;
     }
 }
+
 
 /**
  * @swagger

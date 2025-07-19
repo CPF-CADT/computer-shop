@@ -1,42 +1,33 @@
 // src/components/cart/ShoppingCartPage.jsx
 
-import React from 'react';
-import { useCart } from './CartContext'; // Adjust path if needed
+import { useCart } from './CartContext';
 import { useNavigate } from 'react-router-dom';
 import { FaShoppingCart, FaTrash, FaMinus, FaPlus, FaArrowLeft } from 'react-icons/fa';
-// Assuming you might have these assets for payment icons
-// import AbaPayIcon from '../assets/payment/aba-pay.svg';
-// import VisaIcon from '../assets/payment/visa.svg';
-// import MasterCardIcon from '../assets/payment/mastercard.svg';
 
-
-// This is the component for a single item in the cart
 const CartItem = ({ item }) => {
-  const { updateQuantity, removeFromCart } = useCart();
+  const { updateCartItem, removeFromCart } = useCart();
 
   const handleQuantityUpdate = (newQuantity) => {
-    // Prevent quantity from going below 1, remove item instead.
     if (newQuantity < 1) {
-      removeFromCart(item.id);
+      removeFromCart(item.product_code);
     } else {
-      updateQuantity(item.id, newQuantity);
+      updateCartItem(item.product_code, newQuantity);
     }
   };
 
   return (
     <div className="grid grid-cols-6 gap-4 items-center py-4">
-      {/* Product Details */}
       <div className="col-span-3 flex items-center gap-4">
-        <img src={item.image_path || item.image} alt={item.name} className="w-20 h-20 object-contain rounded-md bg-gray-50" />
+        {/* FIX: Access image_path and name directly from item */}
+        <img src={item.product.image_path || 'https://placehold.co/80x80/cccccc/333333?text=No+Image'} alt={item.product.name} className="w-20 h-20 object-contain rounded-md bg-gray-50" />
         <div>
-          <h3 className="font-semibold text-gray-800">{item.name}</h3>
-          <p className="text-sm text-gray-500">Custom Build</p>
+          <h3 className="font-semibold text-gray-800">{item.product.name}</h3>
         </div>
       </div>
 
-      {/* Price */}
+      {/* Price - Use item.price_at_purchase as stored in CartContext */}
       <div className="col-span-1 text-center font-medium text-gray-700">
-        ${Number(item.price).toFixed(2)}
+        ${Number(item.price_at_purchase || 0).toFixed(2)}
       </div>
 
       {/* Quantity */}
@@ -50,14 +41,15 @@ const CartItem = ({ item }) => {
         </button>
       </div>
 
-      {/* Total & Remove */}
+      {/* Total & Remove - Use item.price_at_purchase for calculation */}
       <div className="col-span-1 flex items-center justify-end gap-6">
-         <span className="font-bold text-gray-800 text-lg">
-           ${(item.price * item.qty).toFixed(2)}
-         </span>
-         <button onClick={() => removeFromCart(item.id)} className="text-gray-400 hover:text-red-500 transition">
-            <FaTrash size={16} />
-         </button>
+           <span className="font-bold text-gray-800 text-lg">
+             ${(Number(item.price_at_purchase || 0) * item.qty).toFixed(2)}
+           </span>
+           {/* Use item.product_code for removeFromCart as per CartContext */}
+           <button onClick={() => removeFromCart(item.product_code)} className="text-gray-400 hover:text-red-500 transition">
+             <FaTrash size={16} />
+           </button>
       </div>
     </div>
   );
@@ -66,17 +58,18 @@ const CartItem = ({ item }) => {
 
 // This is the main page component
 const ShoppingCartPage = () => {
-  const { cartItems, cartTotal, itemCount } = useCart();
+  // Destructure totalPrice and totalItems from useCart for consistency
+  const { cartItems, totalPrice, totalItems } = useCart();
   const navigate = useNavigate();
-  
+
   // Example values, you can make these dynamic
   const shippingCost = cartItems.length > 0 ? 5.00 : 0.00;
-  const taxAmount = cartTotal * 0; // Assuming 0% tax for now
+  const taxAmount = totalPrice * 0; // Assuming 0% tax for now
 
   return (
     <div className="bg-gray-50 p-4 sm:p-8 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        
+
         {/* Main Title and Actions */}
         <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold text-gray-800 flex items-center">
@@ -88,9 +81,10 @@ const ShoppingCartPage = () => {
             </button>
         </div>
 
+        {/* Check if cartItems is not null/undefined before checking length */}
         {cartItems && cartItems.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
             {/* Items List - Takes 2/3 of the width on large screens */}
             <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
                 {/* Headers */}
@@ -103,7 +97,8 @@ const ShoppingCartPage = () => {
                 {/* Items */}
                 <div className="divide-y divide-gray-100">
                     {cartItems.map((item) => (
-                        <CartItem key={item.id} item={item} />
+                        // Use item.product_code as the key for uniqueness
+                        <CartItem key={item.product_code} item={item} />
                     ))}
                 </div>
             </div>
@@ -112,12 +107,12 @@ const ShoppingCartPage = () => {
             <div className="lg:col-span-1">
               <div className="bg-white p-6 rounded-xl shadow-md sticky top-8">
                 <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-4">Order Summary</h2>
-                
+
                 {/* Price Details */}
                 <div className="space-y-3 text-gray-700">
                   <div className="flex justify-between">
-                    <span>Subtotal ({itemCount} items)</span>
-                    <span className="font-medium">${cartTotal.toFixed(2)}</span>
+                    <span>Subtotal ({totalItems} items)</span>
+                    <span className="font-medium">${totalPrice.toFixed(2)}</span>
                   </div>
                    <div className="flex justify-between">
                     <span>Shipping</span>
@@ -134,7 +129,7 @@ const ShoppingCartPage = () => {
                 {/* Total */}
                 <div className="flex justify-between items-center font-bold text-xl mb-5">
                     <span>Order Total</span>
-                    <span>${(cartTotal + shippingCost + taxAmount).toFixed(2)}</span>
+                    <span>${(totalPrice + shippingCost + taxAmount).toFixed(2)}</span>
                 </div>
 
                 {/* Call to Action */}

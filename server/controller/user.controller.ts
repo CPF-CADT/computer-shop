@@ -200,6 +200,10 @@ export async function customerLogin(req: Request, res: Response): Promise<void> 
  *         name: limit
  *         schema: { type: integer, default: 10 }
  *         description: Number of items per page
+*       - in: query
+ *         name: customer_id
+ *         schema: { type: integer }
+ *         description: Search Custoemr By id
  *       - in: query
  *         name: name
  *         schema: { type: string, default: '' }
@@ -227,11 +231,12 @@ export async function getAllCustomer(req:Request,res:Response):Promise<void>{
     const page = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : 1;
     const sortType = (req.query.sort as string)  || 'ASC'
     const sortColumn = (req.query.column as string) || 'name'
+    const customerId = (req.query.customer_id as unknown as number) || 0
     const nameCustomer = (req.query.name as string) || undefined;
     const phoneNumber = (req.query.phone_number as string) || undefined;
 
     try{
-        const customers = await CusomerRepository.getAllUsers(phoneNumber,nameCustomer,sortType,sortColumn,page,limit)
+        const customers = await CusomerRepository.getAllUsers(customerId,phoneNumber,nameCustomer,sortType,sortColumn,page,limit)
         res.status(200).send(customers);
     }catch(err){
         res.status(404).json({ message: (err as Error).message });

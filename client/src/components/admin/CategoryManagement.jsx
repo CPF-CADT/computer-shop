@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { MdAdd, MdEdit, MdDelete, MdCategory, MdLabel, MdSearch } from 'react-icons/md';
 import { apiService } from '../../service/api';
-
+import { useCategory } from '../context/CategoryContext';
 export default function CategoryManagement() {
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [typeProducts, setTypeProducts] = useState([]);
   const [activeTab, setActiveTab] = useState('categories');
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -18,30 +15,15 @@ export default function CategoryManagement() {
     description: ''
   });
 
-  // Fetch data on component mount
-  useEffect(() => {
-    fetchAllData();
-  }, []);
+  const { categories, loadingCategories, categoryError } = useCategory();
 
-  const fetchAllData = async () => {
-    try {
-      setLoading(true);
-      const [categoriesData, brandsData, typesData] = await Promise.all([
-        apiService.getAllCategories(),
-        apiService.getAllBrands(),
-        apiService.getAllTypeProducts()
-      ]);
-      
-      setCategories(categoriesData || []);
-      setBrands(brandsData || []);
-      setTypeProducts(typesData || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (loadingCategories) {
+    return <div className="text-center text-gray-500">Loading categories...</div>;
+  }
 
+  if (categoryError) {
+    return <div className="text-center text-red-500">Error loading categories: {categoryError}</div>;
+  }
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
