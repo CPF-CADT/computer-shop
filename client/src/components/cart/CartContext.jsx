@@ -1,154 +1,189 @@
-// src/context/CartContext.jsx
-
-import { createContext, useState, useContext, useMemo, useCallback, useEffect } from 'react';
-import { apiService } from '../../service/api'; 
-import { useAuth } from '../context/AuthContext';
-
-const normalizeCartItem = (apiItem) => {
-  if (!apiItem) return null;
-
-  // Ensure price_at_purchase is treated as a number
-  const price = Number(apiItem.price_at_purchase);
-  const quantity = Number(apiItem.qty);
-
-  return {
-    id: apiItem.product_code,
-    product_code: apiItem.product_code,
-    qty: isNaN(quantity) ? 1 : quantity, 
-    price: isNaN(price) ? 0 : price, 
-  };
-};
+import { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { apiService } from '../../service/api'; // Adjust path as needed for your apiService
+import { useAuth } from '../context/AuthContext'; // Adjust path as needed for your AuthContext
+import toast from 'react-hot-toast'; // For user notifications
 
 const CartContext = createContext(null);
 
-export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
-  const { isAuthenticated, user } = useAuth(); // Get authentication status and user from AuthContext
-  const [isLoadingCart, setIsLoadingCart] = useState(false);
-  const [cartError, setCartError] = useState(null);
+export function CartProvider({ children }) {
+  const { user, isAuthenticated } = useAuth(); // Get user object and authentication status
+  const [cartItems, setCartItems] = useState([]); // State to hold cart items
+  const [loadingCart, setLoadingCart] = useState(true); // Loading state for cart operations
+  const [cartError, setCartError] = useState(null); // Error state for cart operations
 
-  // --- DEBUG LOG #1 ---
-  console.log('%cCartProvider is Rendering. Current cartItems:', 'color: blue; font-weight: bold;', cartItems);
+  const customerId = user?.id;
 
-  // Effect to fetch cart when user authenticates or user changes
+  const fetchCartItems = useCallback(async () => {
+    if (!isAuthenticated || !customerId) {
+      setCartItems([]);
+      setLoadingCart(false);
+      return;
+    }
+
+    setLoadingCart(true); // Start loading
+    setCartError(null); // Clear previous errors
+    try {
+      const data = await apiService.getCartItems(customerId);
+      setCartItems(data); // Update cart items with data from API
+    } catch (error) {
+      console.error("Error fetching cart items:", error);
+      setCartError(error.message); // Set error message
+      setCartItems([]); // Clear cart on error to prevent displaying stale/incorrect data
+      toast.error("Failed to load cart items."); // Notify user
+    } finally {
+      setLoadingCart(false); // End loading
+    }
+  }, [isAuthenticated, customerId]); // Dependencies for useCallback
+
+  // Effect hook to call fetchCartItems whenever authentication status or customerId changes
   useEffect(() => {
-    const fetchUserCart = async () => {
-      if (isAuthenticated && user?.id) { // Only fetch if authenticated and user ID is available
-        setIsLoadingCart(true);
-        setCartError(null);
-        console.log(`%cFecthing cart for customer ID: ${user.id}`, 'color: purple; font-weight: bold;');
-        try {
-          const response = await apiService.getCustoemrCart(user.id);
-          console.log('%cAPI Response for cart:', 'color: purple;', response);
-          if (Array.isArray(response)) {
-            // Normalize API response items to match your cart item structure
-            const normalizedItems = response.map(normalizeCartItem).filter(item => item !== null);
-            setCartItems(normalizedItems);
-            console.log('%cCart fetched and set:', 'color: purple; font-weight: bold;', normalizedItems);
-          } else {
-            console.warn('API did not return an array for cart items:', response);
-            setCartItems([]);
-          }
-        } catch (error) {
-          console.error('Error fetching customer cart:', error);
-          setCartError(error.message || 'Failed to load cart items.');
-          setCartItems([]); // Clear cart on error
-        } finally {
-          setIsLoadingCart(false);
-        }
-      } else {
-        // If not authenticated, clear the cart to reflect no user cart
-        console.log('%cUser not authenticated or user ID missing, clearing cart.', 'color: red;');
-        setCartItems([]);
-      }
-    };
+    fetchCartItems();
+  }, [fetchCartItems]); // Dependency on the memoized fetchCartItems function
 
-    fetchUserCart();
-  }, [isAuthenticated, user?.id]); // Depend on isAuthenticated and user.id
 
-  const addToCart = useCallback((product) => {
-    // --- DEBUG LOG #2 ---
-    console.log('%caddToCart called with product:', 'color: green;', product);
-
-    const itemToAdd = normalizeCartItem(product);
-    if (!itemToAdd || itemToAdd.price <= 0) {
-      console.error("Attempted to add an invalid product to cart:", product);
+  const addToCart = async (productToAdd) => {
+    if (!isAuthenticated || !customerId) {
+      toast.error("Please log in to add items to your cart.");
       return;
     }
-    const quantityToAdd = itemToAdd.qty || 1;
-    setCartItems((prevItems) => {
-      // --- DEBUG LOG #3 ---
-      console.log('%cUpdating state. Previous items:', 'color: orange;', prevItems);
-      const existingItem = prevItems.find((item) => item.id === itemToAdd.id);
+
+    try {
+      // Check if the item already exists in the local cart state
+      const existingItem = cartItems.find(item => item.product_code === productToAdd.product_code);
+
       if (existingItem) {
-        const newItems = prevItems.map((item) =>
-          item.id === itemToAdd.id
-            ? { ...item, qty: item.qty + quantityToAdd }
-            : item
+        // If item exists, update its quantity via PUT API
+        const newQty = existingItem.qty + productToAdd.qty;
+        await apiService.updateCartItemQuantity(customerId, productToAdd.product_code, newQty);
+
+        // Optimistically update local state
+        setCartItems(prevItems =>
+          prevItems.map(item =>
+            item.product_code === productToAdd.product_code
+              ? { ...item, qty: newQty } // Update quantity
+              : item
+          )
         );
-        // --- DEBUG LOG #4 ---
-        console.log('%cState updated. New items:', 'color: green; font-weight: bold;', newItems);
-        return newItems;
+        toast.success(`Updated quantity for ${productToAdd.name} in cart.`);
+      } else {
+        // If item doesn't exist, add new item via POST API
+        await apiService.addToCartItem(
+          customerId,
+          productToAdd.product_code,
+          productToAdd.qty,
+          productToAdd.price.amount // price_at_purchase from product object
+        );
+
+        // --- FIX START ---
+        // Construct the new item for local state to match the structure from the backend API
+        // This assumes your backend's getCartItems returns a structure like:
+        // { product_code, qty, price_at_purchase, product: { name, image_path, ... } }
+        setCartItems(prevItems => [...prevItems, {
+          product_code: productToAdd.product_code,
+          qty: productToAdd.qty,
+          price_at_purchase: productToAdd.price.amount,
+          // Create the nested 'product' object to match the API response structure
+          product: {
+            name: productToAdd.name,
+            image_path: productToAdd.image_path,
+            // Include any other product details that your backend's getCartItems
+            // might include in the nested 'product' object, e.g.,
+            // description: productToAdd.description,
+            // price: productToAdd.price, // if your API nests the full price object
+          }
+        }]);
+        // --- FIX END ---
+        toast.success(`${productToAdd.qty} x ${productToAdd.name} added to cart!`);
       }
-      const newItems = [...prevItems, { ...itemToAdd, qty: quantityToAdd }];
-      // --- DEBUG LOG #4 ---
-      console.log('%cState updated. New items:', 'color: green; font-weight: bold;', newItems);
-      return newItems;
-    });
-  }, []);
+    } catch (error) {
+      console.error("Error adding/updating cart item:", error);
+      toast.error(error.message || "Failed to add item to cart.");
+      // Consider re-fetching cart items from backend on error to ensure sync
+      fetchCartItems();
+    }
+  };
 
-  const removeFromCart = useCallback((productId) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== productId));
-  }, []);
-
-  const updateQuantity = useCallback((productId, newQty) => {
-    const quantity = Number(newQty);
-    if (isNaN(quantity) || quantity < 1) {
-      removeFromCart(productId);
+  /**
+   * Updates the quantity of an existing item in the cart.
+   * @param {string} productCode - The code of the product to update.
+   * @param {number} newQty - The new quantity for the item.
+   */
+  const updateCartItem = async (productCode, newQty) => {
+    if (!isAuthenticated || !customerId) {
+      toast.error("Please log in to modify your cart.");
       return;
     }
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === productId ? { ...item, qty: quantity } : item
-      )
-    );
-  }, [removeFromCart]);
+    if (newQty <= 0) {
+      // If quantity is 0 or less, remove the item
+      await removeFromCart(productCode);
+      return;
+    }
 
-  const clearCart = useCallback(() => {
-    setCartItems([]);
-  }, []);
+    try {
+      await apiService.updateCartItemQuantity(customerId, productCode, newQty);
+      // Optimistically update local state
+      setCartItems(prevItems =>
+        prevItems.map(item =>
+          item.product_code === productCode
+            ? { ...item, qty: newQty }
+            : item
+        )
+      );
+      toast.success("Cart item quantity updated.");
+    } catch (error) {
+      console.error("Error updating cart item quantity:", error);
+      toast.error(error.message || "Failed to update cart item quantity.");
+      fetchCartItems(); // Re-fetch on error
+    }
+  };
 
-  const cartTotal = useMemo(() => {
-    return cartItems.reduce((total, item) => total + item.price * item.qty, 0);
-  }, [cartItems]);
+  /**
+   * Removes an item from the cart.
+   * @param {string} productCode - The code of the product to remove.
+   */
+  const removeFromCart = async (productCode) => {
+    if (!isAuthenticated || !customerId) {
+      toast.error("Please log in to modify your cart.");
+      return;
+    }
 
-  const itemCount = useMemo(() => {
-    return cartItems.reduce((count, item) => count + item.qty, 0);
-  }, [cartItems]);
+    try {
+      await apiService.removeCartItem(customerId, productCode);
+      // Optimistically update local state
+      setCartItems(prevItems => prevItems.filter(item => item.product_code !== productCode));
+      toast.success("Item removed from cart.");
+    } catch (error) {
+      console.error("Error removing cart item:", error);
+      toast.error(error.message || "Failed to remove item from cart.");
+      fetchCartItems(); // Re-fetch on error
+    }
+  };
 
-  const contextValue = useMemo(() => ({
+  // Calculate total items and total price based on local cart state
+  const totalItems = cartItems.reduce((sum, item) => sum + item.qty, 0);
+  const totalPrice = cartItems.reduce((sum, item) => sum + (item.qty * item.price_at_purchase), 0);
+
+  // Value provided by the context to its consumers
+  const value = {
     cartItems,
+    loadingCart,
+    cartError,
+    totalItems,
+    totalPrice,
     addToCart,
+    updateCartItem,
     removeFromCart,
-    updateQuantity,
-    clearCart,
-    cartTotal,
-    itemCount,
-    isLoadingCart, // Expose loading state
-    cartError,     // Expose error state
-  }), [cartItems, cartTotal, itemCount, addToCart, removeFromCart, updateQuantity, clearCart, isLoadingCart, cartError]);
+    fetchCartItems, // Expose fetch function for manual refresh if needed
+  };
 
   return (
-    <CartContext.Provider value={contextValue}>
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );
-};
+}
 
+// Custom hook to consume the CartContext
 export const useCart = () => {
-  const context = useContext(CartContext);
-  if (context === null) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
-  return context;
+  return useContext(CartContext);
 };

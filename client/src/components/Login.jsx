@@ -1,15 +1,42 @@
 import { useState } from 'react';
-import mainLogo from "../assets/gear-tech.png";
+import { apiService } from '../service/api'; // Make sure this path is correct
+import { useAuth } from './context/AuthContext'; // Make sure this path is correct
+import { useNavigate } from 'react-router-dom';
 
 const LoginForm = () => {
-  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const { login } = useAuth(); // Destructure the login function from useAuth()
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log('Login attempt with:', { email, password });
-    alert(`Login attempt with Email: ${email}`);
+    setError(''); 
+    setLoading(true);
+
+    try {
+      const response = await apiService.userLogin(phoneNumber, password);
+      console.log('Login successful:', response);
+
+      if (response && response.token && response.user) {
+        login(response); // Pass the entire response object (which contains token and user)
+        console.log(response)
+        navigate('/'); // Navigate to home or dashboard after successful login
+      } else {
+        // This case might mean your API response was malformed or missing data
+        setError('Login failed: Invalid response from server. Missing token or user data.');
+      }
+
+    } catch (err) {
+      console.error('Login error:', err);
+      // Display a user-friendly error message
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false); // Reset loading state
+    }
   };
 
   return (
@@ -40,14 +67,14 @@ const LoginForm = () => {
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
+            <label htmlFor="phoneNumber" className="block text-xs font-medium text-gray-700 mb-1">
               Phone Number <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="phoneNumber"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="Your Phone Number"
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 text-sm placeholder-gray-400"
               required
@@ -67,12 +94,18 @@ const LoginForm = () => {
               required
             />
           </div>
+          {error && (
+            <div className="text-red-600 text-sm text-center">
+              {error}
+            </div>
+          )}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
             <button
               type="submit"
-              className="w-full sm:w-auto bg-[#FFA726] hover:bg-[#ff9800] text-white font-semibold py-2.5 px-8 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-[#FFA726] focus:ring-opacity-50 transition duration-150 shadow hover:scale-105 active:scale-95"
+              className="w-full sm:w-auto bg-[#FFA726] hover:bg-[#ff9800] text-white font-semibold py-2.5 px-8 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-[#FFA726] focus:ring-opacity-50 transition duration-150 shadow hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading} 
             >
-              Sign In
+              {loading ? 'Signing In...' : 'Sign In'}
             </button>
             <a
               href="#"

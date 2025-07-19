@@ -1,12 +1,19 @@
 import { CartItem } from "../db/models/CartItem";
+import { Product } from "../db/models/Product";
 
 export class CartItemRepository {
     static async getCart(customerId: number): Promise<CartItem[] | null> {
         try {
             let data = await CartItem.findAll({
+                include: [
+                        {
+                            model: Product,
+                            attributes: ['product_code', 'name', 'image_path'],
+                        },
+                ],
                 where: {
                     customer_id: customerId
-                }
+                },
             })
             return data;
         } catch (err) {

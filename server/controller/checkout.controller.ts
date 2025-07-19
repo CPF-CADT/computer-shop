@@ -41,6 +41,9 @@ dotenv.config()
  *               address_id:
  *                 type: integer
  *                 example: 3
+ *               express_handle:
+ *                 type: string
+ *                 example: VET
  *     responses:
  *       200:
  *         description: Order placed successfully
@@ -63,17 +66,17 @@ dotenv.config()
 
 export async function placeOrder(req: Request, res: Response):Promise<void> {
     try {
-        const { customer_id, address_id } = req.body;
+        const { customer_id, address_id,express_handle } = req.body;
         const customer_id_int = parseInt(customer_id);
         const address_id_int = parseInt(address_id);
 
-        if (Number.isNaN(customer_id_int) || Number.isNaN(address_id_int)) {
+        if (Number.isNaN(customer_id_int) || Number.isNaN(address_id_int) || !express_handle) {
             res.status(400).json({ message: 'Invalid input data' });
         }
 
         const customer = await Customer.findByPk(customer_id_int) as Customer;
         const customerAddress = await AddressRepository.getAddressById(address_id_int) as Address;
-        const orders_item = await OrderRepositories.placeAnOrder(customer_id_int, address_id_int);
+        const orders_item = await OrderRepositories.placeAnOrder(customer_id_int, address_id_int, express_handle);
 
         if (orders_item && customer && customerAddress) {
             const totalAmount = orders_item.reduce((sum, item) => sum + (item.price_at_purchase * item.qty), 0);
@@ -262,7 +265,8 @@ export async function checkPayment(req: Request, res: Response):Promise<void> {
                             phoneNumber: customer.phone_number,
                             address: `${customerAddress.street_line}, ${customerAddress.district}, ${customerAddress.province}`,
                             totalAmount: totalAmount,
-                            items: order_items.map(item => `${item.product_code} : ${item.price_at_purchase} x ${item.qty}`)
+                            items: order_items.map(item => `${item.product_code} : ${item.price_at_purchase} x ${item.qty}`),
+                            expressHandle:order.express_handle,
                         });
                     }
                 }   

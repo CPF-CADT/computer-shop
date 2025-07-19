@@ -4,8 +4,9 @@ import { Customer } from '../db/models/Customer';
 import { Address } from '../db/models/Address';
 import { Product } from '../db/models/Product';
 import {sequelize} from '../db/sequelize';
-import { QueryTypes } from 'sequelize';
+import { Op, QueryTypes } from 'sequelize';
 import { OrderStatus } from '../db/models/Enums';
+import { OrderItem } from '../db/models/OrderItem';
 
 /**
  * @swagger
@@ -155,6 +156,89 @@ export async function getOrders(req: Request, res: Response): Promise<void> {
         res.status(500).json({ message: 'Failed to fetch orders' });
     }
     }
+
+
+ /**
+   * @swagger
+   * /api/user/{customer_id}/orders:
+   *   get:
+   *     summary: Get all orders for a customer by customer ID
+   *     tags: [Customer]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Customer ID
+   *     responses:
+   *       200:
+   *         description: List of orders with items
+   *         content:
+   *           application/json:
+   *             example:
+   *               - order_id: 1
+   *                 order_date: "2025-07-16T12:00:00Z"
+   *                 order_status: "PENDING"
+   *                 address:
+   *                   street_line: "123 Main St"
+   *                   district: "Daun Penh"
+   *                   province: "Phnom Penh"
+   *                 items:
+   *                   - product_code: "P1001"
+   *                     name: "Intel Core i7"
+   *                     OrderItem:
+   *                       qty: 2
+   *                       price_at_purchase: 299.99
+   *       404:
+   *         description: Customer not found or no orders
+   *       500:
+   *         description: Server error
+   */
+  export async function getOrdersByCustomerId(req: Request, res: Response): Promise<void> {
+  try {
+    const customerId = parseInt(req.params.customer_id);
+    if (isNaN(customerId)) {
+      res.status(400).json({ message: 'Invalid customer ID' });
+      return;
+    }
+
+    const ordersCustomerID = await Orders.findAll({
+      where: { customer_id: customerId },
+      attributes: ['order_id']
+    });
+
+    if (!ordersCustomerID || ordersCustomerID.length === 0) {
+      res.status(404).json({ message: 'No orders found for this customer' });
+      return;
+    }
+
+    const orderIds = ordersCustomerID.map(order => order.order_id);
+    const ordersData = await Orders.findAll({
+      where: {
+        order_id: {
+          [Op.in]: orderIds
+        }
+      },
+      include: [
+        { model: Customer, attributes: ['name'] },
+        { model: Address, attributes: ['street_line', 'district', 'province'] },
+        {
+          model: Product,
+          attributes: ['product_code', 'name'],
+          through: {
+            attributes: ['qty', 'price_at_purchase'],
+          },
+        },
+      ],
+    });
+
+    res.status(200).json(ordersData);
+  } catch (error) {
+    console.error('Error fetching orders by customer ID:', error);
+    res.status(500).json({ message: 'Failed to fetch orders' });
+  }
+}
 
 
 

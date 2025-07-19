@@ -1,28 +1,36 @@
-import { GiHamburgerMenu } from "react-icons/gi";
-import { Link } from 'react-router-dom';
-
-const categories = [
-  { name: "Laptop", path: "/laptop" },
-  { name: "Desktop", path: "/desktop" },
-  { name: "PC Components", path: "/pc-components" },
-  { name: "Peripherals", path: "/peripherals" },
-  { name: "Custom PC", path: "/custom-pc" }, // changed from Networking
-  { name: "Monitors", path: "/monitors" },
-];
+// src/components/Categories.jsx
+import React from 'react';
+import { useCategory } from './context/CategoryContext';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 export default function Categories() {
+  const { categories, loadingCategories, categoryError } = useCategory();
+  const navigate = useNavigate(); 
+
+  const handleCategoryClick = (categoryTitle) => {
+    const slug = categoryTitle.toLowerCase().replace(/\s+/g, '-');
+    navigate(`/category/${slug}`);
+  };
+
+  if (loadingCategories) {
+    return <div className="text-center text-gray-500">Loading categories...</div>;
+  }
+
+  if (categoryError) {
+    return <div className="text-center text-red-500">Error loading categories: {categoryError}</div>;
+  }
+
   return (
-    <div className="w-64 border rounded-2xl border-[#FFA726] pb-4">
-      <div className="h-14 flex items-center gap-2 bg-[#FFA726] px-6 rounded-t-2xl">
-        <GiHamburgerMenu size={26} />
-        <span className="font-semibold text-2xl">Categories</span>
-      </div>
-      <ul className="mt-2 space-y-1 px-6">
-        {categories.map((item, index) => (
-          <li key={index}>
-            <Link to={item.path} className='hover:font-bold'>
-                {item.name}
-            </Link>
+    <div className="w-64 p-4 bg-white rounded-lg shadow-md">
+      <h3 className="text-lg font-bold mb-4">Product Categories</h3>
+      <ul className="space-y-2">
+        {categories.map(category => (
+          <li
+            key={category.id}
+            className="text-gray-700 hover:text-orange-500 cursor-pointer"
+            onClick={() => handleCategoryClick(category.title)} // Call handler on click
+          >
+            {category.title}
           </li>
         ))}
       </ul>

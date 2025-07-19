@@ -34,6 +34,11 @@ export class Orders extends Model {
   @Column(DataType.DATE)
   order_date!: Date;
 
+  @Column({
+    type: DataType.STRING,
+  })
+  express_handle!: string;
+
   @Default(OrderStatus.PENDING)
   @Column({
     type: DataType.ENUM(...Object.values(OrderStatus)),

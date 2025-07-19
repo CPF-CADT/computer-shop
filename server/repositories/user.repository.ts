@@ -2,6 +2,7 @@
 import { Op, where } from "sequelize";
 import { Customer } from "../db/models";
 import { TwoFaToken } from "../db/models/TwoFaToken";
+import e from "express";
 
 interface CustomerAttributes {
   customer_id: number;
@@ -12,7 +13,7 @@ interface CustomerAttributes {
 }
 export class CusomerRepository {
     static async getUser(phoneNumber?: string, id?: number): Promise<Customer | null> {
-        if (phoneNumber) {
+        if (phoneNumber && phoneNumber!=='') {
             return await Customer.findOne({ where: { phone_number: phoneNumber } }) as Customer;
         } else if (id) {
             return await Customer.findByPk(id) as Customer;
@@ -20,7 +21,7 @@ export class CusomerRepository {
             return null;
         }
     }
-    static async getAllUsers(phoneNumber?:string,name?:string,sortType:string ='ASC',sortColumn:string ='name',page:number = 1,limit:number=10 ){
+    static async getAllUsers(customerId?: number, phoneNumber?: string, name?: string, sortType: string = 'ASC', sortColumn: string = 'name', page: number = 1, limit: number = 10){
         const allowedSortTypes = ['ASC', 'DESC'];
         const validSortType = allowedSortTypes.includes(sortType.toUpperCase()) ? sortType.toUpperCase() : 'ASC';
 
@@ -28,28 +29,33 @@ export class CusomerRepository {
         const validSortColumn = allowedSortColumns.includes(sortColumn) ? sortColumn : 'name';
 
         const conditions: any[] = [];
-        if (name) {
-            conditions.push({
-            name: {
-                [Op.like]: `%${name}%`
+        if(customerId!==0){
+            const user = await this.getUser('',customerId)
+            return user
+        }else{
+            if (name) {
+                conditions.push({
+                name: {
+                    [Op.like]: `%${name}%`
+                }
+                });
             }
+            if (phoneNumber) {
+                conditions.push({
+                phone_number: {
+                    [Op.like]: `%${phoneNumber}%`
+                }
+                });
+            }
+            const whereClause = conditions.length > 0 ? { [Op.or]: conditions } : {};
+            return await Customer.findAll({
+                where: whereClause,
+                order: [[validSortColumn, validSortType]],
+                limit,
+                offset: (page - 1) * limit,
             });
         }
-        if (phoneNumber) {
-            conditions.push({
-            phone_number: {
-                [Op.like]: `%${phoneNumber}%`
-            }
-            });
-        }
-        const whereClause = conditions.length > 0 ? { [Op.or]: conditions } : {};
-        return await Customer.findAll({
-            where: whereClause,
-            order: [[validSortColumn, validSortType]],
-            limit,
-            offset: (page - 1) * limit,
-        });
-        }
+    }
     static async createNewUser(name: string, phone_number: string, usr_profile_url: string | null, password: string): Promise<boolean | null> {
         try {
             await Customer.create({

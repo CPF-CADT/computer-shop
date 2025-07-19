@@ -7,69 +7,85 @@ class ProductRepository {
     static async getAllProduct(
     nameProduct?: string,
     sortType: string = 'ASC',
-    sortColumn: string = 'price',
+    sortColumn: string = 'price', // Default to 'price' as per your view
     category?: string,
     typeProduct?: string,
     brand?: string,
+    priceMin?: number,
+    priceMax?: number,
     page: number = 1,
     limit: number = 10
-    ): Promise<Product[] | null> {
+  ): Promise<Product[] | null> {
     try {
-        let query = 'SELECT * FROM productshowinformation';
-        const conditions: string[] = [];
-        const replacements: Record<string, any> = {};
+      let query = 'SELECT * FROM productshowinformation';
+      const conditions: string[] = [];
+      const replacements: Record<string, any> = {};
 
-        if (nameProduct) {
+      if (nameProduct) {
         conditions.push('name LIKE :product_name');
         replacements.product_name = `%${nameProduct}%`;
-        }
-        if (category) {
+      }
+      if (category) {
+        // Use 'category_title' as per your view
         conditions.push('category_title = :category');
         replacements.category = category;
-        }
-        if (typeProduct) {
+      }
+      if (typeProduct) {
+        // Use 'type_product' as per your view
         conditions.push('type_product = :typeProduct');
         replacements.typeProduct = typeProduct;
-        }
-        if (brand) {
+      }
+      if (brand) {
+        // Use 'brand_name' as per your view
         conditions.push('brand_name = :brandProduct');
         replacements.brandProduct = brand;
-        }
+      }
 
-        if (conditions.length > 0) {
+      // NEW: Use 'price' column as per your view for filtering
+      if (priceMin !== undefined && priceMin !== null) {
+        conditions.push('price >= :priceMin'); // Use 'price' from the view
+        replacements.priceMin = priceMin;
+      }
+      if (priceMax !== undefined && priceMax !== null) {
+        conditions.push('price <= :priceMax'); // Use 'price' from the view
+        replacements.priceMax = priceMax;
+      }
+
+      if (conditions.length > 0) {
         query += ' WHERE ' + conditions.join(' AND ');
-        }
+      }
 
-        // Whitelist allowed sort columns (adjust columns as per your DB)
-        const allowedSortColumns = ['price', 'name', 'category_title', 'brand_name'];
-        if (!allowedSortColumns.includes(sortColumn)) {
+      // Whitelist allowed sort columns (using names from your view)
+      const allowedSortColumns = ['price', 'name', 'category_title', 'brand_name']; // Use 'price' for sorting
+      if (!allowedSortColumns.includes(sortColumn)) {
         sortColumn = 'price'; // default fallback
-        }
+      }
 
-        // Whitelist sort types
-        const allowedSortTypes = ['ASC', 'DESC'];
-        if (!allowedSortTypes.includes(sortType.toUpperCase())) {
+      // Whitelist sort types
+      const allowedSortTypes = ['ASC', 'DESC'];
+      if (!allowedSortTypes.includes(sortType.toUpperCase())) {
         sortType = 'ASC';
-        } else {
+      } else {
         sortType = sortType.toUpperCase();
-        }
+      }
 
-        query += ` ORDER BY ${sortColumn} ${sortType} `;
+      query += ` ORDER BY ${sortColumn} ${sortType} `;
 
-        query += 'LIMIT :limit OFFSET :offset ';
-        replacements.limit = limit;
-        replacements.offset = (page - 1) * limit;
+      query += 'LIMIT :limit OFFSET :offset ';
+      replacements.limit = limit;
+      replacements.offset = (page - 1) * limit;
 
-        const data = await sequelize.query(query, {
+      const data = await sequelize.query(query, {
         replacements,
         type: QueryTypes.SELECT,
-        });
+      });
 
-        return data.map(toProductStructure);
+      return data.map(toProductStructure);
     } catch (err) {
-        throw err;
+      throw err;
     }
-    }
+  }
+
 
     static async getOneProduct(productCode: string): Promise<Product | null> {
         try {

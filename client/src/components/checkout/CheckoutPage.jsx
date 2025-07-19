@@ -1,23 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaArrowLeft, FaLock, FaChevronDown, FaChevronUp, FaCreditCard, FaShippingFast, FaMapMarkerAlt, FaMobileAlt } from 'react-icons/fa';
+import { FaArrowLeft, FaLock, FaChevronDown, FaChevronUp, FaCreditCard, FaShippingFast, FaMapMarkerAlt, FaMobileAlt, FaShoppingCart } from 'react-icons/fa';
 import { useCart } from '../cart/CartContext';
-import { useNavigate } from 'react-router-dom'; // Keep useNavigate
+import { useAuth } from '../context/AuthContext'; // Import useAuth to get customerId
+import { useNavigate } from 'react-router-dom';
 import CheckoutStepper from './CheckoutStepper';
 import OrderSummaryCheckout from './OrderSummaryCheckout';
 import Khqr from './Khqr';
-// import SuccessPage from './SuccessPage'; // No longer needed for direct rendering
-import axios from 'axios';
-
-// --- Configuration ---
-const BASE_URL = 'http://localhost:3000/api';
-const CUSTOMER_ID = 12;
-const CUSTOMER_PHONE = '096484190'
-
-const mockShippingMethods = [
-  { id: 'standard', name: 'Standard Shipping', price: 5.00, estimatedDelivery: '5-7 business days', type: 'standard' },
-  { id: 'vet_express', name: 'VET Express', price: 2.50, estimatedDelivery: '1-2 business days', type: 'express' },
-  { id: 'j_t_express', name: 'J&T Express', price: 3.00, estimatedDelivery: '2-3 business days', type: 'express' },
-];
+import { apiService } from '../../service/api'; // Import the updated apiService
 
 // --- Reusable InputField ---
 const InputField = ({ label, id, type = "text", placeholder, value, onChange, required = true, error, readOnly = false }) => (
@@ -58,25 +47,31 @@ const CollapsibleSection = ({ title, icon, children, isOpen, onToggle, isComplet
 );
 
 const CheckoutPage = ({ onBackToCart }) => {
-  const { cartItems, cartTotal, clearCart } = useCart();
-  const navigate = useNavigate(); // Used for redirection now
+  // Removed clearCart from useCart destructuring as it won't be used
+  const { cartItems, totalPrice: cartTotal } = useCart();
+  const { user, isAuthenticated } = useAuth(); // Get user and isAuthenticated from AuthContext
+  const navigate = useNavigate();
+
+  // Ensure customerId is available from authenticated user
+  const customerId = user?.id;
 
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
 
   // --- Address State ---
-  const [userAddresses, setUserAddresses] = useState([]); // Fetched from API
+  const [userAddresses, setUserAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
+  // Updated newAddressForm to only include relevant fields as per new API schema
   const [newAddressForm, setNewAddressForm] = useState({
-    street_line: '', commune: '', district: '', province: '', zipCode: '', country: 'Cambodia', phone: ''
+    street_line: '', district: '', province: '', phone: user?.phone_number || '' // Pre-fill phone from user
   });
   const [useNewAddress, setUseNewAddress] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({});
 
   // --- Shipping Method State ---
   const [selectedShippingMethod, setSelectedShippingMethod] = useState(null);
-  const [displayPhoneNumber, setDisplayPhoneNumber] = useState(CUSTOMER_PHONE);
+  const [displayPhoneNumber, setDisplayPhoneNumber] = useState(user?.phone_number || '');
   const [editPhoneNumberMode, setEditPhoneNumberMode] = useState(false);
 
   // --- Payment State ---
@@ -85,74 +80,18 @@ const CheckoutPage = ({ onBackToCart }) => {
   const [qrCodeString, setQrCodeString] = useState('');
   const [uniqueMd5, setUniqueMd5] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('idle'); // 'idle', 'generating_qr', 'pending_payment', 'completed', 'failed'
-  const [pollingIntervalId, setPollingIntervalId] = useState(null);
+  const [pollingIntervalId, setPollingIntervalId] = useState(null); // Stores the interval ID
+  const [pollingAttempts, setPollingAttempts] = useState(0); // Track polling attempts
+  const MAX_POLLING_ATTEMPTS = 30; // Max attempts for polling
 
   const [errors, setErrors] = useState({});
 
-  // --- Data Fetching and Initialization ---
-
-  // Fetch user addresses on component mount
-  useEffect(() => {
-    const fetchUserAddresses = async () => {
-      try {
-        setApiError(null); // Clear previous errors
-        const response = await axios.get(`${BASE_URL}/address-customer/${CUSTOMER_ID}`);
-
-        const addresses = response.data.data || [];
-        setUserAddresses(addresses);
-
-        // Set the first address as default if none selected initially and addresses are available
-        if (addresses.length > 0 && selectedAddressId === null) {
-          setSelectedAddressId(addresses[0].address_id);
-        }
-      } catch (err) {
-        console.error("Failed to fetch user addresses:", err.response?.data?.message || err.message);
-        setApiError("Failed to load addresses. Please ensure your backend is running and the API endpoint is correct.");
-      }
-    };
-    fetchUserAddresses();
-  }, [CUSTOMER_ID, selectedAddressId]);
-
-  // Update shippingAddress and displayPhoneNumber when selection/input changes
-  useEffect(() => {
-    // Select first shipping method by default if not already selected
-    if (!selectedShippingMethod && mockShippingMethods.length > 0) {
-      setSelectedShippingMethod(mockShippingMethods[0]);
-    }
-
-    if (useNewAddress) {
-      setShippingAddress(newAddressForm);
-      setDisplayPhoneNumber(newAddressForm.phone || '');
-    } else if (selectedAddressId !== null) {
-      const selected = userAddresses.find(addr => String(addr.address_id) === String(selectedAddressId));
-      if (selected) {
-        setShippingAddress(selected);
-      }
-    } else if (userAddresses.length > 0 && selectedAddressId === null && !useNewAddress) {
-      setShippingAddress(userAddresses[0]);
-      setSelectedAddressId(userAddresses[0].address_id);
-    }
-  }, [selectedAddressId, useNewAddress, newAddressForm, userAddresses, selectedShippingMethod]);
-
-  // Cleanup polling interval on component unmount
-  useEffect(() => {
-    return () => {
-      if (pollingIntervalId) {
-        clearInterval(pollingIntervalId);
-      }
-    };
-  }, [pollingIntervalId]);
-
-
-  // --- New useEffect to trigger QR generation when entering Step 3 ---
-  useEffect(() => {
-    // Only attempt to initiate payment if on step 3
-    // and payment hasn't already started or completed.
-    if (currentStep === 3 && (paymentStatus === 'idle' || paymentStatus === 'failed')) {
-      console.log("Entering payment step (3). Initiating payment flow...");
-      initiatePaymentFlow();
-    }
-  }, [currentStep, paymentStatus]);
+  // Mock shipping methods (can be fetched from API if available)
+  const mockShippingMethods = [
+    { id: 'standard', name: 'Standard Shipping', price: 5.00, estimatedDelivery: '5-7 business days', type: 'standard' },
+    { id: 'vet_express', name: 'VET Express', price: 2.50, estimatedDelivery: '1-2 business days', type: 'express' },
+    { id: 'j_t_express', name: 'J&T Express', price: 3.00, estimatedDelivery: '2-3 business days', type: 'express' },
+  ];
 
   // --- Handlers ---
 
@@ -173,112 +112,221 @@ const CheckoutPage = ({ onBackToCart }) => {
     const newErrors = {};
 
     if (useNewAddress) {
-      if (!addressToValidate.street_line) newErrors.street_line = 'Street line required';
       if (!addressToValidate.district) newErrors.district = 'District required';
       if (!addressToValidate.province) newErrors.province = 'Province required';
       if (!addressToValidate.phone) newErrors.phone = 'Phone number required';
-    } else {
-      if (!addressToValidate.street_line) newErrors.street_line = 'Street line required';
-      if (!addressToValidate.district) newErrors.district = 'District required';
-      if (!addressToValidate.province) newErrors.province = 'Province required';
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0 && (selectedAddressId !== null || (useNewAddress && newAddressForm.street_line && newAddressForm.phone));
+    return Object.keys(newErrors).length === 0 && (selectedAddressId !== null || (useNewAddress && newAddressForm.district && newAddressForm.province && newAddressForm.phone));
   }, [useNewAddress, newAddressForm, shippingAddress, selectedAddressId]);
 
   // Function to start polling for payment status
   const startPollingPayment = useCallback((md5, orderId) => {
+    // Clear any existing interval before starting a new one
     if (pollingIntervalId) {
       clearInterval(pollingIntervalId);
+      setPollingIntervalId(null);
     }
 
-    let attempts = 0;
-    const maxAttempts = 30; // 30 attempts * 5 seconds = 150 seconds (2.5 minutes)
+    setPollingAttempts(0); // Reset attempts for new polling session
 
     const interval = setInterval(async () => {
-      attempts++;
-      if (attempts > maxAttempts) {
+      setPollingAttempts(prev => prev + 1); // Increment attempt count
+      const currentAttempt = pollingAttempts + 1; // Use updated attempt count
+
+      if (currentAttempt > MAX_POLLING_ATTEMPTS) {
         console.warn("Polling timed out. Payment not completed.");
         setPaymentStatus('failed');
-        clearInterval(interval);
+        clearInterval(interval); // Stop polling on timeout
+        setPollingIntervalId(null);
         return;
       }
 
       try {
-        const response = await axios.post(`${BASE_URL}/checkout/check-payment`, {
-          unique_md5: md5,
-          order_id: orderId
-        });
+        // Ensure apiService.checkPaymentStatus is defined and imported correctly
+        if (typeof apiService.checkPaymentStatus !== 'function') {
+          console.error("apiService.checkPaymentStatus is not a function. Stopping polling.");
+          setApiError("Payment check service is unavailable. Please try again later.");
+          setPaymentStatus('failed');
+          clearInterval(interval);
+          setPollingIntervalId(null);
+          return;
+        }
 
-        if (response.status === 200) {
-          const { payment_status } = response.data;
+        const response = await apiService.checkPaymentStatus(md5, orderId);
+
+        if (response) {
+          const { payment_status } = response;
           if (payment_status === 'Completed') {
             console.log("Payment successful!");
             setPaymentStatus('completed');
-            clearInterval(interval);
-            clearCart(); 
-            navigate('/checkout/success'); 
+            clearInterval(interval); // Stop polling on success
+            setPollingIntervalId(null);
+            navigate('/checkout/success');
           } else if (payment_status === 'Pending') {
-            console.log(`(Attempt ${attempts}/${maxAttempts}) Payment status: Pending`);
+            console.log(`(Attempt ${currentAttempt}/${MAX_POLLING_ATTEMPTS}) Payment status: Pending`);
           } else {
-            console.error(`Unexpected payment status: ${payment_status}`);
+            // If status is neither Completed nor Pending, consider it a failure and stop polling
+            console.error(`Unexpected payment status: ${payment_status}. Stopping polling.`);
             setPaymentStatus('failed');
             clearInterval(interval);
+            setPollingIntervalId(null);
           }
-        } else {
-          console.error(`Check payment request failed with status ${response.status}`);
-          setPaymentStatus('failed');
-          clearInterval(interval);
         }
       } catch (error) {
-        console.error("Error checking payment status:", error);
-        setPaymentStatus('failed');
-        clearInterval(interval);
+        console.error(`(Attempt ${currentAttempt}/${MAX_POLLING_ATTEMPTS}) Error checking payment status:`, error.message);
+        // Do NOT immediately set to 'failed' or stop polling here.
+        // The polling loop will continue until MAX_POLLING_ATTEMPTS is reached or a 'Completed' status is received.
+        // This allows for transient network issues or temporary backend problems.
+        // Only set a general API error message without stopping the polling loop,
+        // as the user explicitly requested to wait for 30 attempts.
+        // setApiError(`Payment check failed: ${error.message}. Retrying...`); // Optional: show a temporary error
       }
     }, 5000); // Poll every 5 seconds
     setPollingIntervalId(interval);
-  }, [pollingIntervalId, clearCart, navigate]); // Re-added 'navigate' to dependencies
+  }, [pollingIntervalId, pollingAttempts, navigate]); // Removed clearCart from dependencies
 
-
-  // --- Cart Synchronization ---
-  const syncCartToBackend = async () => {
-    setLoading(true);
-    setApiError(null);
-    try {
-      for (const item of cartItems) {
-        const productResponse = await axios.get(`${BASE_URL}/product/${item.product_code}`);
-        const productData = productResponse.data;
-        let price = productData.price.amount;
-
-        if (productData.discount) {
-          const discountType = productData.discount.type;
-          const discountValue = productData.discount.value || 0;
-          if (discountType === 'Percentage') {
-            price *= (1 - discountValue / 100);
-          } else if (discountType === 'Fixed Amount') {
-            price -= discountValue;
-          }
-          price = Math.max(price, 0);
-        }
-
-        await axios.post(`${BASE_URL}/cart-item/${CUSTOMER_ID}`, {
-          customer_id: CUSTOMER_ID,
-          product_code: item.product_code,
-          qty: item.qty,
-          price_at_purchase: parseFloat(price.toFixed(2)),
-        });
-      }
-      console.log("Frontend cart synced to backend successfully.");
-      return true;
-    } catch (err) {
-      console.error("Failed to sync cart to backend:", err.response?.data?.message || err.message);
-      setApiError(`Failed to sync cart data: ${err.response?.data?.message || 'Please check console for details.'}`);
-      return false;
-    } finally {
-      setLoading(false);
+  const initiatePaymentFlow = useCallback(async () => {
+    // Only proceed if payment is idle or failed, and customerId is available
+    if ((paymentStatus !== 'idle' && paymentStatus !== 'failed') || !customerId) {
+      console.log("Payment process already initiated/completed, or customerId is missing. Not re-initiating.");
+      if (!customerId) setApiError("Customer ID is missing. Please log in.");
+      return;
     }
-  };
+
+    // Reset payment status to idle only if it was 'failed'
+    if (paymentStatus === 'failed') {
+      setPaymentStatus('idle');
+      setQrCodeString('');
+      setUniqueMd5('');
+      setOrderId(null);
+      setAmountToPay(0);
+    }
+
+    setLoading(true);
+    setApiError(null); // Clear previous API errors
+
+    try {
+      const addressIdForOrder = selectedAddressId;
+
+      if (addressIdForOrder === null) {
+        throw new Error("No shipping address selected. Please select an existing address or ensure new address is saved.");
+      }
+
+      const expressHandle = selectedShippingMethod?.type === 'express' ? selectedShippingMethod.name : null;
+
+      console.log("Attempting to place order with Customer ID:", customerId, "Address ID:", addressIdForOrder, "Express Handle:", expressHandle);
+      const placeOrderResponse = await apiService.placeOrder(customerId, addressIdForOrder, expressHandle);
+
+      const orderData = placeOrderResponse;
+      setOrderId(orderData.order_id);
+      setAmountToPay(orderData.amount_pay);
+      console.log(`Order placed. Order ID: ${orderData.order_id}, Amount: ${orderData.amount_pay}`);
+
+      console.log("Generating KHQR...");
+      const qrData = await apiService.getKhqr(
+        parseInt(orderData.amount_pay),
+        orderData.order_id,
+        'KHR'
+      );
+
+      setQrCodeString(qrData.khqr_string);
+      setUniqueMd5(qrData.unique_md5);
+      setPaymentStatus('pending_payment'); // Now waiting for actual payment
+      setLoading(false); // Stop loading indicator for initial setup
+      console.log("KHQR generated. Starting payment polling...");
+
+      // Start polling only if QR generation was successful
+      startPollingPayment(qrData.unique_md5, qrData.order_id);
+
+    } catch (error) {
+      console.error("Error during checkout initiation:", error.message);
+      setApiError(error.message || "An unexpected error occurred during checkout initiation.");
+      setPaymentStatus('failed'); // Set status to failed
+      setLoading(false); // Stop loading indicator
+      // Clear any existing polling interval if an error occurred before polling started or during QR generation
+      if (pollingIntervalId) {
+        clearInterval(pollingIntervalId);
+        setPollingIntervalId(null);
+      }
+    }
+  }, [paymentStatus, customerId, selectedAddressId, selectedShippingMethod, startPollingPayment, pollingIntervalId]);
+
+  // --- Data Fetching and Initialization ---
+
+  // Fetch user addresses on component mount or when customerId changes
+  useEffect(() => {
+    const fetchUserAddresses = async () => {
+      if (!isAuthenticated || !customerId) {
+        setApiError("Please log in to view and manage your addresses.");
+        setLoading(false);
+        return;
+      }
+      try {
+        setApiError(null);
+        setLoading(true);
+        const addresses = await apiService.getAddressCustomer(customerId);
+
+        setUserAddresses(addresses);
+
+        if (addresses.length > 0 && selectedAddressId === null && !useNewAddress) {
+          setSelectedAddressId(addresses[0].address_id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch user addresses:", err.message);
+        setApiError(`Failed to load addresses: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserAddresses();
+  }, [isAuthenticated, customerId, selectedAddressId, useNewAddress]);
+
+  // Update shippingAddress and displayPhoneNumber when selection/input changes
+  useEffect(() => {
+    if (!selectedShippingMethod && mockShippingMethods.length > 0) {
+      setSelectedShippingMethod(mockShippingMethods[0]);
+    }
+
+    if (useNewAddress) {
+      setShippingAddress(newAddressForm);
+      setDisplayPhoneNumber(newAddressForm.phone || user?.phone_number || '');
+    } else if (selectedAddressId !== null) {
+      const selected = userAddresses.find(addr => String(addr.address_id) === String(selectedAddressId));
+      if (selected) {
+        setShippingAddress(selected);
+        setDisplayPhoneNumber(selected.phone || user?.phone_number || '');
+      }
+    } else if (userAddresses.length > 0 && selectedAddressId === null && !useNewAddress) {
+      setShippingAddress(userAddresses[0]);
+      setSelectedAddressId(userAddresses[0].address_id);
+      setDisplayPhoneNumber(userAddresses[0].phone || user?.phone_number || '');
+    } else if (!selectedAddressId && !useNewAddress && userAddresses.length === 0) {
+        setDisplayPhoneNumber(user?.phone_number || '');
+    }
+  }, [selectedAddressId, useNewAddress, newAddressForm, userAddresses, selectedShippingMethod, user?.phone_number]);
+
+  // Cleanup polling interval on component unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalId) {
+        clearInterval(pollingIntervalId);
+      }
+    };
+  }, [pollingIntervalId]);
+
+
+  // --- New useEffect to trigger QR generation when entering Step 3 ---
+  useEffect(() => {
+    // Only attempt to initiate payment if on step 3
+    // AND payment is either 'idle' (first time) or 'failed' (retry)
+    // AND it's not already generating or pending.
+    if (currentStep === 3 && (paymentStatus === 'idle' || paymentStatus === 'failed')) {
+      console.log("Entering payment step (3). Initiating payment flow...");
+      initiatePaymentFlow();
+    }
+  }, [currentStep, paymentStatus, initiatePaymentFlow]);
 
 
   const STEPS_CONFIG = [
@@ -288,113 +336,119 @@ const CheckoutPage = ({ onBackToCart }) => {
   ];
 
   const handleNextStep = async () => {
-    setApiError(null); // Clear previous errors
+    setApiError(null);
+    setLoading(true);
 
     if (currentStep === 1) {
       if (!validateAddress()) {
         console.log("Address validation failed.");
+        setLoading(false);
         return;
       }
-      setCurrentStep(2);
+
+      if (useNewAddress) {
+        try {
+          // Call API to add new address
+          await apiService.addAddressCustomer(customerId, {
+            street_line: newAddressForm.street_line,
+            commune: '', // Sending empty string as it's not collected by form but in API schema
+            district: newAddressForm.district,
+            province: newAddressForm.province,
+            google_map_link: null, // Sending null as it's not collected by form but in API schema
+            // phone is intentionally omitted from this payload as per API schema provided
+          });
+          console.log("New address added to backend. Re-fetching addresses...");
+
+          // Re-fetch all addresses to get the newly added one with its ID
+          const updatedAddresses = await apiService.getAddressCustomer(customerId);
+          setUserAddresses(updatedAddresses);
+
+          // Find the newly added address by its unique properties
+          // This is more robust than assuming it's the last one or relying on API returning ID directly
+          const newlyAddedAddress = updatedAddresses.find(
+            addr => addr.street_line === newAddressForm.street_line &&
+                    addr.district === newAddressForm.district &&
+                    addr.province === newAddressForm.province &&
+                    (addr.phone === newAddressForm.phone || !newAddressForm.phone) // Match phone if provided
+          );
+
+          if (newlyAddedAddress) {
+            setSelectedAddressId(newlyAddedAddress.address_id);
+          } else if (updatedAddresses.length > 0) {
+            // Fallback to selecting the first address if new one not found (shouldn't happen with re-fetch)
+            setSelectedAddressId(updatedAddresses[0].address_id);
+          }
+
+
+          setUseNewAddress(false); // Switch back to using existing addresses
+          setNewAddressForm({ // Clear new address form, but keep phone number for next new address if needed
+            street_line: '', district: '', province: '', phone: user?.phone_number || ''
+          });
+          setCurrentStep(2); // Move to the next step
+        } catch (err) {
+          console.error("Failed to add new address:", err.message);
+          setApiError(`Failed to add new address: ${err.message}`);
+          setLoading(false);
+          return;
+        }
+      } else {
+        setCurrentStep(2);
+      }
     } else if (currentStep === 2) {
       if (!selectedShippingMethod) {
         alert("Please select a shipping method.");
+        setLoading(false);
         return;
       }
 
-      // Sync cart data to backend before moving to payment
-      setLoading(true); // Indicate loading while syncing cart
-      const cartSynced = await syncCartToBackend();
-      setLoading(false);
-
-      if (!cartSynced) {
-        alert("Could not proceed to payment: Failed to sync cart data.");
-        return;
-      }
       setCurrentStep(3);
     } else if (currentStep === 3) {
         if (paymentStatus === 'failed') {
-            // If payment failed, allow retry
             initiatePaymentFlow();
         }
     }
+    setLoading(false);
   };
 
-  // New function to encapsulate the payment initiation logic
-  const initiatePaymentFlow = useCallback(async () => {
-    // Prevent re-triggering if already in process or completed
-    if (paymentStatus === 'generating_qr' || paymentStatus === 'pending_payment' || paymentStatus === 'completed') {
-      console.log("Payment process already initiated or completed.");
-      return;
-    }
-
-    setPaymentStatus('generating_qr'); // Set status to show QR generation loading
-    setLoading(true); // Main loading for API calls
-
-    try {
-      const addressIdForOrder = selectedAddressId;
-
-      if (addressIdForOrder === null) {
-        throw new Error("No shipping address selected. Please select an existing address or ensure new address is saved.");
-      }
-
-      // 1. Place Order API Call
-      console.log("Attempting to place order with Customer ID:", CUSTOMER_ID, "and Address ID:", addressIdForOrder);
-      const placeOrderResponse = await axios.post(`${BASE_URL}/checkout/place-order`, {
-        customer_id: CUSTOMER_ID,
-        address_id: addressIdForOrder,
-      });
-
-      if (placeOrderResponse.status !== 200) {
-        throw new Error(`Place order failed: ${placeOrderResponse.status} - ${placeOrderResponse.data.message || 'Unknown error'}`);
-      }
-
-      const orderData = placeOrderResponse.data;
-      setOrderId(orderData.order_id);
-      setAmountToPay(orderData.amount_pay);
-      console.log(`Order placed. Order ID: ${orderData.order_id}, Amount: ${orderData.amount_pay}`);
-
-      // 2. Generate KHQR API Call
-      console.log("Generating KHQR...");
-      const getKhqrResponse = await axios.post(`${BASE_URL}/checkout/get-khqr`, {
-        amount_pay: parseInt(orderData.amount_pay),
-        order_id: orderData.order_id,
-        typeCurrency: 'KHR' // Or 'USD' based on your requirement
-      });
-
-      if (getKhqrResponse.status !== 200) {
-        throw new Error(`Get KHQR failed: ${getKhqrResponse.status} - ${getKhqrResponse.data.message || 'Unknown error'}`);
-      }
-
-      const qrData = getKhqrResponse.data;
-      setQrCodeString(qrData.khqr_string);
-      setUniqueMd5(qrData.unique_md5);
-      setPaymentStatus('pending_payment'); // Now waiting for actual payment
-      setLoading(false); // Stop main loading indicator for API calls
-      console.log("KHQR generated. Starting payment polling...");
-
-      // 3. Start Polling for Payment Status
-      startPollingPayment(qrData.unique_md5, qrData.order_id);
-
-    } catch (error) {
-      console.error("Error during checkout:", error.response?.data?.message || error.message);
-      setApiError(error.response?.data?.message || error.message || "An unexpected error occurred during checkout.");
-      setPaymentStatus('failed'); // Set status to failed
-      setLoading(false); // Stop loading indicator
-    }
-  }, [paymentStatus, selectedAddressId, startPollingPayment]);
 
   const orderSubtotal = cartTotal;
   const shippingCost = selectedShippingMethod?.price || 0;
-  const tax = orderSubtotal * 0.07; // Example 7% tax
+  const tax = orderSubtotal * 0.07;
   const finalTotal = orderSubtotal + shippingCost + tax;
 
-  const customerNameForKhqr = "Customer";
+  const customerNameForKhqr = user?.name || "Customer";
 
 
+  if (!isAuthenticated) {
+    return (
+      <div className="p-8 text-center bg-white rounded-lg shadow-md max-w-md mx-auto mt-20">
+        <FaLock className="text-6xl text-orange-400 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-gray-800 mb-3">Please Log In</h2>
+        <p className="text-gray-600 mb-6">You need to be logged in to proceed to checkout.</p>
+        <button
+          onClick={() => navigate('/login')}
+          className="bg-orange-500 text-white px-8 py-3 rounded-md font-semibold hover:bg-orange-600 transition"
+        >
+          Go to Login
+        </button>
+      </div>
+    );
+  }
+
+  if (loading && currentStep < 3) return <div className="text-center py-20 text-xl font-semibold">Loading...</div>;
   if (!cartItems) return <div className="p-8 text-center">Loading checkout...</div>;
   if (cartItems.length === 0 && currentStep <= STEPS_CONFIG.length) {
-    return <div className="p-8 text-center">Your cart is empty. <button onClick={onBackToCart} className="text-orange-500 hover:underline">Return to cart</button></div>;
+    return (
+      <div className="p-8 text-center bg-white rounded-lg shadow-md max-w-md mx-auto mt-20">
+        <FaShoppingCart className="text-6xl text-gray-300 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-gray-800 mb-3">Your Cart is Empty</h2>
+        <p className="text-gray-600 mb-6">Add some items to your cart before checking out.</p>
+        <button onClick={() => navigate('/')} className="bg-orange-500 text-white px-8 py-3 rounded-md font-semibold hover:bg-orange-600 transition"
+        >
+          Start Shopping
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -442,8 +496,8 @@ const CheckoutPage = ({ onBackToCart }) => {
                           className="form-radio h-4 w-4 text-orange-600 focus:ring-orange-500"
                         />
                         <span className="ml-3 text-sm font-medium text-gray-700">
+                          {/* Updated display to only show street_line, district, province */}
                           {addr.street_line}, {addr.district}, {addr.province}
-                          {addr.commune ? `, ${addr.commune}` : ''}
                         </span>
                       </label>
                     ))}
@@ -469,18 +523,16 @@ const CheckoutPage = ({ onBackToCart }) => {
               {(useNewAddress || userAddresses.length === 0) && (
                 <>
                   <p className="text-xs text-gray-500 mb-4">You can create an account after checkout.</p>
-                  <InputField label="Street Line" id="street_line" name="street_line" value={newAddressForm.street_line} onChange={handleAddressInputChange} error={errors.street_line} />
-                  <InputField label="Commune" id="commune" name="commune" value={newAddressForm.commune} onChange={handleAddressInputChange} error={errors.commune} />
+                  <InputField label="Street Line" id="street_line" name="street_line" value={newAddressForm.street_line} onChange={handleAddressInputChange} error={errors.street_line} required={false} /> {/* street_line is now optional */}
+                  {/* Removed Commune, Zip/Postal Code, and Country fields as per request */}
                   <InputField label="District" id="district" name="district" value={newAddressForm.district} onChange={handleAddressInputChange} error={errors.district} />
                   <InputField label="Province" id="province" name="province" value={newAddressForm.province} onChange={handleAddressInputChange} error={errors.province} />
-                  <InputField label="Zip/Postal Code" id="zipCode" name="zipCode" value={newAddressForm.zipCode} onChange={handleAddressInputChange} error={errors.zipCode} />
-                  <InputField label="Country" id="country" name="country" value={newAddressForm.country} onChange={handleAddressInputChange} error={errors.country} />
                   <InputField label="Phone Number" id="phone" name="phone" type="tel" placeholder="(012) 345-6789" value={newAddressForm.phone} onChange={handleAddressInputChange} error={errors.phone} />
                 </>
               )}
               {currentStep === 1 && (
-                <button onClick={handleNextStep} className="mt-3 w-full sm:w-auto bg-orange-500 text-white px-7 py-2.5 rounded-md font-semibold hover:bg-orange-600 text-sm">
-                  Continue to Shipping
+                <button onClick={handleNextStep} className="mt-3 w-full sm:w-auto bg-orange-500 text-white px-7 py-2.5 rounded-md font-semibold hover:bg-orange-600 text-sm" disabled={loading}>
+                  {loading ? 'Saving Address...' : 'Continue to Shipping'}
                 </button>
               )}
             </CollapsibleSection>
@@ -503,7 +555,7 @@ const CheckoutPage = ({ onBackToCart }) => {
                       onChange={() => setSelectedShippingMethod(method)}
                       className="form-radio h-4 w-4 text-orange-600 focus:ring-orange-500" />
                     <span className="ml-3 text-sm font-medium text-gray-700 flex-grow">{method.name} ({method.estimatedDelivery})</span>
-                    <span className="text-sm text-gray-600">{method.price.toFixed(2)} KHR</span> {/* Display in KHR */}
+                    <span className="text-sm text-gray-600">${method.price.toFixed(2)}</span>
                   </label>
                 ))}
               </div>
@@ -540,7 +592,7 @@ const CheckoutPage = ({ onBackToCart }) => {
                         Save
                       </button>
                       <button
-                        onClick={() => { setDisplayPhoneNumber(shippingAddress.phone || ''); setEditPhoneNumberMode(false); }}
+                        onClick={() => { setDisplayPhoneNumber(shippingAddress.phone || user?.phone_number || ''); setEditPhoneNumberMode(false); }}
                         className="bg-gray-300 text-gray-800 px-4 py-2.5 rounded-md font-semibold hover:bg-gray-400 text-sm h-fit mb-4"
                       >
                         Cancel
@@ -552,7 +604,7 @@ const CheckoutPage = ({ onBackToCart }) => {
               {currentStep === 2 && (
                 <button onClick={handleNextStep} className="mt-5 w-full sm:w-auto bg-orange-500 text-white px-7 py-2.5 rounded-md font-semibold hover:bg-orange-600 text-sm"
                   disabled={editPhoneNumberMode || !displayPhoneNumber || loading}>
-                  {loading ? 'Syncing Cart...' : 'Continue to Payment'}
+                  {loading ? 'Loading...' : 'Continue to Payment'}
                 </button>
               )}
             </CollapsibleSection>
@@ -587,8 +639,8 @@ const CheckoutPage = ({ onBackToCart }) => {
                 {paymentStatus === 'pending_payment' && qrCodeString ? (
                   <Khqr name={customerNameForKhqr} amount={finalTotal} qrValue={qrCodeString} />
                 ) : (
-                    // Removed the condition for paymentStatus === 'completed' to render SuccessPage directly
-                    paymentStatus !== 'generating_qr' && paymentStatus !== 'idle' && paymentStatus !== 'completed' && ( // Added paymentStatus !== 'completed' here
+                    // Only show error message if paymentStatus is 'failed' and not generating/idle/completed
+                    paymentStatus === 'failed' && (
                       <div className="text-gray-500 text-center py-10">QR code not available or an error occurred.</div>
                     )
                   )}
@@ -614,7 +666,7 @@ const CheckoutPage = ({ onBackToCart }) => {
               {/* Only show retry button if payment failed */}
               {currentStep === 3 && paymentStatus === 'failed' && (
                 <button onClick={() => {
-                  setPaymentStatus('idle'); // Reset state to idle to allow retry
+                  setPaymentStatus('idle'); // Reset status to idle to trigger re-initiation
                   setQrCodeString('');
                   setUniqueMd5('');
                   setOrderId(null);
