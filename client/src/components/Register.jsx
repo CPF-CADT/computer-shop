@@ -55,11 +55,9 @@ const RegisterForm = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6 self-start ml-2 sm:ml-8">
-        Register
-      </h1>
-      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-md flex flex-col gap-6 relative">
+    <div className="bg-white min-h-screen flex flex-col items-center justify-center p-4">
+      {/* Move the form slightly up for visual alignment with login */}
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-md flex flex-col gap-6 relative mt-[-56px] sm:mt-[-72px]">
         {/* Animated hook icon */}
         <div className="flex justify-center mb-2">
           <svg
