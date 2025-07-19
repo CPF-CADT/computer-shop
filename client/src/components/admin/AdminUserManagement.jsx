@@ -379,7 +379,7 @@ export default function AdminManagement() {
                 <button type="submit" className="w-full md:w-auto px-6 py-2 bg-orange-500 text-white rounded-md font-semibold hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors cursor-pointer">Add User</button>
             </form>
 
-            <div className="overflow-x-auto bg-white rounded-lg shadow-md">
+            <div className="overflow-x-auto bg-white rounded-lg shadow-md w-full">
                 <table className="min-w-full text-sm">
                     <thead className="bg-gray-100">
                         <tr className="text-gray-700">

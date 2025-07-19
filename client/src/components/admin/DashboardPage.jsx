@@ -72,7 +72,84 @@ const [orderLoading, setOrderLoading] = useState(true);
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full">
+      <style>{`
+        .modern-table-container {
+          width: 100%;
+          overflow-x: auto;
+          background: white;
+          border-radius: 0.75rem;
+          box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+        }
+        .modern-table {
+          width: 100%;
+          border-collapse: separate;
+          border-spacing: 0;
+          min-width: 400px;
+        }
+        .modern-table th, .modern-table td {
+          padding: 12px 10px;
+          text-align: left;
+          font-size: 15px;
+          border-bottom: 1px solid #f3f4f6;
+          background: white;
+        }
+        .modern-table th {
+          background: #f9fafb;
+          font-weight: 600;
+          color: #374151;
+        }
+        .modern-table tr:last-child td {
+          border-bottom: none;
+        }
+        @media (max-width: 900px) {
+          .modern-table, .modern-table th, .modern-table td {
+            font-size: 13px;
+            min-width: 120px;
+          }
+        }
+        @media (max-width: 600px) {
+          .modern-table-container {
+            border-radius: 0.5rem;
+            box-shadow: none;
+            padding: 0;
+          }
+          .modern-table, .modern-table thead, .modern-table tbody, .modern-table th, .modern-table td, .modern-table tr {
+            display: block;
+            width: 100%;
+          }
+          .modern-table thead {
+            display: none;
+          }
+          .modern-table tr {
+            margin-bottom: 1.2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 4px 0 rgba(0,0,0,0.04);
+            background: white;
+            border: 1px solid #f3f4f6;
+          }
+          .modern-table td {
+            padding: 10px 8px 10px 50%;
+            position: relative;
+            border: none;
+            min-width: unset;
+            max-width: unset;
+            font-size: 13px;
+            background: white;
+          }
+          .modern-table td:before {
+            position: absolute;
+            top: 10px;
+            left: 16px;
+            width: 45%;
+            white-space: pre-wrap;
+            font-weight: 600;
+            color: #6b7280;
+            content: attr(data-label);
+            font-size: 12px;
+          }
+        }
+      `}</style>
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>
@@ -85,7 +162,7 @@ const [orderLoading, setOrderLoading] = useState(true);
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
             <div>
@@ -138,24 +215,24 @@ const [orderLoading, setOrderLoading] = useState(true);
       </div>
 
       {/* Charts and Tables Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Recent Orders */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-800">Recent Orders</h2>
             <button className="text-sm text-blue-600 hover:text-blue-800">View All</button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
+          <div className="modern-table-container">
+            <table className="modern-table">
+              <thead>
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Total</th>
+                  <th>Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody>
                 {orderLoading ? (
                   <tr>
                     <td colSpan="4" className="px-4 py-3 text-center text-gray-500">Loading...</td>
@@ -185,7 +262,7 @@ const [orderLoading, setOrderLoading] = useState(true);
         </div>
 
         {/* Top Products */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-800">Top Selling Products</h2>
             <button className="text-sm text-blue-600 hover:text-blue-800">View All</button>
@@ -209,9 +286,9 @@ const [orderLoading, setOrderLoading] = useState(true);
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <button className="p-4 bg-blue-50 rounded-lg text-left hover:bg-blue-100 transition-colors">
             <h3 className="font-medium text-blue-900">Add New Product</h3>
             <p className="text-sm text-blue-600 mt-1">Add items to your inventory</p>

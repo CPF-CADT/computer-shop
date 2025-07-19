@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { MdMenu } from 'react-icons/md';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
@@ -63,10 +64,10 @@ export default function AdminDash() {
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
       <Sidebar activePage={activePage} setActivePage={setActivePage} />
-      <div className="flex-1 flex flex-col lg:ml-0">
+      <div className="flex-1 flex flex-col lg:ml-0 min-w-0">
         <Header />
-        <main className="p-4 lg:p-6 overflow-auto">
-          {renderPage()}
+        <main className="p-2 sm:p-4 lg:p-6 flex-1 w-full max-w-full overflow-x-auto">
+          <div className="w-full max-w-full mx-auto">{renderPage()}</div>
         </main>
       </div>
     </div>

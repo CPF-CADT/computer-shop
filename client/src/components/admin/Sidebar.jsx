@@ -50,6 +50,7 @@ export default function Sidebar({ activePage, setActivePage }) {
         w-64 bg-[#FFA726] text-white min-h-screen flex flex-col
         transform transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        max-w-full
       `}>
         {/* Logo */}
         <div className="flex items-center gap-2 text-2xl font-bold p-6 bg-white flex-shrink-0">

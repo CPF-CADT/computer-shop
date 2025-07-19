@@ -303,29 +303,109 @@ export default function AdminManageRole() {
                 <button type="submit" className="cursor-pointer px-6 py-2 bg-orange-500 text-white rounded-md font-semibold hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">Add Role & Grant</button>
             </form>
 
-            <div className="overflow-x-auto bg-white rounded-lg shadow-md">
-                <table className="min-w-full text-sm">
-                    <thead className="bg-gray-100">
+            <div className="overflow-x-auto bg-white rounded-lg shadow-md w-full">
+                <style>{`
+                  .modern-table-container {
+                    width: 100%;
+                    overflow-x: auto;
+                    background: white;
+                    border-radius: 0.75rem;
+                    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+                  }
+                  .modern-table {
+                    width: 100%;
+                    border-collapse: separate;
+                    border-spacing: 0;
+                    min-width: 340px;
+                  }
+                  .modern-table th, .modern-table td {
+                    padding: 12px 10px;
+                    text-align: left;
+                    font-size: 15px;
+                    border-bottom: 1px solid #f3f4f6;
+                    background: white;
+                  }
+                  .modern-table th {
+                    background: #f9fafb;
+                    font-weight: 600;
+                    color: #374151;
+                  }
+                  .modern-table tr:last-child td {
+                    border-bottom: none;
+                  }
+                  @media (max-width: 900px) {
+                    .modern-table, .modern-table th, .modern-table td {
+                      font-size: 13px;
+                      min-width: 100px;
+                    }
+                  }
+                  @media (max-width: 600px) {
+                    .modern-table-container {
+                      border-radius: 0.5rem;
+                      box-shadow: none;
+                      padding: 0;
+                    }
+                    .modern-table, .modern-table thead, .modern-table tbody, .modern-table th, .modern-table td, .modern-table tr {
+                      display: block;
+                      width: 100%;
+                    }
+                    .modern-table thead {
+                      display: none;
+                    }
+                    .modern-table tr {
+                      margin-bottom: 1.2rem;
+                      border-radius: 0.5rem;
+                      box-shadow: 0 1px 4px 0 rgba(0,0,0,0.04);
+                      background: white;
+                      border: 1px solid #f3f4f6;
+                    }
+                    .modern-table td {
+                      padding: 10px 8px 10px 50%;
+                      position: relative;
+                      border: none;
+                      min-width: unset;
+                      max-width: unset;
+                      font-size: 13px;
+                      background: white;
+                      word-break: break-word;
+                    }
+                    .modern-table td:before {
+                      position: absolute;
+                      top: 10px;
+                      left: 16px;
+                      width: 45%;
+                      white-space: pre-wrap;
+                      font-weight: 600;
+                      color: #6b7280;
+                      content: attr(data-label);
+                      font-size: 12px;
+                    }
+                  }
+                `}</style>
+                <div className="modern-table-container">
+                  <table className="modern-table">
+                    <thead>
                         <tr className="text-gray-700">
-                            <th className="p-4 text-left font-semibold">Role Name</th>
-                            <th className="p-4 text-left font-semibold">Assigned Permissions</th>
-                            <th className="p-4 text-left font-semibold">Actions</th>
+                            <th>Role Name</th>
+                            <th>Assigned Permissions</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody>
                         {loading ? (<tr><td colSpan="3" className="p-4 text-center">Loading...</td></tr>) : roles.map(role => (
                             <tr key={role.roleName} className="hover:bg-gray-50">
-                                <td className="p-4 font-medium text-gray-800">{role.roleName}</td>
-                                <td className="p-4">
+                                <td data-label="Role Name">{role.roleName}</td>
+                                <td data-label="Assigned Permissions">
                                     <button onClick={() => setModal({ type: 'view-role-permissions', data: role })} className="cursor-pointer px-3 py-1 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 font-medium transition-colors text-xs">View</button>
                                 </td>
-                                <td className="p-4 space-x-2">
+                                <td data-label="Actions">
                                     <button onClick={() => handleDeleteRole(role.roleName)} className="cursor-pointer px-3 py-1 bg-red-100 text-red-600 rounded-md hover:bg-red-200 font-medium transition-colors">Delete</button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
-                </table>
+                  </table>
+                </div>
             </div>
         </div>
     );

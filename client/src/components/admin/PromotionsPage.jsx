@@ -231,7 +231,84 @@ export default function PromotionsPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full">
+      <style>{`
+        .modern-table-container {
+          width: 100%;
+          overflow-x: auto;
+          background: white;
+          border-radius: 0.75rem;
+          box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+        }
+        .modern-table {
+          width: 100%;
+          border-collapse: separate;
+          border-spacing: 0;
+          min-width: 400px;
+        }
+        .modern-table th, .modern-table td {
+          padding: 12px 10px;
+          text-align: left;
+          font-size: 15px;
+          border-bottom: 1px solid #f3f4f6;
+          background: white;
+        }
+        .modern-table th {
+          background: #f9fafb;
+          font-weight: 600;
+          color: #374151;
+        }
+        .modern-table tr:last-child td {
+          border-bottom: none;
+        }
+        @media (max-width: 900px) {
+          .modern-table, .modern-table th, .modern-table td {
+            font-size: 13px;
+            min-width: 120px;
+          }
+        }
+        @media (max-width: 600px) {
+          .modern-table-container {
+            border-radius: 0.5rem;
+            box-shadow: none;
+            padding: 0;
+          }
+          .modern-table, .modern-table thead, .modern-table tbody, .modern-table th, .modern-table td, .modern-table tr {
+            display: block;
+            width: 100%;
+          }
+          .modern-table thead {
+            display: none;
+          }
+          .modern-table tr {
+            margin-bottom: 1.2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 4px 0 rgba(0,0,0,0.04);
+            background: white;
+            border: 1px solid #f3f4f6;
+          }
+          .modern-table td {
+            padding: 10px 8px 10px 50%;
+            position: relative;
+            border: none;
+            min-width: unset;
+            max-width: unset;
+            font-size: 13px;
+            background: white;
+          }
+          .modern-table td:before {
+            position: absolute;
+            top: 10px;
+            left: 16px;
+            width: 45%;
+            white-space: pre-wrap;
+            font-weight: 600;
+            color: #6b7280;
+            content: attr(data-label);
+            font-size: 12px;
+          }
+        }
+      `}</style>
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>
@@ -311,109 +388,101 @@ export default function PromotionsPage() {
       </div>
 
       {/* Promotions Table */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Promotion</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usage</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Validity</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+      <div className="bg-white rounded-lg shadow-md overflow-x-auto">
+        <table className="w-full min-w-[700px]">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Promotion</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usage</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Validity</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredPromotions.map((promotion) => (
+              <tr key={promotion.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    {getTypeIcon(promotion.type)}
+                    <div className="ml-3">
+                      <div className="text-sm font-medium text-gray-900">{promotion.name}</div>
+                      <div className="text-sm text-gray-500">{promotion.description}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-900">
+                    {promotion.code}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">
+                    {promotion.type === 'percentage' && `${promotion.value}%`}
+                    {promotion.type === 'fixed' && `$${promotion.value}`}
+                    {promotion.type === 'shipping' && 'Free Shipping'}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Min: ${promotion.minAmount}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">
+                    {promotion.usageCount} / {promotion.usageLimit}
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full"
+                      style={{ width: `${(promotion.usageCount / promotion.usageLimit) * 100}%` }}
+                    ></div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <div>{new Date(promotion.startDate).toLocaleDateString()}</div>
+                  <div>{new Date(promotion.endDate).toLocaleDateString()}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(promotion.status)}`}>
+                    {promotion.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleEdit(promotion)}
+                      className="text-blue-600 hover:text-blue-900"
+                      title="Edit"
+                    >
+                      <MdEdit />
+                    </button>
+                    <button
+                      onClick={() => toggleStatus(promotion.id)}
+                      className="text-green-600 hover:text-green-900"
+                      title={promotion.status === 'active' ? 'Deactivate' : 'Activate'}
+                    >
+                      <MdVisibility />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(promotion.id)}
+                      className="text-red-600 hover:text-red-900"
+                      title="Delete"
+                    >
+                      <MdDelete />
+                    </button>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPromotions.map((promotion) => (
-                <tr key={promotion.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      {getTypeIcon(promotion.type)}
-                      <div className="ml-3">
-                        <div className="text-sm font-medium text-gray-900">{promotion.name}</div>
-                        <div className="text-sm text-gray-500">{promotion.description}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-900">
-                      {promotion.code}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {promotion.type === 'percentage' && `${promotion.value}%`}
-                      {promotion.type === 'fixed' && `$${promotion.value}`}
-                      {promotion.type === 'shipping' && 'Free Shipping'}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Min: ${promotion.minAmount}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {promotion.usageCount} / {promotion.usageLimit}
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${(promotion.usageCount / promotion.usageLimit) * 100}%` }}
-                      ></div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div>{new Date(promotion.startDate).toLocaleDateString()}</div>
-                    <div>{new Date(promotion.endDate).toLocaleDateString()}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(promotion.status)}`}>
-                      {promotion.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEdit(promotion)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="Edit"
-                      >
-                        <MdEdit />
-                      </button>
-                      <button
-                        onClick={() => toggleStatus(promotion.id)}
-                        className="text-green-600 hover:text-green-900"
-                        title={promotion.status === 'active' ? 'Deactivate' : 'Activate'}
-                      >
-                        <MdVisibility />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(promotion.id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Delete"
-                      >
-                        <MdDelete />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div
-            className="overflow-y-auto"
-            style={{ maxHeight: '425px' }} // Adjust height for ~5 rows
-          >
-            {/* ...existing code for scrollable content if needed... */}
-          </div>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Create/Edit Promotion Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-white/70 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="flex items-center justify-center z-50 fixed inset-0 pointer-events-none">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl pointer-events-auto mx-2">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">
                 {editingPromotion ? 'Edit Promotion' : 'Create New Promotion'}
@@ -578,4 +647,5 @@ export default function PromotionsPage() {
   );
 }
 
-       
+
+

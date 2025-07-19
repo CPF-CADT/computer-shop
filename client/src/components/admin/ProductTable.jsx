@@ -11,7 +11,7 @@ export default function ProductTable({ products = [], onDelete, onEdit }) {
     }
 
     return (
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
+        <div className="bg-white rounded-lg shadow overflow-x-auto w-full">
             <table className="min-w-full text-sm">
                 <thead>
                     <tr className="bg-gray-100 text-gray-700">
