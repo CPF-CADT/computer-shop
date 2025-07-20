@@ -117,11 +117,11 @@ export async function getOrders(req: Request, res: Response): Promise<void> {
 
     // Get total count of orders for pagination
         const totalItems = await Orders.count();
-
+      const cleanSortType = sortType.trim().toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
         // Fetch orders with pagination & sorting
         const orders = await Orders.findAll({
         include,
-        order: [[orderColumn, sortType]],
+         order: [[orderColumn, cleanSortType]],
         limit,
         offset,
         });
@@ -152,7 +152,6 @@ export async function getOrders(req: Request, res: Response): Promise<void> {
         });
 
     } catch (error) {
-        console.error('Error fetching orders:', error);
         res.status(500).json({ message: 'Failed to fetch orders' });
     }
     }
@@ -235,7 +234,6 @@ export async function getOrders(req: Request, res: Response): Promise<void> {
 
     res.status(200).json(ordersData);
   } catch (error) {
-    console.error('Error fetching orders by customer ID:', error);
     res.status(500).json({ message: 'Failed to fetch orders' });
   }
 }
@@ -291,7 +289,7 @@ export async function getOrderById(req: Request, res: Response): Promise<void> {
 
     const order = await Orders.findByPk(orderId, {
     include: [
-        { model: Customer, attributes: ['name'] },
+        { model: Customer, attributes: ['name','phone_number'] },
         { model: Address, attributes: ['street_line', 'district', 'province'] },
         {
         model: Product,
@@ -311,7 +309,6 @@ export async function getOrderById(req: Request, res: Response): Promise<void> {
 
     res.status(200).json(order);
   } catch (error) {
-    console.error('Error fetching order by ID:', error);
     res.status(500).json({ message: 'Failed to fetch order' });
   }
 }
@@ -382,8 +379,84 @@ export async function getOrderSummary(req: Request, res: Response): Promise<void
 
     res.status(200).json({ totalOrders, counts });
   } catch (error) {
-    console.error('Error fetching order summary:', error);
     res.status(500).json({ message: 'Failed to fetch order summary' });
   }
 }
 
+/**
+ * @swagger
+ * /api/order/{id}/status:
+ *   patch:
+ *     summary: Update the status of an order
+ *     tags: [Order]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Order ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - order_status
+ *             properties:
+ *               order_status:
+ *                 type: string
+ *                 enum: [PENDING, PROCESSING, DELIVERED, CANCELLED]
+ *     responses:
+ *       200:
+ *         description: Order status updated successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Order status updated successfully
+ *               order:
+ *                 order_id: 1
+ *                 order_status: "DELIVERED"
+ *       400:
+ *         description: Invalid input or order status
+ *       404:
+ *         description: Order not found
+ *       500:
+ *         description: Server error
+ */
+export async function updateOrderStatus(req: Request, res: Response): Promise<void> {
+  try {
+    const orderId = Number(req.params.id);
+    const { order_status } = req.body;
+
+    if (isNaN(orderId)) {
+      res.status(400).json({ message: 'Invalid order ID' });
+      return;
+    }
+
+    if (!Object.values(OrderStatus).includes(order_status)) {
+      res.status(400).json({ message: 'Invalid order status' });
+      return;
+    }
+
+    const order = await Orders.findByPk(orderId);
+    if (!order) {
+      res.status(404).json({ message: 'Order not found' });
+      return;
+    }
+
+    order.order_status = order_status;
+    await order.save();
+
+    res.status(200).json({
+      message: 'Order status updated successfully',
+      order: {
+        order_id: order.order_id,
+        order_status: order.order_status,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update order status' });
+  }
+}

@@ -88,9 +88,8 @@ export async function getCounts (req: Request, res: Response):Promise<void> {
          return
       }
     }
-    res.json(counts);
+    res.status(200).json(counts);
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -170,7 +169,6 @@ export async function getSalesData(req: Request, res: Response): Promise<void> {
     });
 
   } catch (error) {
-    console.error('Error fetching sales data (raw SQL):', error);
     res.status(500).json({ message: 'Server error' });
   }
 }

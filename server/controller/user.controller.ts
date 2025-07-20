@@ -226,22 +226,47 @@ export async function customerLogin(req: Request, res: Response): Promise<void> 
  * 
  */
 
-export async function getAllCustomer(req:Request,res:Response):Promise<void>{
+export async function getAllCustomer(req: Request, res: Response): Promise<void> {
     const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 10;
     const page = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : 1;
-    const sortType = (req.query.sort as string)  || 'ASC'
-    const sortColumn = (req.query.column as string) || 'name'
-    const customerId = (req.query.customer_id as unknown as number) || 0
+    const sortType = (req.query.sort as string) || 'ASC';
+    const sortColumn = (req.query.column as string) || 'name';
+    const customerId = (req.query.customer_id as unknown as number) || 0;
     const nameCustomer = (req.query.name as string) || undefined;
     const phoneNumber = (req.query.phone_number as string) || undefined;
+    // Assuming is_verifyed filter is also passed from frontend
+    const isVerifyed = typeof req.query.is_verifyed === 'string' ? (req.query.is_verifyed === 'true') : undefined;
 
-    try{
-        const customers = await CusomerRepository.getAllUsers(customerId,phoneNumber,nameCustomer,sortType,sortColumn,page,limit)
-        res.status(200).send(customers);
-    }catch(err){
-        res.status(404).json({ message: (err as Error).message });
+
+    try {
+        // Fetch customers with pagination and filters
+        const customers = await CusomerRepository.getAllUsers(
+            customerId,
+            phoneNumber,
+            nameCustomer,
+            isVerifyed, // Pass isVerifyed filter
+            sortType,
+            sortColumn,
+            page,
+            limit
+        );
+        const totalItems = await Customer.count();
+        
+        const totalPages: number = Math.ceil(totalItems / limit);
+
+        res.status(200).json({
+            meta: {
+                totalItems,
+                page,
+                totalPages,
+                limit 
+            },
+            data: customers
+        });
+    } catch (err) {
+        console.error("Error in getAllCustomer controller:", err);
+        res.status(500).json({ message: (err as Error).message || 'Internal Server Error' });
     }
-
 }
 
 /**

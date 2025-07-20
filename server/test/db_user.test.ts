@@ -74,4 +74,78 @@ describe('User Management Controller - Unit Tests', () => {
             expect(responseJson).toHaveBeenCalledWith({ message: `User '${username}' dropped successfully.` });
         });
     });
+    
+    describe('User Management Controller - Additional Tests', () => {
+        // setup (reuse from your base beforeEach)
+    
+        describe('getAllUsers', () => {
+            it('[UM-006] should return all users', async () => {
+                const fakeUsers = [{ User: 'alice' }, { User: 'bob' }];
+                mockedUserManagement.getAllDatabaseUsers.mockResolvedValue(fakeUsers);
+                await UserManagementController.getAllUsers(mockRequest as Request, mockResponse as Response);
+                expect(responseStatus).toHaveBeenCalledWith(200);
+                expect(responseJson).toHaveBeenCalledWith(fakeUsers);
+            });
+        });
+    
+        describe('showUserPermissions', () => {
+            it('[UM-007] should return permissions for a user', async () => {
+                mockRequest.params = { username: 'john' };
+                mockRequest.query = { host: '%' };
+                mockedUserManagement.getPermissionsForUser.mockResolvedValue(['SELECT']);
+                await UserManagementController.showUserPermissions(mockRequest as Request, mockResponse as Response);
+                expect(responseStatus).toHaveBeenCalledWith(200);
+                expect(responseJson).toHaveBeenCalledWith({ grants: ['SELECT'] });
+            });
+        });
+    
+       describe('getAllRoles', () => {
+        it('[UM-008] should return all roles', async () => {
+            const roles = [
+                { Role: 'reader' },
+                { Role: 'admin' }
+            ];
+            mockedUserManagement.getAllDatabaseRoles.mockResolvedValue(roles);
+            await UserManagementController.getAllRoles(mockRequest as Request, mockResponse as Response);
+            expect(responseStatus).toHaveBeenCalledWith(200);
+            expect(responseJson).toHaveBeenCalledWith(roles);
+        });
+    });
+
+        describe('dropRole', () => {
+            it('[UM-009] should delete a role', async () => {
+                const roleName = 'guest';
+                mockRequest.params = { roleName };
+                mockedUserManagement.dropDatabaseRole.mockResolvedValue();
+                await UserManagementController.dropRole(mockRequest as Request, mockResponse as Response);
+                expect(responseStatus).toHaveBeenCalledWith(200);
+                expect(responseJson).toHaveBeenCalledWith({ message: `Role '${roleName}' dropped successfully.` });
+            });
+        });
+    
+        describe('grantPermissionsToUser', () => {
+            it('[UM-010] should grant permissions to a user', async () => {
+                mockRequest.body = {
+                    username: 'john',
+                    permissions: ['SELECT'],
+                    tableName: 'orders',
+                    host: '%',
+                };
+                mockedUserManagement.grantPermissionsToUser.mockResolvedValue();
+                await UserManagementController.grantPermissionsToUser(mockRequest as Request, mockResponse as Response);
+                expect(responseStatus).toHaveBeenCalledWith(200);
+                expect(responseJson).toHaveBeenCalledWith({ message: `Permissions granted to user 'john'.` });
+            });
+        });
+    
+        describe('updateUserExpiry', () => {
+            it('[UM-011] should update user expiry', async () => {
+                mockRequest.body = { username: 'jane', host: '%', expireDays: 90 };
+                mockedUserManagement.updateUserExpiry.mockResolvedValue();
+                await UserManagementController.updateUserExpiry(mockRequest as Request, mockResponse as Response);
+                expect(responseStatus).toHaveBeenCalledWith(200);
+                expect(responseJson).toHaveBeenCalledWith({ message: `Expiry for user 'jane' updated successfully.` });
+            });
+        });
+    });
 });

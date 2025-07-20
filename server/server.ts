@@ -52,9 +52,9 @@ try {
     app.use('/api/db', userManagementRouter);
     app.use('/api/recovery-db', recoveryDBRouter);
     app.use('/api/service', ServiceRouter);
-    app.use('/api/service', PromotionRouter);
     app.use('/api/staff',staffRouter );
     app.use('/api/store-infor', storeInforRouter);
+    app.use('/api/promotions',PromotionRouter)
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
     app.use('/api/order',ordersRoute)
 

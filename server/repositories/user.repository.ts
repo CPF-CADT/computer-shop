@@ -21,39 +21,48 @@ export class CusomerRepository {
             return null;
         }
     }
-    static async getAllUsers(customerId?: number, phoneNumber?: string, name?: string, sortType: string = 'ASC', sortColumn: string = 'name', page: number = 1, limit: number = 10){
-        const allowedSortTypes = ['ASC', 'DESC'];
+    static async getAllUsers(customerId?: number, phoneNumber?: string, name?: string,isVerifyed?: boolean, sortType: string = 'ASC', sortColumn: string = 'name', page: number = 1, limit: number = 10){
+       const allowedSortTypes = ['ASC', 'DESC'];
         const validSortType = allowedSortTypes.includes(sortType.toUpperCase()) ? sortType.toUpperCase() : 'ASC';
 
-        const allowedSortColumns = ['name', 'phone_number', 'registration_date']; 
+        const allowedSortColumns = ['name', 'phone_number', 'registration_date', 'customer_id']; // Added customer_id for sorting
         const validSortColumn = allowedSortColumns.includes(sortColumn) ? sortColumn : 'name';
 
         const conditions: any[] = [];
-        if(customerId!==0){
-            const user = await this.getUser('',customerId)
-            return user
-        }else{
-            if (name) {
-                conditions.push({
+
+        if (customerId !== undefined && customerId !== 0) { // Handle customerId filter
+            conditions.push({ customer_id: customerId });
+        }
+        if (name) {
+            conditions.push({
                 name: {
                     [Op.like]: `%${name}%`
                 }
-                });
-            }
-            if (phoneNumber) {
-                conditions.push({
+            });
+        }
+        if (phoneNumber) {
+            conditions.push({
                 phone_number: {
                     [Op.like]: `%${phoneNumber}%`
                 }
-                });
-            }
-            const whereClause = conditions.length > 0 ? { [Op.or]: conditions } : {};
+            });
+        }
+        if (isVerifyed !== undefined) { // Handle isVerifyed filter
+            conditions.push({ is_verifyed: isVerifyed });
+        }
+
+        const whereClause = conditions.length > 0 ? { [Op.and]: conditions } : {}; // Use Op.and for multiple conditions
+
+        try {
             return await Customer.findAll({
                 where: whereClause,
                 order: [[validSortColumn, validSortType]],
                 limit,
                 offset: (page - 1) * limit,
             });
+        } catch (error) {
+            console.error("Error in CusomerRepository.getAllUsers:", error);
+            throw error;
         }
     }
     static async createNewUser(name: string, phone_number: string, usr_profile_url: string | null, password: string): Promise<boolean | null> {

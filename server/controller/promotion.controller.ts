@@ -299,3 +299,157 @@ export async function deletePromotion(req: Request, res: Response): Promise<void
     res.status(500).json({ message: 'Internal Server Error' });
   }
 }
+
+/**
+ * @swagger
+ * /api/promotions:
+ *   get:
+ *     summary: Retrieve a list of all promotions
+ *     tags:
+ *       - Promotion
+ *     responses:
+ *       200:
+ *         description: A list of promotions.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   promotion_id:
+ *                     type: integer
+ *                     example: 1
+ *                   title:
+ *                     type: string
+ *                     example: "Summer Sale"
+ *                   discount_type:
+ *                     type: string
+ *                     example: "percentage"
+ *                   discount_value:
+ *                     type: number
+ *                     example: 15
+ *                   start_date:
+ *                     type: string
+ *                     format: date
+ *                     example: "2025-07-01"
+ *                   end_date:
+ *                     type: string
+ *                     format: date
+ *                     example: "2025-07-31"
+ *                   code:
+ *                     type: string
+ *                     nullable: true
+ *                     example: "SUMMER25"
+ *       500:
+ *         description: Internal Server Error
+ */
+export async function getAllPromotions(req: Request, res: Response): Promise<void> {
+  try {
+    const promotions = await PromotionRepository.getAllPromotions(); // Call the new repository method
+    res.status(200).json(promotions);
+  } catch (error) {
+    console.error('Error fetching all promotions:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+}
+
+/**
+ * @swagger
+ * /api/promotions/apply-batch:
+ *   post:
+ *     summary: Apply a promotion to multiple products based on criteria
+ *     tags:
+ *       - Promotion
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - promotionId
+ *             properties:
+ *               promotionId:
+ *                 type: integer
+ *                 description: The ID of the promotion to apply.
+ *               productCodes:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Optional list of specific product codes to apply the promotion to.
+ *               categoryIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Optional list of category IDs to apply the promotion to all products within.
+ *               typeIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Optional list of product type IDs to apply the promotion to all products of these types.
+ *               brandIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Optional list of brand IDs to apply the promotion to all products of these brands.
+ *     responses:
+ *       200:
+ *         description: Promotion applied to products successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Promotion applied to products successfully.
+ *                 appliedCount:
+ *                   type: integer
+ *                   example: 5
+ *       400:
+ *         description: Invalid input or missing promotion ID.
+ *       404:
+ *         description: Promotion not found.
+ *       500:
+ *         description: Internal Server Error
+ */
+export async function applyPromotionBatch(req: Request, res: Response): Promise<void> {
+    try {
+        const { promotionId, productCodes, categoryIds, typeIds, brandIds } = req.body;
+
+        if (!promotionId) {
+            res.status(400).json({ message: 'Promotion ID is required.' });
+            return;
+        }
+
+        // Ensure at least one targeting criteria is provided
+        if (!productCodes && !categoryIds && !typeIds && !brandIds) {
+            res.status(400).json({ message: 'At least one of productCodes, categoryIds, typeIds, or brandIds must be provided.' });
+            return;
+        }
+
+        const promotionExists = await PromotionRepository.updatePromotion(promotionId, {}); // Check if promotion exists
+        if (!promotionExists) {
+            res.status(404).json({ message: `Promotion with ID ${promotionId} not found.` });
+            return;
+        }
+
+        const appliedAssociations = await PromotionRepository.applyPromotionToProductsByCriteria(
+            promotionId,
+            productCodes,
+            categoryIds,
+            typeIds,
+            brandIds
+        );
+
+        res.status(200).json({
+            message: `Promotion applied to ${appliedAssociations.length} products successfully.`,
+            appliedCount: appliedAssociations.length
+        });
+
+    } catch (error) {
+        console.error('Error applying promotion batch:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+}

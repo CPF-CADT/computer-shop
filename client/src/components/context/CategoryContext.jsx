@@ -47,9 +47,9 @@ export function CategoryProvider({ children }) {
     typeProducts,
     loadingCategories,
     categoryError,
-    activeCategory, // Include activeCategory state
-    selectCategory, // Include selectCategory function
-    refetchCategoryData: fetchCategoryData, // Expose refetch function if needed
+    activeCategory, 
+    selectCategory, 
+    refetchCategoryData: fetchCategoryData, 
   };
 
   return (

@@ -18,17 +18,21 @@ import StaffManagementPage from './StaffManagementPage';
 
 export default function AdminDash() {
   const [activePage, setActivePage] = useState('Dashboard');
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const savedPage = localStorage.getItem('adminActivePage');
     if (savedPage) {
       setActivePage(savedPage);
     }
+    setIsLoaded(true); 
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('adminActivePage', activePage);
-  }, [activePage]);
+    if (isLoaded) {
+      localStorage.setItem('adminActivePage', activePage);
+    }
+  }, [activePage, isLoaded]);
 
   const renderPage = () => {
     switch (activePage) {
@@ -64,10 +68,9 @@ export default function AdminDash() {
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
       <Sidebar activePage={activePage} setActivePage={setActivePage} />
-      <div className="flex-1 flex flex-col lg:ml-0 min-w-0">
-        <Header />
-        <main className="p-2 sm:p-4 lg:p-6 flex-1 w-full max-w-full overflow-x-auto">
-          <div className="w-full max-w-full mx-auto">{renderPage()}</div>
+      <div className="flex-1 flex flex-col lg:ml-0">
+        <main className="p-4 lg:p-6 overflow-auto">
+          {renderPage()}
         </main>
       </div>
     </div>
