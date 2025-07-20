@@ -415,7 +415,6 @@ export async function addNewProduct(req: Request, res: Response): Promise<void> 
           return
         }
     } catch (err) {
-        console.error('Error adding product:', err);
         res.status(500).json({ message: (err as Error).message });
     }
 }
@@ -487,7 +486,6 @@ export async function addProductFeedback(req: Request, res: Response): Promise<v
         res.status(201).json({ message: 'Feedback added successfully.' });
         return
     } catch (err) {
-        console.error(err); 
         res.status(500).json({ message: (err as Error).message });
         return
     }
@@ -613,7 +611,6 @@ export async function updateProduct(req: Request, res: Response): Promise<void> 
             res.status(404).json({ message: `Product with code ${productCode} not found or no changes made.` });
         }
     } catch (err) {
-        console.error(`Error updating product with code ${req.params.productCode}:`, err);
         res.status(500).json({ message: (err as Error).message || 'Internal server error.' });
     }
 }

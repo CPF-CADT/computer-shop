@@ -1,7 +1,8 @@
 import { ProductPromotion } from "../db/models/ProductPromotion";
 import { Promotion } from "../db/models/Promotion";
 import { DiscountType } from "../db/models/Enums";
-import { CreationAttributes } from 'sequelize';
+import { CreationAttributes, Op } from 'sequelize';
+import { Product } from "../db/models/Product";
 
 interface IUpdatePromotion {
     title?: string;
@@ -14,6 +15,18 @@ interface IUpdatePromotion {
 
 
 export class PromotionRepository {
+    static async getAllPromotions(): Promise<Promotion[]> {
+        try {
+            const promotions = await Promotion.findAll({
+                // You can add ordering here if needed, e.g., order: [['start_date', 'DESC']]
+            });
+            return promotions;
+        } catch (error) {
+            console.error("Error fetching all promotions:", error);
+            throw new Error("Failed to fetch promotions.");
+        }
+    }
+
     static async createNewPromotion(promotionData: CreationAttributes<Promotion>): Promise<Promotion> {
         try {
             // The `promotionData` argument now perfectly matches what `create` expects.
@@ -79,6 +92,62 @@ export class PromotionRepository {
         } catch (error) {
             console.error(`Error revoking promotion ${promotionId} from product ${productCode}:`, error);
             throw new Error("Failed to revoke promotion for product.");
+        }
+    }
+    static async applyPromotionToProductsByCriteria(
+        promotionId: number,
+        productCodes?: string[],
+        categoryIds?: number[],
+        typeIds?: number[],
+        brandIds?: number[]
+    ): Promise<ProductPromotion[]> {
+        if (!promotionId) {
+            throw new Error("Promotion ID is required.");
+        }
+
+        const productWhereClause: any = {};
+        const productInclude: any[] = [];
+
+        if (productCodes && productCodes.length > 0) {
+            productWhereClause.product_code = { [Op.in]: productCodes };
+        }
+
+        if (categoryIds && categoryIds.length > 0) {
+            productWhereClause.category_id = { [Op.in]: categoryIds };
+        }
+
+        if (typeIds && typeIds.length > 0) {
+            productWhereClause.type_id = { [Op.in]: typeIds };
+        }
+
+        if (brandIds && brandIds.length > 0) {
+            productWhereClause.brand_id = { [Op.in]: brandIds };
+        }
+
+        if (Object.keys(productWhereClause).length === 0 && (!productCodes || productCodes.length === 0)) {
+            return [];
+        }
+
+        try {
+            const productsToApply = await Product.findAll({
+                where: productWhereClause,
+            });
+
+            const associations: ProductPromotion[] = [];
+            for (const product of productsToApply) {
+                const [productPromotion, created] = await ProductPromotion.findOrCreate({
+                    where: {
+                        product_code: product.product_code,
+                        promotion_id: promotionId
+                    }
+                });
+                associations.push(productPromotion);
+            }
+            return associations;
+
+        } catch (error) {
+            console.error(`Error applying promotion ${promotionId} by criteria:`, error);
+            throw new Error("Failed to apply promotion by criteria.");
         }
     }
 }

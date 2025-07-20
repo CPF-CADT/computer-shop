@@ -1,126 +1,198 @@
-import React, { useState, useEffect } from 'react';
-import { MdSearch, MdFilterList, MdPersonAdd, MdEdit, MdBlock, MdHistory, MdEmail, MdPhone, MdLocationOn } from 'react-icons/md';
+import React, { useState, useEffect, useCallback } from 'react';
+import { MdSearch, MdFilterList, MdPersonAdd, MdEdit, MdBlock, MdHistory, MdEmail, MdPhone, MdLocationOn, MdClose } from 'react-icons/md';
+import { apiService } from '../../service/api'; // Adjust path as needed
+import toast from 'react-hot-toast'; // For notifications
+import Pagination from './Pagination'; // Import the Pagination component
+import { Link } from 'react-router-dom'; // For linking to user profile page
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState([]);
-  const [filteredCustomers, setFilteredCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'active', 'blocked'
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
+  const [selectedCustomerDetails, setSelectedCustomerDetails] = useState(null); // Full details for modal
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [customerDetailsError, setCustomerDetailsError] = useState(null);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
     name: '',
-    phone: '',
+    phone_number: '', // Changed to phone_number to match API
     password: '',
     confirmPassword: ''
   });
+  const [addCustomerError, setAddCustomerError] = useState(null);
 
-  // Only one customer from API JSON
-  useEffect(() => {
-    const mockCustomers = [
-      {
-        id: 1,
-        name: 'John Doe',
-        phone: '12345678',
-        status: 'active',
-        avatar: 'https://i.pinimg.com/736x/fc/58/f6/fc58f67f1a08d72aac200002f2fdd3f1.jpg'
-      },
-      {
-        id: 2,
-        name: 'Jane Smith',
-        phone: '87654321',
-        status: 'blocked',
-        avatar: 'https://i.pinimg.com/736x/50/ba/77/50ba771944438cc0fac2d9c0a7a993fe.jpg'
-      },
-      {
-        id: 3,
-        name: 'Alice Johnson',
-        phone: '55512345',
-        status: 'active',
-        avatar: 'https://i.pinimg.com/736x/0f/ad/48/0fad48e96644fe804f42e064c5c6829b.jpg'
-      },
-      { 
-        id: 4,
-        name: 'Bob Lee',
-        phone: '99988877',
-        status: 'inactive',
-        avatar: 'https://i.pinimg.com/736x/e4/9d/9d/e49d9de6eeea0852eb81e2875f492734.jpg'
-      },
-      { 
-        id: 5,
-        name: 'Bob Lee',
-        phone: '99988877',
-        status: 'inactive',
-        avatar: 'https://i.pinimg.com/736x/e4/9d/9d/e49d9de6eeea0852eb81e2875f492734.jpg'
-      },
-      { 
-        id: 6,
-        name: 'Bob Lee',
-        phone: '99988877',
-        status: 'inactive',
-        avatar: 'https://i.pinimg.com/736x/e4/9d/9d/e49d9de6eeea0852eb81e2875f492734.jpg'
+
+  // Fetch customers from API
+  const fetchCustomers = useCallback(async () => {
+    setLoading(true);
+    setApiError(null);
+    try {
+      const params = {
+        page: currentPage,
+        limit: 10, // Items per page
+        sort: 'ASC',
+        column: 'name',
+      };
+
+      if (searchTerm) {
+        // Assuming your API can search by name or phone_number with one param
+        // You might need to adjust this based on your backend's search capabilities
+        params.name = searchTerm;
+        params.phone_number = searchTerm; // Assuming backend searches both if provided
       }
-    ];
-    setCustomers(mockCustomers);
-    setFilteredCustomers(mockCustomers);
-  }, []);
 
-  // Filter customers based on search and status
-  useEffect(() => {
-    let filtered = customers.filter(customer => 
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.phone.includes(searchTerm)
-    );
+      // Filter by status (is_verified in API, status in UI)
+      // This mapping might need adjustment based on your backend's actual 'status' field
+      if (filterStatus !== 'all') {
+        if (filterStatus === 'active') {
+          params.is_verifyed = true; // Assuming 'active' means is_verifyed: true
+        } else if (filterStatus === 'blocked') {
+          // Your API doesn't have a direct 'blocked' status.
+          // You might need a separate API endpoint or a different field for this.
+          // For now, we'll filter this client-side or assume 'blocked' is not 'is_verifyed'.
+          // If 'blocked' means is_verifyed: false, then:
+          params.is_verifyed = false;
+        }
+      }
 
-    if (filterStatus !== 'all') {
-      filtered = filtered.filter(customer => customer.status === filterStatus);
+      const response = await apiService.getAllCustomers(params);
+      setCustomers(response.data || []);
+      setTotalItems(response.meta?.totalItems || 0);
+      setTotalPages(response.meta?.totalPages || 1);
+    } catch (err) {
+      setApiError(err.message || "Failed to load customers.");
+      console.error("Error fetching customers:", err);
+      setCustomers([]); // Clear customers on error
+    } finally {
+      setLoading(false);
     }
+  }, [currentPage, searchTerm, filterStatus]);
 
-    setFilteredCustomers(filtered);
-  }, [searchTerm, filterStatus, customers]);
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
 
-  const handleStatusChange = (customerId, newStatus) => {
-    setCustomers(customers.map(customer => 
-      customer.id === customerId ? { ...customer, status: newStatus } : customer
-    ));
+  // Handle pagination change
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
-  const openCustomerDetails = (customer) => {
-    setSelectedCustomer(customer);
-    setShowModal(true);
+  // Handle status change (Block/Unblock)
+  const handleStatusChange = async (customerId, currentStatus) => {
+    setApiError(null);
+    try {
+      // Assuming 'blocked' status in UI maps to `is_verifyed: false` and 'active' to `is_verifyed: true`
+      // You might need a dedicated API endpoint for blocking/unblocking or a different field.
+      // For this example, we'll toggle `is_verifyed` if it represents active/inactive.
+      const newIsVerifiedStatus = currentStatus === 'active' ? false : true; // Toggle logic
+      const updatePayload = { is_verifyed: newIsVerifiedStatus }; // Assuming API accepts this field
+
+      await apiService.updateCustomer(customerId, updatePayload);
+      toast.success(`Customer status updated to ${newIsVerifiedStatus ? 'active' : 'blocked'}!`);
+      fetchCustomers(); // Refresh the list
+    } catch (err) {
+      setApiError(err.message || "Failed to update customer status.");
+      toast.error(err.message || "Failed to update customer status.");
+      console.error("Status update error:", err);
+    }
   };
 
-  const handleAddCustomer = (e) => {
+  // Open customer details modal
+  const openCustomerDetails = async (customer) => {
+    setSelectedCustomerDetails(null); // Clear previous details
+    setShowDetailsModal(true);
+    setLoadingDetails(true);
+    setCustomerDetailsError(null);
+    try {
+      // Fetch full customer profile
+      const profile = await apiService.getOneCustomer(customer.customer_id);
+      // Fetch addresses
+      const addresses = await apiService.getAddressCustomer(customer.customer_id);
+      // Fetch orders
+      const orders = await apiService.getOrdersByCustomerId(customer.customer_id);
+
+      setSelectedCustomerDetails({
+        ...profile,
+        addresses: addresses,
+        orders: orders.map(order => {
+          const total = order.items.reduce((sum, item) => sum + (item.OrderItem.qty * parseFloat(item.OrderItem.price_at_purchase)), 0);
+          return {
+            id: order.order_id,
+            date: new Date(order.order_date).toLocaleDateString(),
+            total: total.toFixed(2),
+            status: order.order_status,
+            items_count: order.items.length,
+            express_handle: order.express_handle,
+            address: order.address,
+            products: order.items,
+          };
+        }),
+      });
+    } catch (err) {
+      setCustomerDetailsError(err.message || "Failed to load customer details.");
+      console.error("Error fetching customer details:", err);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  // Handle adding a new customer
+  const handleAddCustomer = async (e) => {
     e.preventDefault();
-    if (!newCustomer.name || !newCustomer.phone || !newCustomer.password || !newCustomer.confirmPassword) return;
+    setAddCustomerError(null);
     if (newCustomer.password !== newCustomer.confirmPassword) {
-      alert('Passwords do not match');
+      setAddCustomerError('Passwords do not match');
       return;
     }
-    const nextId = customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1;
-    setCustomers([
-      ...customers,
-      {
-        id: nextId,
+    try {
+      await apiService.registerCustomer({
         name: newCustomer.name,
-        phone: newCustomer.phone,
-        status: 'active'
-      }
-    ]);
-    setFilteredCustomers([
-      ...customers,
-      {
-        id: nextId,
-        name: newCustomer.name,
-        phone: newCustomer.phone,
-        status: 'active'
-      }
-    ]);
-    setShowAddModal(false);
-    setNewCustomer({ name: '', phone: '', password: '', confirmPassword: '' });
+        phone_number: newCustomer.phone_number,
+        password: newCustomer.password,
+      });
+      toast.success("Customer added successfully!");
+      setShowAddModal(false);
+      setNewCustomer({ name: '', phone_number: '', password: '', confirmPassword: '' });
+      fetchCustomers(); // Refresh the customer list
+    } catch (err) {
+      setAddCustomerError(err.message || "Failed to add customer.");
+      toast.error(err.message || "Failed to add customer.");
+      console.error("Add customer error:", err);
+    }
   };
+
+  // Map API status to UI status for filtering and display
+  const mapApiStatusToUi = (isVerifyed) => {
+    // This mapping needs to be consistent with your backend's definition of 'status'
+    // If your backend has a 'status' field directly, use that.
+    // Assuming 'is_verifyed: true' means 'active', 'is_verifyed: false' means 'inactive' or 'blocked'.
+    // You might need a separate field for 'blocked' if it's distinct from 'inactive'.
+    return isVerifyed ? 'active' : 'inactive'; // Default to inactive if not verified
+  };
+
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-gray-600">Loading customers...</div>
+      </div>
+    );
+  }
+
+  if (apiError) {
+    return (
+      <div className="text-center py-20 text-xl font-semibold text-red-500">{apiError}</div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -142,21 +214,19 @@ export default function CustomersPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h3 className="text-sm font-medium text-gray-600">Total Customers</h3>
-          <p className="text-3xl font-bold text-gray-900">{customers.length}</p>
+          <p className="text-3xl font-bold text-gray-900">{totalItems}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h3 className="text-sm font-medium text-gray-600">Active Customers</h3>
-          <p className="text-3xl font-bold text-green-600">{customers.filter(c => c.status === 'active').length}</p>
+          <p className="text-3xl font-bold text-green-600">{customers.filter(c => mapApiStatusToUi(c.is_verifyed) === 'active').length}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-sm font-medium text-gray-600">Blocked Customers</h3>
-          <p className="text-3xl font-bold text-red-600">{customers.filter(c => c.status === 'blocked').length}</p>
+          <h3 className="text-sm font-medium text-gray-600">Inactive/Blocked Customers</h3>
+          <p className="text-3xl font-bold text-red-600">{customers.filter(c => mapApiStatusToUi(c.is_verifyed) !== 'active').length}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-sm font-medium text-gray-600">Province</h3>
-          <p className="text-3xl font-bold text-blue-600">
-            {customers[0]?.province || '-'}
-          </p>
+          <h3 className="text-sm font-medium text-gray-600">Verified Customers</h3>
+          <p className="text-3xl font-bold text-blue-600">{customers.filter(c => c.is_verifyed).length}</p>
         </div>
       </div>
 
@@ -167,9 +237,9 @@ export default function CustomersPage() {
             <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search customers by name, email, or phone..."
+              placeholder="Search customers by name or phone..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} // Reset page on search
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -177,13 +247,12 @@ export default function CustomersPage() {
             <MdFilterList className="text-gray-400" />
             <select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} // Reset page on filter
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="blocked">Blocked</option>
+              <option value="inactive">Inactive</option> {/* Use 'inactive' instead of 'blocked' if API only has is_verifyed */}
             </select>
           </div>
         </div>
@@ -202,97 +271,167 @@ export default function CustomersPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredCustomers.map((customer) => (
-                <tr key={customer.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      {customer.avatar && (
-                        <img className="h-10 w-10 rounded-full" src={customer.avatar} alt="" />
-                      )}
-                      <div className={customer.avatar ? "ml-4" : ""}>
-                        <div className="text-sm font-medium text-gray-900">{customer.name}</div>
+              {customers.length > 0 ? (
+                customers.map((customer) => (
+                  <tr key={customer.customer_id} className="hover:bg-gray-50"> {/* Use customer_id as key */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {customer.profile_img_path && (
+                          <img className="h-10 w-10 rounded-full" src={customer.profile_img_path} alt="" />
+                        )}
+                        <div className={customer.profile_img_path ? "ml-4" : ""}>
+                          <div className="text-sm font-medium text-gray-900">{customer.name}</div>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 flex items-center gap-1">
-                      <MdPhone className="text-gray-400" />
-                      {customer.phone}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      customer.status === 'active' ? 'bg-green-100 text-green-800' :
-                      customer.status === 'blocked' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {customer.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => openCustomerDetails(customer)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="View Details"
-                      >
-                        <MdHistory />
-                      </button>
-                      <button
-                        className="text-green-600 hover:text-green-900"
-                        title="Edit Customer"
-                      >
-                        <MdEdit />
-                      </button>
-                      <button
-                        onClick={() => handleStatusChange(customer.id, customer.status === 'blocked' ? 'active' : 'blocked')}
-                        className={`${customer.status === 'blocked' ? 'text-green-600 hover:text-green-900' : 'text-red-600 hover:text-red-900'}`}
-                        title={customer.status === 'blocked' ? 'Unblock Customer' : 'Block Customer'}
-                      >
-                        <MdBlock />
-                      </button>
-                    </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 flex items-center gap-1">
+                        <MdPhone className="text-gray-400" />
+                        {customer.phone_number}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        mapApiStatusToUi(customer.is_verifyed) === 'active' ? 'bg-green-100 text-green-800' :
+                        'bg-red-100 text-red-800' // Assuming non-active is 'blocked' or 'inactive'
+                      }`}>
+                        {mapApiStatusToUi(customer.is_verifyed)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openCustomerDetails(customer)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="View Details"
+                        >
+                          <MdHistory />
+                        </button>
+                        {/* Edit button - currently not implemented with API */}
+                        <button
+                          className="text-green-600 hover:text-green-900"
+                          title="Edit Customer"
+                          // onClick={() => handleEditCustomer(customer)} // Implement this function
+                        >
+                          <MdEdit />
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(customer.customer_id, mapApiStatusToUi(customer.is_verifyed))}
+                          className={`${mapApiStatusToUi(customer.is_verifyed) === 'active' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}
+                          title={mapApiStatusToUi(customer.is_verifyed) === 'active' ? 'Deactivate Customer' : 'Activate Customer'}
+                        >
+                          <MdBlock />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="px-6 py-8 text-center text-gray-500">
+                    No customers found.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
+
       {/* Customer Details Modal */}
-      {showModal && selectedCustomer && (
-        <div className="flex items-center justify-center z-50 fixed inset-0 pointer-events-none">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl pointer-events-auto">
+      {showDetailsModal && selectedCustomerDetails && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Customer Details</h2>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => { setShowDetailsModal(false); setSelectedCustomerDetails(null); setCustomerDetailsError(null); }}
                 className="text-gray-500 hover:text-gray-700"
               >
                 ✕
               </button>
             </div>
-            <div className="space-y-6">
-              {/* Customer Info */}
-              <div className="flex items-center space-x-4">
-                {selectedCustomer.avatar && (
-                  <img src={selectedCustomer.avatar} alt="" className="w-16 h-16 rounded-full" />
-                )}
+            {loadingDetails ? (
+              <div className="text-center text-gray-500 py-8">Loading details...</div>
+            ) : customerDetailsError ? (
+              <div className="text-center text-red-500 py-8">{customerDetailsError}</div>
+            ) : (
+              <div className="space-y-6">
+                {/* Customer Info */}
+                <div className="flex items-center space-x-4 border-b pb-4">
+                  {selectedCustomerDetails.profile_img_path && (
+                    <img src={selectedCustomerDetails.profile_img_path} alt="" className="w-16 h-16 rounded-full" />
+                  )}
+                  <div>
+                    <h3 className="text-xl font-semibold">{selectedCustomerDetails.name}</h3>
+                    <p className="text-gray-600 flex items-center gap-1"><MdPhone className="text-gray-400" />{selectedCustomerDetails.phone_number}</p>
+                    <p className="text-gray-600 flex items-center gap-1"><MdEmail className="text-gray-400" />{selectedCustomerDetails.email || 'N/A'}</p>
+                  </div>
+                </div>
+
+                {/* Addresses */}
+                <div className="border-b pb-4">
+                  <h4 className="text-lg font-semibold mb-3 flex items-center gap-2"><MdLocationOn />Addresses</h4>
+                  {selectedCustomerDetails.addresses && selectedCustomerDetails.addresses.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {selectedCustomerDetails.addresses.map(addr => (
+                        <div key={addr.address_id} className="border p-3 rounded-md text-sm">
+                          <p className="font-medium">{addr.street_line}</p>
+                          <p>{addr.commune ? `${addr.commune}, ` : ''}{addr.district}, {addr.province}</p>
+                          <p className="text-gray-500">{addr.phone}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No addresses found.</p>
+                  )}
+                </div>
+
+                {/* Orders */}
                 <div>
-                  <h3 className="text-xl font-semibold">{selectedCustomer.name}</h3>
-                  <p className="text-gray-600">{selectedCustomer.phone}</p>
+                  <h4 className="text-lg font-semibold mb-3 flex items-center gap-2"><MdHistory />Orders</h4>
+                  {selectedCustomerDetails.orders && selectedCustomerDetails.orders.length > 0 ? (
+                    <div className="space-y-3">
+                      {selectedCustomerDetails.orders.map(order => (
+                        <div key={order.id} className="border p-3 rounded-md text-sm">
+                          <div className="flex justify-between items-center">
+                            <p className="font-medium">Order ID: {order.id}</p>
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                              order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                              'bg-orange-100 text-orange-800'
+                            }`}>
+                              {order.status}
+                            </span>
+                          </div>
+                          <p className="text-gray-600">Date: {order.date}</p>
+                          <p className="text-gray-600">Total: ${order.total}</p>
+                          <p className="text-gray-600">Items: {order.items_count}</p>
+                          <p className="text-gray-600">Shipping: {order.express_handle || 'Standard'}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No orders found.</p>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Add Customer Modal */}
       {showAddModal && (
-        <div className="flex items-center justify-center z-50 fixed inset-0 pointer-events-none">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl pointer-events-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Add Customer</h2>
               <button
@@ -302,6 +441,11 @@ export default function CustomersPage() {
                 ✕
               </button>
             </div>
+            {addCustomerError && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative mb-4 text-sm">
+                {addCustomerError}
+              </div>
+            )}
             <form onSubmit={handleAddCustomer} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
@@ -317,8 +461,8 @@ export default function CustomersPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                 <input
                   type="text"
-                  value={newCustomer.phone}
-                  onChange={e => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                  value={newCustomer.phone_number}
+                  onChange={e => setNewCustomer({ ...newCustomer, phone_number: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -365,4 +509,3 @@ export default function CustomersPage() {
     </div>
   );
 }
-

@@ -10,6 +10,73 @@ const apiClient = axios.create({
 const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB
 
 export const apiService = {
+   // --- Promotion Management API Methods ---
+  getAllPromotions: async () => {
+    try {
+      const response = await apiClient.get('promotions');
+      return response.data; 
+    } catch (error) {
+      console.error("API Error (getAllPromotions):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to fetch promotions");
+    }
+  },
+
+  createPromotion: async (promotionData) => {
+    try {
+      const response = await apiClient.post('promotions', promotionData);
+      return response.data;
+    } catch (error) {
+      console.error("API Error (createPromotion):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to create promotion");
+    }
+  },
+
+  updatePromotion: async (id, updateData) => {
+    try {
+      const response = await apiClient.put(`promotions/${id}`, updateData);
+      return response.data;
+    } catch (error) {
+      console.error("API Error (updatePromotion):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to update promotion");
+    }
+  },
+
+  deletePromotion: async (id) => {
+    try {
+      await apiClient.delete(`promotions/${id}`);
+    } catch (error) {
+      console.error("API Error (deletePromotion):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to delete promotion");
+    }
+  },
+
+  applyPromotionToProduct: async (productCode, promotionId) => {
+    try {
+      const response = await apiClient.post('promotions/apply', { productCode, promotionId });
+      return response.data;
+    } catch (error) {
+      console.error("API Error (applyPromotionToProduct):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to apply promotion to product");
+    }
+  },
+
+  revokePromotionFromProduct: async (promotionId, productCode) => {
+    try {
+      await apiClient.delete(`promotions/revoke/${promotionId}/${productCode}`);
+    } catch (error) {
+      console.error("API Error (revokePromotionFromProduct):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to revoke promotion from product");
+    }
+  },
+  applyPromotionBatch: async (data) => {
+    try {
+      const response = await apiClient.post('/promotions/apply-batch', data);
+      return response.data;
+    } catch (error) {
+      console.error("API Error (applyPromotionBatch):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to apply promotion batch");
+    }
+  },
   getOrdersByCustomerId: async (customerId) => {
     try {
       const response = await apiClient.get(`user/${customerId}/orders`);
@@ -19,7 +86,15 @@ export const apiService = {
       throw new Error(error.response?.data?.message || "Failed to fetch customer orders");
     }
   },
-
+  updateOrderStatus: async (orderId, newStatus) => {
+    try {
+      const response = await apiClient.patch(`/order/${orderId}/status`, { order_status: newStatus });
+      return response.data;
+    } catch (error) {
+      console.error("API Error (updateOrderStatus):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to update order status");
+    }
+  },
 
   getOneCustomer: async (customerId) => {
     try {
@@ -30,6 +105,35 @@ export const apiService = {
     } catch (error) {
       console.error('API Error (getOneCustomer):', error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Failed to fetch customer profile");
+    }
+  },
+  getAllCustomers: async (params = {}) => {
+    try {
+      const response = await apiClient.get('/user/all', { params });
+      return response.data; 
+    } catch (error) {
+      console.error("API Error (getAllCustomers):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to fetch customers");
+    }
+  },
+
+  updateCustomer: async (customerId, updateData) => {
+    try {
+      const response = await apiClient.put(`/user/${customerId}`, updateData);
+      return response.data;
+    } catch (error) {
+      console.error("API Error (updateCustomer):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to update customer");
+    }
+  },
+
+  registerCustomer: async (customerData) => {
+    try {
+      const response = await apiClient.post('/user/register', customerData);
+      return response.data;
+    } catch (error) {
+      console.error("API Error (registerCustomer):", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to register customer");
     }
   },
 

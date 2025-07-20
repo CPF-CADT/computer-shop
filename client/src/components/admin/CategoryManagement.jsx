@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { MdAdd, MdEdit, MdDelete, MdCategory, MdLabel, MdSearch } from 'react-icons/md';
 import { apiService } from '../../service/api';
-import { useCategory } from '../context/CategoryContext';
+import { useCategory } from '../context/CategoryContext'; // Import useCategory hook
+
 export default function CategoryManagement() {
+  // Destructure data and loading/error states from useCategory
+  const { categories, brands, typeProducts, loadingCategories, categoryError, refetchCategoryData } = useCategory();
+
   const [activeTab, setActiveTab] = useState('categories');
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
+  // Removed local loading state as we use loadingCategories from context
+  // Removed local error state as we use categoryError from context
 
   const [formData, setFormData] = useState({
     title: '',
@@ -15,49 +20,39 @@ export default function CategoryManagement() {
     description: ''
   });
 
-  const { categories, loadingCategories, categoryError } = useCategory();
+  // Removed useEffect for fetchAllData as data is now managed by CategoryContext
+  // We will use refetchCategoryData from context for refreshing after CRUD operations.
 
-  if (loadingCategories) {
-    return <div className="text-center text-gray-500">Loading categories...</div>;
-  }
-
-  if (categoryError) {
-    return <div className="text-center text-red-500">Error loading categories: {categoryError}</div>;
-  }
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (activeTab === 'categories') {
         if (editingItem) {
-          // Update category
           await apiService.updateCategory(editingItem.id, formData);
         } else {
-          // Create new category
           await apiService.createCategory(formData);
         }
       } else if (activeTab === 'brands') {
         if (editingItem) {
-          // Update brand
           await apiService.updateBrand(editingItem.id, formData);
         } else {
-          // Create new brand
           await apiService.createBrand(formData);
         }
       } else if (activeTab === 'types') {
         if (editingItem) {
-          // Update type
           await apiService.updateTypeProduct(editingItem.id, formData);
         } else {
-          // Create new type
           await apiService.createTypeProduct(formData);
         }
       }
-      
-      await fetchAllData(); // Refresh data
+
+      // Use refetchCategoryData from context to refresh data
+      await refetchCategoryData();
       resetForm();
+      toast.success(`${editingItem ? 'Updated' : 'Created'} ${getTabTitle().slice(0, -1)} successfully!`);
     } catch (error) {
       console.error('Error saving data:', error);
-      alert('Error saving data. Please try again.');
+      toast.error('Error saving data. Please try again.');
     }
   };
 
@@ -72,7 +67,7 @@ export default function CategoryManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
+    if (!window.confirm('Are you sure you want to delete this item?')) return; // Use window.confirm for consistency
 
     try {
       if (activeTab === 'categories') {
@@ -82,11 +77,13 @@ export default function CategoryManagement() {
       } else if (activeTab === 'types') {
         await apiService.deleteTypeProduct(id);
       }
-      
-      await fetchAllData(); // Refresh data
+
+      // Use refetchCategoryData from context to refresh data
+      await refetchCategoryData();
+      toast.success(`Deleted ${getTabTitle().slice(0, -1)} successfully!`);
     } catch (error) {
       console.error('Error deleting item:', error);
-      alert('Error deleting item. Please try again.');
+      toast.error('Error deleting item. Please try again.');
     }
   };
 
@@ -103,15 +100,15 @@ export default function CategoryManagement() {
   const getCurrentData = () => {
     switch (activeTab) {
       case 'categories':
-        return categories.filter(cat => 
+        return categories.filter(cat =>
           (cat.title || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
       case 'brands':
-        return brands.filter(brand => 
+        return brands.filter(brand =>
           (brand.name || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
       case 'types':
-        return typeProducts.filter(type => 
+        return typeProducts.filter(type =>
           (type.title || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
       default:
@@ -121,14 +118,10 @@ export default function CategoryManagement() {
 
   const getTabTitle = () => {
     switch (activeTab) {
-      case 'categories':
-        return 'Categories';
-      case 'brands':
-        return 'Brands';
-      case 'types':
-        return 'Product Types';
-      default:
-        return '';
+      case 'categories': return 'Categories';
+      case 'brands': return 'Brands';
+      case 'types': return 'Product Types';
+      default: return '';
     }
   };
 
@@ -151,10 +144,20 @@ export default function CategoryManagement() {
     }
   };
 
-  if (loading) {
+  // Use loadingCategories from context instead of local loading
+  if (loadingCategories) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-600">Loading...</div>
+        <div className="text-lg text-gray-600">Loading categories, brands, and types...</div>
+      </div>
+    );
+  }
+
+  // Display error from context if any
+  if (categoryError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-red-500">Error: {categoryError}</div>
       </div>
     );
   }
@@ -168,7 +171,7 @@ export default function CategoryManagement() {
           <p className="mt-2 text-gray-600">Manage product categories, brands, and types</p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => { setEditingItem(null); resetForm(); setShowModal(true); }}
           className="mt-4 lg:mt-0 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
         >
           <MdAdd />
@@ -315,7 +318,7 @@ export default function CategoryManagement() {
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-white/70 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">
