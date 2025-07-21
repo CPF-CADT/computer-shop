@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { apiService } from '../service/api'; // Ensure this path is correct
 import { useNavigate } from 'react-router-dom'; // To navigate after successful registration
-import { useAuth } from './context/AuthContext'; // Import useAuth to access the login function
+// Removed: import { useAuth } from './context/AuthContext'; // No direct login after register
 
 const RegisterForm = () => {
   const [name, setName] = useState('');
@@ -10,16 +10,14 @@ const RegisterForm = () => {
   const [phone, setPhone] = useState(''); // Corresponds to phone_number in API
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState(''); // To display success message
+  // Removed: const [successMessage, setSuccessMessage] = useState(''); // No direct success message here
 
   const navigate = useNavigate();
-  const { login } = useAuth(); // Get the login function from AuthContext
+  // Removed: const { login } = useAuth(); // No direct login after register
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); // Clear previous errors
-    setSuccessMessage(''); // Clear previous success messages
-
+    setError(''); 
     if (password !== confirmPassword) {
       setError("Passwords do not match!");
       return;
@@ -29,21 +27,12 @@ const RegisterForm = () => {
 
     try {
       // Call the userRegister API
-      // Assuming apiService.userRegister now returns { success, message, token, user }
       const response = await apiService.userRegister(name, phone, password);
       console.log('Registration successful:', response);
 
-      // IMPORTANT: Check if both token and user data are present in the response
-      if (response && response.token && response.user) {
-        // Automatically log in the user using the AuthContext's login function
-        login(response);
-        setSuccessMessage('Registration successful! Redirecting to main page...');
-        // Redirect immediately to the main page
-        navigate('/');
-      } else {
-        // This case might mean your API response was malformed or missing data
-        setError('Registration failed: Invalid response from server. Missing token or user data.');
-      }
+      // After successful registration, navigate to the verification page
+      // Pass the phone number so the VerificationCode component knows which number to send the code to
+      navigate('/verify-code', { state: { phoneNumber: phone } });
 
     } catch (err) {
       console.error('Registration error:', err);
@@ -141,16 +130,11 @@ const RegisterForm = () => {
               {error}
             </div>
           )}
-          {successMessage && (
-            <div className="text-green-600 text-sm text-center">
-              {successMessage}
-            </div>
-          )}
           <div className="pt-2 flex flex-col gap-2">
             <button
               type="submit"
               className="w-full bg-[#FFA726] hover:bg-[#ff9800] text-white font-semibold py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading} // Disable button while loading
+              disabled={loading} 
             >
               {loading ? 'Registering...' : 'Register'}
             </button>

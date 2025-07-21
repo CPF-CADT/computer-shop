@@ -1,4 +1,3 @@
-// src/App.js
 import React from 'react';
 import { Routes, Route, useLocation } from "react-router-dom";
 
@@ -7,7 +6,7 @@ import Nav from "./components/Nav";
 import Home from "./components/Home";
 import LoginForm from "./components/Login";
 import RegisterForm from "./components/Register";
-import VerificationCode from "./components/VerificationCode";
+import VerificationCode from "./components/VerificationCode"; // Ensure this import is correct
 import Desktop from "./components/Desktop";
 import ProductDetails from './components/ProductDetails/ProductDetails';
 import PCBuilderPage from "./components/CustomPC/PCBuilderPage";
@@ -28,8 +27,13 @@ import { AuthProvider } from './components/context/AuthContext';
 import { CategoryProvider } from './components/context/CategoryContext';
 import UserProfilePage from './components/UserProfilePage';
 
-// Import the new CategoryProductPage
-import CategoryProductPage from './components/CategoryProductPage'; // Renamed Laptop.jsx to this
+import CategoryProductPage from './components/CategoryProductPage'; 
+
+const VerifyCodePage = () => {
+  const location = useLocation();
+  const phoneNumber = location.state?.phoneNumber; 
+  return <VerificationCode phoneNumber={phoneNumber} />;
+};
 
 function App() {
   const location = useLocation();
@@ -50,9 +54,8 @@ function App() {
                 <Route path='/' element={<Home />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/register" element={<RegisterForm />} />
-                <Route path="/verification" element={<VerificationCode />} />
+                <Route path="/verify-code" element={<VerifyCodePage />} />
                 <Route path="/category/:categoryName" element={<CategoryProductPage />} />
-                {/* <Route path="/desktop" element={<Desktop />} /> */}
                 <Route path="/product/:productId/detail" element={<ProductDetails />} />
                 <Route element={<CartLayout />}>
                   <Route path="/cart" element={<ShoppingCartPage />} />
@@ -65,7 +68,7 @@ function App() {
                 <Route path="/service" element={<Service />} />
                 <Route path="/promotion" element={<Promotion />} />
                 <Route path="/about-us" element={<AboutUs />} />
-                 <Route path="/peripherals" element={<Peripherals />} /> 
+                <Route path="/peripherals" element={<Peripherals />} />
                 <Route path='/user/profile/:id' element={<UserProfilePage />}/>
               </Routes>
             </div>

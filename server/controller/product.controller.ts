@@ -224,7 +224,6 @@ export async function getAllProduct(req: Request, res: Response): Promise<void> 
     const priceMax = typeof req.query.price_max === 'string' ? parseFloat(req.query.price_max) : undefined;
 
     try {
-        // NEW: Pass priceMin and priceMax to the repository method
         const product = await ProductRepository.getAllProduct(
             nameProductSearch,
             sortType,
@@ -237,7 +236,7 @@ export async function getAllProduct(req: Request, res: Response): Promise<void> 
             page,
             limit
         );
-        const totalItems = await Product.count();
+        const totalItems = await Product.count(); // <--- This is the primary suspect
         const totalPages: number = Math.round(totalItems / limit);
         res.status(200).json({
             meta: {

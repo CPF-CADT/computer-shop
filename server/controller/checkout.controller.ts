@@ -6,7 +6,6 @@ import { AddressRepository } from "../repositories/address.repository";
 import { generateBillNumber } from '../service/TwoFA';
 import KHQR from '../service/BakongKHQR';
 import dotenv from 'dotenv';
-type Currency = 'USD' | 'KHR';
 dotenv.config()
 
 

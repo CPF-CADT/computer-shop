@@ -1,313 +1,506 @@
+// test/orders.test.ts
 import { Request, Response } from 'express';
-import * as orderController from '../controller/orders.controller'; // Adjust path if needed
-import { Orders } from '../db/models/Orders'; // Still needed for the 'typeof Orders' cast
+import { Op, QueryTypes } from 'sequelize'; // Import Op and QueryTypes for mocking
+import { OrderStatus } from '../db/models/Enums'; // Adjust path if necessary
 
-// IMPORTANT: This Jest mock setup directly replaces the 'Orders' module.
-// It provides mock functions for static methods (findByPk, findAll, count).
-// For instance methods (save, toJSON), they will be part of the objects
-// returned by the mocked static methods.
+jest.mock('../db/sequelize', () => {
+    const mockSequelizeFn = jest.fn((func, col) => ({
+        _is        : 'sequelize.fn',
+        fn         : func,
+        args       : [col],
+        as         : undefined,
+        toString   : () => `${func}(${col})`
+    }));
+
+    const mockSequelizeCol = jest.fn(colName => ({
+        _is        : 'sequelize.col',
+        col        : colName,
+        toString   : () => colName
+    }));
+
+    return {
+        sequelize: {
+            query: jest.fn(),
+            fn: mockSequelizeFn,
+            col: mockSequelizeCol,
+        },
+    };
+});
 jest.mock('../db/models/Orders', () => ({
-  // The 'Orders' property here corresponds to the named export 'Orders'
-  Orders: {
-    findByPk: jest.fn(),
-    findAll: jest.fn(),
-    count: jest.fn(),
-    // Add other static methods your controller might call (e.g., create, update, destroy)
-  },
+    Orders: {
+        count: jest.fn(),
+        findAll: jest.fn(),
+        findByPk: jest.fn(),
+    },
 }));
+jest.mock('../db/models/Customer', () => ({ Customer: {} }));
+jest.mock('../db/models/Address', () => ({ Address: {} }));
+jest.mock('../db/models/Product', () => ({ Product: {} }));
+jest.mock('../db/models/OrderItem', () => ({ OrderItem: {} }));
 
-// Mock the sequelize instance itself, as it's used for raw queries
-jest.mock('../db/sequelize', () => ({
-  sequelize: {
-    query: jest.fn(),
-    fn: jest.fn(), // If your controller uses sequelize.fn, keep it.
-    col: jest.fn()  // If your controller uses sequelize.col, keep it.
-  }
-}));
 
-// We still cast Orders to JestMocked type for better type inference on mock functions
-const mockedOrders = Orders as jest.Mocked<typeof Orders>;
+// Import the controller functions AFTER mocks are set up
+import {
+    getOrders,
+    getOrdersByCustomerId,
+    getOrderById,
+    getOrderSummary,
+    updateOrderStatus
+} from '../controller/orders.controller'; // Adjust path if necessary
 
-describe('Order Controller - Unit Tests', () => {
-  let mockRequest: Partial<Request>;
-  let mockResponse: Partial<Response>;
-  let responseJson: jest.Mock;
-  let responseStatus: jest.Mock;
+// Get the mocked modules
+const mockedOrdersModel = require('../db/models/Orders').Orders as jest.Mocked<any>;
+const mockedCustomerModel = require('../db/models/Customer').Customer as jest.Mocked<any>;
+const mockedAddressModel = require('../db/models/Address').Address as jest.Mocked<any>;
+const mockedProductModel = require('../db/models/Product').Product as jest.Mocked<any>;
+const mockedOrderItemModel = require('../db/models/OrderItem').OrderItem as jest.Mocked<any>;
+const mockedSequelize = require('../db/sequelize').sequelize as jest.Mocked<any>;
 
-  beforeEach(() => {
-    jest.clearAllMocks(); // Clears all mock history before each test
-    responseJson = jest.fn();
-    responseStatus = jest.fn().mockReturnValue({ json: responseJson });
-    mockRequest = { body: {}, params: {}, query: {} };
-    mockResponse = { status: responseStatus, json: responseJson };
-  });
 
-  describe('getOrders', () => {
-    it('[OR-001] should return paginated orders with totalMoney and 200 status', async () => {
-      mockRequest.query = { page: '1', limit: '2', sortBy: 'date', sortType: 'ASC', includeItems: 'false' };
+describe('Orders Controller - Unit Tests', () => {
+    let mockRequest: Partial<Request>;
+    let mockResponse: Partial<Response>;
+    let responseJson: jest.Mock;
+    let responseStatus: jest.Mock;
 
-      // Mock objects returned by findAll don't need to be instances of Model
-      // Just ensure they have the properties your controller accesses
-      const mockOrdersData = [
-        {
-          order_id: 1,
-          order_date: '2025-07-16',
-          order_status: 'PENDING',
-          // Add toJSON if your controller implicitly or explicitly calls it on the result of findAll
-          toJSON: jest.fn().mockImplementation(function (this: any) {
-            return { order_id: this.order_id, order_date: this.order_date, order_status: this.order_status };
-          })
-        },
-        {
-          order_id: 2,
-          order_date: '2025-07-17',
-          order_status: 'PROCESSING',
-          toJSON: jest.fn().mockImplementation(function (this: any) {
-            return { order_id: this.order_id, order_date: this.order_date, order_status: this.order_status };
-          })
-        }
-      ];
+    // --- Fixed date for consistent testing ---
+    const MOCK_DATE = new Date('2025-07-21T07:14:02.096Z'); // Fixed date for all tests
 
-      mockedOrders.count.mockResolvedValue(3);
-      // Casting to 'any' here as the mock data does not fully conform to Model<any, any>[]
-      mockedOrders.findAll.mockResolvedValue(mockOrdersData as any);
+    beforeEach(() => {
+        jest.clearAllMocks();
+        responseJson = jest.fn();
+        responseStatus = jest.fn().mockReturnValue({ json: responseJson });
+        mockRequest = { query: {}, params: {}, body: {} };
+        mockResponse = { status: responseStatus, json: responseJson };
 
-      const sequelizeQueryMock = require('../db/sequelize').sequelize.query;
-      sequelizeQueryMock.mockResolvedValue([
-        { order_id: 1, totalMoney: 100 },
-        { order_id: 2, totalMoney: 150 }
-      ]);
-
-      await orderController.getOrders(mockRequest as Request, mockResponse as Response);
-
-      expect(mockedOrders.count).toHaveBeenCalled();
-      expect(mockedOrders.findAll).toHaveBeenCalled();
-      expect(responseStatus).toHaveBeenCalledWith(200);
-      expect(responseJson).toHaveBeenCalledWith(expect.objectContaining({
-        meta: expect.objectContaining({ totalItems: 3, page: 1, totalPages: 2 }),
-        data: expect.any(Array)
-      }));
-    });
-  });
-
-  describe('getOrdersByCustomerId', () => {
-    it('[OR-003] should return 400 if customer_id param is invalid', async () => {
-      mockRequest.params = { customer_id: 'abc' };
-
-      await orderController.getOrdersByCustomerId(mockRequest as Request, mockResponse as Response);
-
-      expect(responseStatus).toHaveBeenCalledWith(400);
-      expect(responseJson).toHaveBeenCalledWith({ message: 'Invalid customer ID' });
+        // Default mock implementations for common model methods
+        mockedOrdersModel.count.mockResolvedValue(100); // For getOrders and getOrderSummary
+        mockedOrdersModel.findAll.mockResolvedValue([]); // Default empty array
+        mockedOrdersModel.findByPk.mockResolvedValue(null); // Default null for findByPk
     });
 
-    it('[OR-004] should return 404 if no orders found for customer', async () => {
-      mockRequest.params = { customer_id: '1' };
-      mockedOrders.findAll.mockResolvedValue([]); // Empty array is assignable
+    // --- getOrders Tests ---
+    describe('getOrders', () => {
+        const mockOrderData = [
+            {
+                order_id: 1,
+                order_date: MOCK_DATE, // Use the fixed mock date
+                order_status: OrderStatus.PENDING,
+                customer: { name: 'John Doe', phone_number: '12345' },
+                address: { street_line: '123 Main St', district: 'DP', province: 'PP' },
+                toJSON: () => ({ // Ensure toJSON also returns the fixed date string
+                    order_id: 1,
+                    order_date: MOCK_DATE.toISOString(),
+                    order_status: OrderStatus.PENDING,
+                    customer: { name: 'John Doe', phone_number: '12345' },
+                    address: { street_line: '123 Main St', district: 'DP', province: 'PP' },
+                }),
+            },
+        ];
 
-      await orderController.getOrdersByCustomerId(mockRequest as Request, mockResponse as Response);
+        it('[OC-001] should retrieve all orders with default parameters and return 200', async () => {
+            mockedOrdersModel.findAll.mockResolvedValue(mockOrderData);
+            mockedSequelize.query.mockResolvedValue([{ order_id: 1, totalMoney: 150 }]);
 
-      expect(responseStatus).toHaveBeenCalledWith(404);
-      expect(responseJson).toHaveBeenCalledWith({ message: 'No orders found for this customer' });
+            await getOrders(mockRequest as Request, mockResponse as Response);
+
+            expect(mockedOrdersModel.count).toHaveBeenCalledTimes(1);
+            expect(mockedOrdersModel.findAll).toHaveBeenCalledWith({
+                include: [
+                    { model: mockedCustomerModel, attributes: ['name', 'phone_number'] },
+                    { model: mockedAddressModel, attributes: ['street_line', 'district', 'province'] },
+                ],
+                order: [['order_date', 'ASC']],
+                limit: 10,
+                offset: 0,
+            });
+            expect(mockedSequelize.query).toHaveBeenCalledTimes(1);
+            expect(responseStatus).toHaveBeenCalledWith(200);
+            expect(responseJson).toHaveBeenCalledWith({
+                meta: { totalItems: 100, page: 1, totalPages: 10 },
+                data: [{ ...mockOrderData[0].toJSON(), totalMoney: 150 }],
+            });
+        });
+
+        it('[OC-002] should retrieve orders with sorting and include items and return 200', async () => {
+            mockRequest.query = { sortBy: 'price', sortType: 'DESC', includeItems: 'true', page: '1', limit: '5' };
+            const mockOrderDataWithItems = [
+                {
+                    order_id: 2,
+                    order_date: MOCK_DATE, // Use the fixed mock date
+                    order_status: OrderStatus.DELIVERED,
+                    customer: { name: 'Jane Doe', phone_number: '54321' },
+                    address: { street_line: '456 Oak Ave', district: 'PP', province: 'PP' },
+                    items: [
+                        { product_code: 'P001', name: 'Prod A', OrderItem: { qty: 1, price_at_purchase: 100 } }
+                    ],
+                    toJSON: () => ({ // Ensure toJSON also returns the fixed date string
+                        order_id: 2,
+                        order_date: MOCK_DATE.toISOString(),
+                        order_status: OrderStatus.DELIVERED,
+                        customer: { name: 'Jane Doe', phone_number: '54321' },
+                        address: { street_line: '456 Oak Ave', district: 'PP', province: 'PP' },
+                        items: [
+                            { product_code: 'P001', name: 'Prod A', OrderItem: { qty: 1, price_at_purchase: 100 } }
+                        ],
+                    }),
+                },
+            ];
+            mockedOrdersModel.findAll.mockResolvedValue(mockOrderDataWithItems);
+            mockedSequelize.query.mockResolvedValue([{ order_id: 2, totalMoney: 100 }]);
+            mockedOrdersModel.count.mockResolvedValue(50); // Simulate different total
+
+            await getOrders(mockRequest as Request, mockResponse as Response);
+
+            expect(mockedOrdersModel.findAll).toHaveBeenCalledWith({
+                include: [
+                    { model: mockedCustomerModel, attributes: ['name', 'phone_number'] },
+                    { model: mockedAddressModel, attributes: ['street_line', 'district', 'province'] },
+                    {
+                        model: mockedProductModel,
+                        attributes: ['product_code', 'name'],
+                        through: { attributes: ['qty', 'price_at_purchase'] },
+                    },
+                ],
+                order: [['total_price', 'DESC']],
+                limit: 5,
+                offset: 0,
+            });
+            expect(responseStatus).toHaveBeenCalledWith(200);
+            expect(responseJson).toHaveBeenCalledWith({
+                meta: { totalItems: 50, page: 1, totalPages: 10 },
+                data: [{ ...mockOrderDataWithItems[0].toJSON(), totalMoney: 100 }],
+            });
+        });
+
+        it('[OC-003] should return 200 with empty data if no orders are found', async () => {
+            mockedOrdersModel.findAll.mockResolvedValue([]);
+            mockedSequelize.query.mockResolvedValue([]); // No order totals
+            mockedOrdersModel.count.mockResolvedValue(0);
+
+            await getOrders(mockRequest as Request, mockResponse as Response);
+
+            expect(responseStatus).toHaveBeenCalledWith(200);
+            expect(responseJson).toHaveBeenCalledWith({
+                meta: { totalItems: 0, page: 1, totalPages: 0 },
+                data: [],
+            });
+        });
+
+        it('[OC-004] should handle errors during order retrieval and return 500', async () => {
+            const errorMessage = 'Database error fetching orders';
+            mockedOrdersModel.findAll.mockRejectedValue(new Error(errorMessage));
+
+            await getOrders(mockRequest as Request, mockResponse as Response);
+
+            expect(responseStatus).toHaveBeenCalledWith(500);
+            expect(responseJson).toHaveBeenCalledWith({ message: 'Failed to fetch orders' });
+        });
     });
 
-    it('[OR-005] should return 200 and orders for valid customer', async () => {
-      mockRequest.params = { customer_id: '1' };
+    // --- getOrdersByCustomerId Tests ---
+    describe('getOrdersByCustomerId', () => {
+        const mockCustomerOrders = [
+            {
+                order_id: 101,
+                order_date: MOCK_DATE,
+                order_status: OrderStatus.DELIVERED,
+                address: { street_line: 'Customer St', district: 'DP', province: 'PP' },
+                customer: { name: 'Test Customer' },
+                items: [{ product_code: 'PROD1', name: 'Item One', OrderItem: { qty: 1, price_at_purchase: 10 } }],
+            },
+        ];
 
-      mockedOrders.findAll.mockResolvedValueOnce([
-        { order_id: 1 }
-      ] as any); // Cast here as it's a minimal object, not a full Model instance
+        it('[OC-005] should retrieve orders for a specific customer and return 200', async () => {
+            mockRequest.params = { customer_id: '1' };
+            // First call to findAll for order_ids
+            mockedOrdersModel.findAll.mockResolvedValueOnce([{ order_id: 101 }, { order_id: 102 }]);
+            // Second call to findAll for full order data
+            mockedOrdersModel.findAll.mockResolvedValueOnce(mockCustomerOrders);
 
-      mockedOrders.findAll.mockResolvedValueOnce([
-        {
-          order_id: 1,
-          customer: {}, // Mock related objects if the controller accesses their properties
-          address: {},
-          items: [],
-          toJSON: jest.fn().mockImplementation(function (this: any) {
-            return { order_id: this.order_id, customer: this.customer, address: this.address, items: this.items };
-          })
-        },
-      ] as any); // Cast here too
+            await getOrdersByCustomerId(mockRequest as Request, mockResponse as Response);
 
-      await orderController.getOrdersByCustomerId(mockRequest as Request, mockResponse as Response);
+            expect(mockedOrdersModel.findAll).toHaveBeenNthCalledWith(1, {
+                where: { customer_id: 1 },
+                attributes: ['order_id']
+            });
+            expect(mockedOrdersModel.findAll).toHaveBeenNthCalledWith(2, {
+                where: {
+                    order_id: {
+                        [Op.in]: [101, 102]
+                    }
+                },
+                include: [
+                    { model: mockedCustomerModel, attributes: ['name'] },
+                    { model: mockedAddressModel, attributes: ['street_line', 'district', 'province'] },
+                    {
+                        model: mockedProductModel,
+                        attributes: ['product_code', 'name'],
+                        through: { attributes: ['qty', 'price_at_purchase'] },
+                    },
+                ],
+            });
+            expect(responseStatus).toHaveBeenCalledWith(200);
+            expect(responseJson).toHaveBeenCalledWith(mockCustomerOrders);
+        });
 
-      expect(responseStatus).toHaveBeenCalledWith(200);
-      expect(responseJson).toHaveBeenCalledWith(expect.any(Array));
+        it('[OC-006] should return 400 for an invalid customer ID', async () => {
+            mockRequest.params = { customer_id: 'abc' };
+
+            await getOrdersByCustomerId(mockRequest as Request, mockResponse as Response);
+
+            expect(mockedOrdersModel.findAll).not.toHaveBeenCalled();
+            expect(responseStatus).toHaveBeenCalledWith(400);
+            expect(responseJson).toHaveBeenCalledWith({ message: 'Invalid customer ID' });
+        });
+
+        it('[OC-007] should return 404 if no orders are found for the customer', async () => {
+            mockRequest.params = { customer_id: '999' };
+            mockedOrdersModel.findAll.mockResolvedValueOnce([]); // No order_ids found
+
+            await getOrdersByCustomerId(mockRequest as Request, mockResponse as Response);
+
+            expect(mockedOrdersModel.findAll).toHaveBeenCalledWith({
+                where: { customer_id: 999 },
+                attributes: ['order_id']
+            });
+            expect(responseStatus).toHaveBeenCalledWith(404);
+            expect(responseJson).toHaveBeenCalledWith({ message: 'No orders found for this customer' });
+        });
+
+        it('[OC-008] should handle errors during customer order retrieval and return 500', async () => {
+            mockRequest.params = { customer_id: '1' };
+            const errorMessage = 'DB error fetching customer orders';
+            mockedOrdersModel.findAll.mockRejectedValue(new Error(errorMessage));
+
+            await getOrdersByCustomerId(mockRequest as Request, mockResponse as Response);
+
+            expect(responseStatus).toHaveBeenCalledWith(500);
+            expect(responseJson).toHaveBeenCalledWith({ message: 'Failed to fetch orders' });
+        });
     });
 
-    it('[OR-006] should handle errors and return 500 status', async () => {
-      mockRequest.params = { customer_id: '1' };
-      mockedOrders.findAll.mockRejectedValue(new Error('DB failure'));
+    // --- getOrderById Tests ---
+    describe('getOrderById', () => {
+        const mockSingleOrder = {
+            order_id: 1,
+            order_date: MOCK_DATE,
+            order_status: OrderStatus.PENDING,
+            customer: { name: 'Single Order Cust', phone_number: '111222' },
+            address: { street_line: 'Single St', district: 'SingleD', province: 'SingleP' },
+            items: [
+                { product_code: 'P-ABC', name: 'Product ABC', OrderItem: { qty: 1, price_at_purchase: 50 } }
+            ],
+        };
 
-      await orderController.getOrdersByCustomerId(mockRequest as Request, mockResponse as Response);
+        it('[OC-009] should retrieve a single order by ID and return 200', async () => {
+            mockRequest.params = { id: '1' };
+            mockedOrdersModel.findByPk.mockResolvedValue(mockSingleOrder);
 
-      expect(responseStatus).toHaveBeenCalledWith(500);
-      expect(responseJson).toHaveBeenCalledWith({ message: 'Failed to fetch orders' });
-    });
-  });
+            await getOrderById(mockRequest as Request, mockResponse as Response);
 
-  describe('getOrderById', () => {
-    it('[OR-007] should return 400 for invalid order id', async () => {
-      mockRequest.params = { id: 'abc' };
+            expect(mockedOrdersModel.findByPk).toHaveBeenCalledWith(1, {
+                include: [
+                    { model: mockedCustomerModel, attributes: ['name', 'phone_number'] },
+                    { model: mockedAddressModel, attributes: ['street_line', 'district', 'province'] },
+                    {
+                        model: mockedProductModel,
+                        attributes: ['product_code', 'name'],
+                        through: { attributes: ['qty', 'price_at_purchase'] },
+                    },
+                ],
+            });
+            expect(responseStatus).toHaveBeenCalledWith(200);
+            expect(responseJson).toHaveBeenCalledWith(mockSingleOrder);
+        });
 
-      await orderController.getOrderById(mockRequest as Request, mockResponse as Response);
+        it('[OC-010] should return 400 for an invalid order ID', async () => {
+            mockRequest.params = { id: 'invalid' };
 
-      expect(responseStatus).toHaveBeenCalledWith(400);
-      expect(responseJson).toHaveBeenCalledWith({ message: 'Invalid order ID' });
-    });
+            await getOrderById(mockRequest as Request, mockResponse as Response);
 
-    it('[OR-008] should return 404 if order not found', async () => {
-      mockRequest.params = { id: '1' };
-      mockedOrders.findByPk.mockResolvedValue(null);
+            expect(mockedOrdersModel.findByPk).not.toHaveBeenCalled();
+            expect(responseStatus).toHaveBeenCalledWith(400);
+            expect(responseJson).toHaveBeenCalledWith({ message: 'Invalid order ID' });
+        });
 
-      await orderController.getOrderById(mockRequest as Request, mockResponse as Response);
+        it('[OC-011] should return 404 if the order is not found', async () => {
+            mockRequest.params = { id: '999' };
+            mockedOrdersModel.findByPk.mockResolvedValue(null);
 
-      expect(responseStatus).toHaveBeenCalledWith(404);
-      expect(responseJson).toHaveBeenCalledWith({ message: 'Order not found' });
-    });
+            await getOrderById(mockRequest as Request, mockResponse as Response);
 
-    it('[OR-009] should return 200 and order details if found', async () => {
-      mockRequest.params = { id: '1' };
-      const mockOrderInstance = {
-        order_id: 1,
-        order_status: 'PENDING',
-        // Assuming toJSON is called by the controller if it's sending a Sequelize instance
-        toJSON: jest.fn().mockImplementation(function (this: any) {
-          return { order_id: this.order_id, order_status: this.order_status };
-        }),
-      };
-      // Cast here for the single instance
-      mockedOrders.findByPk.mockResolvedValue(mockOrderInstance as any);
+            expect(mockedOrdersModel.findByPk).toHaveBeenCalledWith(999, expect.any(Object));
+            expect(responseStatus).toHaveBeenCalledWith(404);
+            expect(responseJson).toHaveBeenCalledWith({ message: 'Order not found' });
+        });
 
-      await orderController.getOrderById(mockRequest as Request, mockResponse as Response);
+        it('[OC-012] should handle errors during single order retrieval and return 500', async () => {
+            mockRequest.params = { id: '1' };
+            const errorMessage = 'DB error fetching single order';
+            mockedOrdersModel.findByPk.mockRejectedValue(new Error(errorMessage));
 
-      expect(responseStatus).toHaveBeenCalledWith(200);
-      expect(responseJson).toHaveBeenCalledWith(expect.objectContaining({ order_id: 1 }));
-      // This assertion is conditional. If your controller does NOT explicitly call .toJSON(), remove it.
-      // Based on typical Express behavior with Sequelize, .toJSON() is often implicitly called.
-      expect(mockOrderInstance.toJSON).toHaveBeenCalled();
-    });
+            await getOrderById(mockRequest as Request, mockResponse as Response);
 
-    it('[OR-010] should handle errors and return 500 status', async () => {
-      mockRequest.params = { id: '1' };
-      mockedOrders.findByPk.mockRejectedValue(new Error('DB failure'));
-
-      await orderController.getOrderById(mockRequest as Request, mockResponse as Response);
-
-      expect(responseStatus).toHaveBeenCalledWith(500);
-      expect(responseJson).toHaveBeenCalledWith({ message: 'Failed to fetch order' });
-    });
-  });
-
-  describe('getOrderSummary', () => {
-    it('[OR-011] should return order counts summary', async () => {
-      // Sequelize's aggregate results often come with a `dataValues` property
-      const mockRawCounts = [
-        { order_status: 'PENDING', dataValues: { count: 5 } },
-        { order_status: 'DELIVERED', dataValues: { count: 3 } }
-      ];
-      // Cast here as these are plain objects with dataValues, not full Model instances
-      mockedOrders.findAll.mockResolvedValue(mockRawCounts as any);
-      mockedOrders.count.mockResolvedValue(8);
-
-      await orderController.getOrderSummary(mockRequest as Request, mockResponse as Response);
-
-      expect(responseStatus).toHaveBeenCalledWith(200);
-      expect(responseJson).toHaveBeenCalledWith({
-        totalOrders: 8,
-        counts: expect.objectContaining({
-          // Adjust these keys if your controller transforms them (e.g., to 'Pending', 'Delivered')
-          PENDING: 5,
-          DELIVERED: 3,
-          PROCESSING: 0,
-          CANCELLED: 0,
-        }),
-      });
+            expect(responseStatus).toHaveBeenCalledWith(500);
+            expect(responseJson).toHaveBeenCalledWith({ message: 'Failed to fetch order' });
+        });
     });
 
-    it('[OR-012] should handle errors and return 500 status', async () => {
-      mockedOrders.findAll.mockRejectedValue(new Error('DB failure'));
+    // --- getOrderSummary Tests ---
+   describe('getOrderSummary', () => {
+        it('[OC-013] should return order summary with total orders and status counts', async () => {
+            mockedOrdersModel.findAll.mockResolvedValueOnce([
+                { order_status: OrderStatus.PENDING, dataValues: { count: '10' } },
+                { order_status: OrderStatus.PROCESSING, dataValues: { count: '15' } },
+                { order_status: OrderStatus.DELIVERED, dataValues: { count: '20' } },
+            ]);
+            mockedOrdersModel.count.mockResolvedValueOnce(45); // Total count from previous mock
 
-      await orderController.getOrderSummary(mockRequest as Request, mockResponse as Response);
+            await getOrderSummary(mockRequest as Request, mockResponse as Response);
 
-      expect(responseStatus).toHaveBeenCalledWith(500);
-      expect(responseJson).toHaveBeenCalledWith({ message: 'Failed to fetch order summary' });
+            // Corrected: Use expect.any(Object) for the complex sequelize function parts
+            const expectedAttributes = [
+                'order_status',
+                [
+                    // This tells Jest to expect an object here,
+                    // without strictly checking its internal function references or `toString` outputs.
+                    expect.objectContaining({
+                        _is: 'sequelize.fn',
+                        fn: 'COUNT',
+                        args: [
+                            expect.objectContaining({ // Also for sequelize.col
+                                _is: 'sequelize.col',
+                                col: 'order_status'
+                            })
+                        ]
+                    }),
+                    'count'
+                ]
+            ];
+
+
+            expect(mockedOrdersModel.findAll).toHaveBeenCalledWith({
+                attributes: expectedAttributes,
+                group: ['order_status'],
+            });
+            expect(mockedOrdersModel.count).toHaveBeenCalledTimes(1);
+            expect(responseStatus).toHaveBeenCalledWith(200);
+            expect(responseJson).toHaveBeenCalledWith({
+                totalOrders: 45,
+                counts: {
+                    [OrderStatus.PENDING]: 10,
+                    [OrderStatus.PROCESSING]: 15,
+                    [OrderStatus.DELIVERED]: 20,
+                    [OrderStatus.CANCELLED]: 0,
+                },
+            });
+        });
+
+        it('[OC-014] should handle cases with no orders and return 0 counts', async () => {
+            mockedOrdersModel.findAll.mockResolvedValueOnce([]); // No status counts
+            mockedOrdersModel.count.mockResolvedValueOnce(0); // No total orders
+
+            await getOrderSummary(mockRequest as Request, mockResponse as Response);
+
+            expect(responseStatus).toHaveBeenCalledWith(200);
+            expect(responseJson).toHaveBeenCalledWith({
+                totalOrders: 0,
+                counts: {
+                    [OrderStatus.PENDING]: 0,
+                    [OrderStatus.PROCESSING]: 0,
+                    [OrderStatus.DELIVERED]: 0,
+                    [OrderStatus.CANCELLED]: 0,
+                },
+            });
+        });
+
+        it('[OC-015] should handle errors during order summary retrieval and return 500', async () => {
+            const errorMessage = 'DB error fetching summary';
+            mockedOrdersModel.findAll.mockRejectedValue(new Error(errorMessage));
+
+            await getOrderSummary(mockRequest as Request, mockResponse as Response);
+
+            expect(responseStatus).toHaveBeenCalledWith(500);
+            expect(responseJson).toHaveBeenCalledWith({ message: 'Failed to fetch order summary' });
+        });
     });
-  });
 
-  describe('updateOrderStatus', () => {
-    it('[OR-013] should return 400 for invalid order ID', async () => {
-      mockRequest.params = { id: 'abc' }; // This should trigger the 400 'Invalid order ID'
-      mockRequest.body = { order_status: 'DELIVERED' };
+    // --- updateOrderStatus Tests ---
+    describe('updateOrderStatus', () => {
+        const mockOrderToUpdate = {
+            order_id: 1,
+            order_status: OrderStatus.PENDING,
+            save: jest.fn().mockResolvedValue(true), // Mock the save method
+        };
 
-      await orderController.updateOrderStatus(mockRequest as Request, mockResponse as Response);
+        it('[OC-016] should update order status successfully and return 200', async () => {
+            mockRequest.params = { id: '1' };
+            mockRequest.body = { order_status: OrderStatus.DELIVERED };
+            mockedOrdersModel.findByPk.mockResolvedValue(mockOrderToUpdate);
 
-      expect(responseStatus).toHaveBeenCalledWith(400);
-      expect(responseJson).toHaveBeenCalledWith({ message: 'Invalid order ID' });
+            await updateOrderStatus(mockRequest as Request, mockResponse as Response);
+
+            expect(mockedOrdersModel.findByPk).toHaveBeenCalledWith(1);
+            // The order_status on the mock object should be updated
+            expect(mockOrderToUpdate.order_status).toBe(OrderStatus.DELIVERED);
+            expect(mockOrderToUpdate.save).toHaveBeenCalledTimes(1);
+            expect(responseStatus).toHaveBeenCalledWith(200);
+            expect(responseJson).toHaveBeenCalledWith({
+                message: 'Order status updated successfully',
+                order: {
+                    order_id: 1,
+                    order_status: OrderStatus.DELIVERED,
+                },
+            });
+        });
+
+        it('[OC-017] should return 400 for an invalid order ID', async () => {
+            mockRequest.params = { id: 'abc' };
+            mockRequest.body = { order_status: OrderStatus.PROCESSING };
+
+            await updateOrderStatus(mockRequest as Request, mockResponse as Response);
+
+            expect(mockedOrdersModel.findByPk).not.toHaveBeenCalled();
+            expect(responseStatus).toHaveBeenCalledWith(400);
+            expect(responseJson).toHaveBeenCalledWith({ message: 'Invalid order ID' });
+        });
+
+        it('[OC-018] should return 400 for an invalid order status', async () => {
+            mockRequest.params = { id: '1' };
+            mockRequest.body = { order_status: 'INVALID_STATUS' };
+
+            await updateOrderStatus(mockRequest as Request, mockResponse as Response);
+
+            expect(mockedOrdersModel.findByPk).not.toHaveBeenCalled();
+            expect(responseStatus).toHaveBeenCalledWith(400);
+            expect(responseJson).toHaveBeenCalledWith({ message: 'Invalid order status' });
+        });
+
+        it('[OC-019] should return 404 if the order to update is not found', async () => {
+            mockRequest.params = { id: '999' };
+            mockRequest.body = { order_status: OrderStatus.CANCELLED };
+            mockedOrdersModel.findByPk.mockResolvedValue(null);
+
+            await updateOrderStatus(mockRequest as Request, mockResponse as Response);
+
+            expect(mockedOrdersModel.findByPk).toHaveBeenCalledWith(999);
+            expect(responseStatus).toHaveBeenCalledWith(404);
+            expect(responseJson).toHaveBeenCalledWith({ message: 'Order not found' });
+        });
+
+        it('[OC-020] should handle errors during order status update and return 500', async () => {
+            mockRequest.params = { id: '1' };
+            mockRequest.body = { order_status: OrderStatus.DELIVERED };
+            const errorMessage = 'DB error during status update';
+            mockedOrdersModel.findByPk.mockResolvedValue(mockOrderToUpdate);
+            // Reset the save mock to simulate an error
+            mockOrderToUpdate.save.mockRejectedValue(new Error(errorMessage));
+
+            await updateOrderStatus(mockRequest as Request, mockResponse as Response);
+
+            expect(responseStatus).toHaveBeenCalledWith(500);
+            expect(responseJson).toHaveBeenCalledWith({ message: 'Failed to update order status' });
+        });
     });
-
-    it('[OR-014] should return 400 for invalid order status', async () => {
-      mockRequest.params = { id: '1' }; // Valid ID format
-      mockRequest.body = { order_status: 'INVALID_STATUS' }; // This should trigger the 400 'Invalid order status'
-
-      await orderController.updateOrderStatus(mockRequest as Request, mockResponse as Response);
-
-      expect(responseStatus).toHaveBeenCalledWith(400);
-      expect(responseJson).toHaveBeenCalledWith({ message: 'Invalid order status' });
-    });
-
-    it('[OR-015] should return 404 if order not found', async () => {
-      mockRequest.params = { id: '1' }; // Valid ID format
-      mockRequest.body = { order_status: 'DELIVERED' }; // Valid status
-      mockedOrders.findByPk.mockResolvedValue(null); // Simulate order not found
-
-      await orderController.updateOrderStatus(mockRequest as Request, mockResponse as Response);
-
-      expect(responseStatus).toHaveBeenCalledWith(404);
-      expect(responseJson).toHaveBeenCalledWith({ message: 'Order not found' });
-    });
-
-    it('[OR-016] should update order status and return 200', async () => {
-      mockRequest.params = { id: '1' };
-      mockRequest.body = { order_status: 'DELIVERED' };
-
-      const mockOrderInstance = {
-        order_id: 1,
-        order_status: 'PENDING', // Initial status before update
-        save: jest.fn().mockImplementation(function (this: any) {
-          // Simulate update: change the status on the mock object itself
-          this.order_status = mockRequest.body.order_status;
-          return Promise.resolve(this); // save() typically resolves with the instance itself
-        }),
-        toJSON: jest.fn().mockImplementation(function (this: any) {
-          // toJSON should reflect the current state of the mock object
-          return { order_id: this.order_id, order_status: this.order_status };
-        }),
-      };
-      // Cast here as this is a plain object acting as a Model instance
-      mockedOrders.findByPk.mockResolvedValue(mockOrderInstance as any);
-
-      await orderController.updateOrderStatus(mockRequest as Request, mockResponse as Response);
-
-      expect(mockOrderInstance.save).toHaveBeenCalled();
-      expect(mockOrderInstance.order_status).toBe('DELIVERED'); // Assert that the mock object's status was updated
-      expect(responseStatus).toHaveBeenCalledWith(200);
-      expect(responseJson).toHaveBeenCalledWith({
-        message: 'Order status updated successfully',
-        order: { order_id: 1, order_status: 'DELIVERED' }, // Ensure the response reflects the updated status
-      });
-      expect(mockOrderInstance.toJSON).toHaveBeenCalled();
-    });
-
-    it('[OR-017] should handle errors and return 500 status', async () => {
-      mockRequest.params = { id: '1' }; // Valid ID format
-      mockRequest.body = { order_status: 'DELIVERED' }; // Valid status
-      mockedOrders.findByPk.mockRejectedValue(new Error('DB failure')); // Simulate DB error
-
-      await orderController.updateOrderStatus(mockRequest as Request, mockResponse as Response);
-
-      expect(responseStatus).toHaveBeenCalledWith(500);
-      expect(responseJson).toHaveBeenCalledWith({ message: 'Failed to update order status' });
-    });
-  });
 });

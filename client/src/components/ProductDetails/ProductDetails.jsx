@@ -33,8 +33,6 @@ const RatingsAndReviews = ({ product }) => {
             comment: comment
         };
         try {
-            // This is where you would call your API to save the review
-            // await apiService.submitReview(reviewData);
             toast.success("Thank you for your review!");
             console.log("Submitting review:", reviewData);
             setUserName('');

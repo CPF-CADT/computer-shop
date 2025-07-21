@@ -3,7 +3,7 @@ import swaggerJSDoc from 'swagger-jsdoc';
 const swaggerDefinition = {
   openapi: '3.0.0',
   info: {
-    title: 'Product API',
+    title: 'Tech Gear API',
     version: '1.0.0',
     description: 'API documentation',
   },

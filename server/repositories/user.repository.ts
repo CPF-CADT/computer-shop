@@ -1,15 +1,12 @@
-// import {Customer, toCustomerStructure } from "../model/UserModel";
-import { Op, where } from "sequelize";
+import { Op } from "sequelize";
 import { Customer } from "../db/models";
 import { TwoFaToken } from "../db/models/TwoFaToken";
-import e from "express";
-
 interface CustomerAttributes {
   customer_id: number;
   name: string;
   phone_number: string;
   usr_profile_url: string | null;
-  password: string; // This will store the hashed password
+  password: string;
 }
 export class CusomerRepository {
     static async getUser(phoneNumber?: string, id?: number): Promise<Customer | null> {
@@ -111,47 +108,85 @@ export class CusomerRepository {
             return null; 
         }
     }
+    static async markCustomerAsVerified(customerId: number): Promise<boolean> {
+    try {
+      const [affectedCount] = await Customer.update(
+        { is_verifyed: true },
+        {
+          where: { customer_id: customerId }
+        }
+      );
+      return affectedCount > 0;
+    } catch (error) {
+      console.error("Error marking customer as verified:", error);
+      throw error;
+    }
+  }
 }
-export class TwoFaTokenRepository{
-    static async getToken(customerId:number):Promise<TwoFaToken | null>{
-        try{
-            const customerToken = await TwoFaToken.findOne({
-                where: {
-                customer_id: customerId,
+export class TwoFaTokenRepository {
+  public static async getToken(customerId: number): Promise<TwoFaToken | null> {
+    const now = new Date();
+    return TwoFaToken.findOne({
+      where: {
+        customer_id: customerId,
+        is_used: false,
+        expire_at: {
+          [Op.gt]: now, 
         },
-        order: [['expire_at', 'DESC']], 
-            });
-            if(customerToken){
-                return customerToken;
-            }else{
-                return null;
-            }
-        }catch(err){
-            throw err;
-        }
-    }
-    static async addToken(customerId: number, code: string, expire_at: Date): Promise<boolean | null> {
-        try {
-            await TwoFaToken.create({
-                customer_id: customerId,
-                code: code,
-                expire_at: expire_at,
-                is_used: false, 
-            });
-            return true;
-        }catch(err){
-            throw err;
-        }
-    }
-    static async markTokenAsUsed(customerId: number): Promise<boolean> {
-        try {
-            const [updatedCount] = await TwoFaToken.update(
-                { is_used: true },
-                { where: { customer_id: customerId, is_used: false } }
-            );
-            return updatedCount > 0; 
-        } catch (err) {
-            throw err;
-        }
-    }
+      },
+      order: [['expire_at', 'DESC']], 
+    });
+  }
+
+  public static async addToken(customerId: number, code: string, expireAt: Date): Promise<TwoFaToken> {
+    await TwoFaToken.update(
+      { is_used: true }, 
+      {
+        where: {
+          customer_id: customerId,
+          is_used: false,
+          expire_at: {
+            [Op.gt]: new Date(), 
+          },
+        },
+      }
+    );
+
+    return TwoFaToken.create({
+      customer_id: customerId,
+      code: code,
+      expire_at: expireAt,
+      is_used: false,
+      last_sent_at: new Date(), 
+    });
+  }
+
+  public static async markTokenAsUsed(customerId: number): Promise<boolean> {
+    const [affectedCount] = await TwoFaToken.update(
+      { is_used: true },
+      {
+        where: {
+          customer_id: customerId,
+          is_used: false, // Only mark unused tokens
+        },
+      }
+    );
+    return affectedCount > 0;
+  }
+
+  public static async updateTokenLastSent(customerId: number, timestamp: Date): Promise<boolean> {
+    const [affectedCount] = await TwoFaToken.update(
+      { last_sent_at: timestamp },
+      {
+        where: {
+          customer_id: customerId,
+          is_used: false, 
+          expire_at: {
+            [Op.gt]: new Date(), 
+          },
+        },
+      }
+    );
+    return affectedCount > 0;
+  }
 }
