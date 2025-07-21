@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../service/api'; // Adjust the path as necessary
-import { useAuth } from './context/AuthContext'; // Import useAuth to access the login function
+import { apiService } from '../service/api';
+import { useAuth } from './context/AuthContext';
 
 const VerificationCode = ({ phoneNumber }) => {
   const [codes, setCodes] = useState(['', '', '', '']);
@@ -10,34 +10,30 @@ const VerificationCode = ({ phoneNumber }) => {
   const [resendLoading, setResendLoading] = useState(false);
   const inputRefs = useRef([]);
   const navigate = useNavigate();
-  const { login } = useAuth(); // Get the login function from AuthContext
+  const { login } = useAuth();
 
-  // Effect to send the initial verification code when the component mounts
   useEffect(() => {
     if (phoneNumber) {
-      handleResendCode(); // Send code on component mount
+      handleResendCode();
     } else {
       setError("Phone number not provided. Cannot send verification code.");
     }
-    inputRefs.current[0]?.focus(); // Focus first input on mount
-  }, [phoneNumber]); // Dependency on phoneNumber to resend if it changes (unlikely in this flow)
+    inputRefs.current[0]?.focus();
+  }, [phoneNumber]);
 
   const handleChange = (index, value) => {
-    // Only allow numeric values
     if (!/^\d*$/.test(value)) return;
 
     const newCodes = [...codes];
     newCodes[index] = value;
     setCodes(newCodes);
 
-    // Auto-focus next input
     if (value && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (index, e) => {
-    // Handle backspace to move to previous input
     if (e.key === 'Backspace' && !codes[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -54,7 +50,6 @@ const VerificationCode = ({ phoneNumber }) => {
 
     setCodes(newCodes);
 
-    // Focus the next empty input or the last input
     const nextEmptyIndex = newCodes.findIndex(code => !code);
     const focusIndex = nextEmptyIndex === -1 ? 3 : nextEmptyIndex;
     inputRefs.current[focusIndex]?.focus();

@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import Categories from "../Categories";
 
-// Case size options
 const defaultSizeOptions = [
   { value: 'mini', label: 'Mini Tower' },
   { value: 'mid', label: 'Mid Tower' },
   { value: 'full', label: 'Full Tower' }
 ];
 
-// Price range options
 const defaultPriceOptions = [
   { min: 0, max: 1000, label: 'Under $1,000' },
   { min: 1000, max: 2000, label: '$1,000 - $2,000' },
@@ -16,13 +14,11 @@ const defaultPriceOptions = [
   { min: 3000, max: Infinity, label: 'Over $3,000' }
 ];
 
-// Case type options
 const defaultCaseTypeOptions = [
   { value: 'glass', label: 'Glass Case' },
   { value: 'normal', label: 'Normal Case' }
 ];
 
-// Brand options (example, should be dynamic in real app)
 const defaultBrandOptions = [
   'ASUS', 'MSI', 'Acer', 'Dell', 'HP', 'Lenovo', 'Custom'
 ];
@@ -87,7 +83,6 @@ export default function DesktopFilterSidebar({ onFilterChange }) {
     });
   };
 
-  // Helper to trigger filter change with all current filters
   const triggerFilterChange = (changed = {}) => {
     onFilterChange({
       sizes: changed.sizes !== undefined ? changed.sizes : selectedSizes,
@@ -109,7 +104,6 @@ export default function DesktopFilterSidebar({ onFilterChange }) {
         >
           Clear Filter
         </button>
-        {/* Case Size */}
         <div className="mb-4">
           <div className="font-semibold mb-1">Case Size</div>
           {defaultSizeOptions.map((opt) => (
@@ -124,7 +118,6 @@ export default function DesktopFilterSidebar({ onFilterChange }) {
             </label>
           ))}
         </div>
-        {/* Price Range */}
         <div className="mb-4">
           <div className="font-semibold mb-1">Price Range</div>
           {defaultPriceOptions.map((opt) => (
@@ -141,7 +134,6 @@ export default function DesktopFilterSidebar({ onFilterChange }) {
             </label>
           ))}
         </div>
-        {/* Case Type */}
         <div className="mb-4">
           <div className="font-semibold mb-1">Case Type</div>
           {defaultCaseTypeOptions.map((opt) => (
@@ -156,7 +148,6 @@ export default function DesktopFilterSidebar({ onFilterChange }) {
             </label>
           ))}
         </div>
-        {/* Brand */}
         <div className="mb-4">
           <div className="font-semibold mb-1">Brand</div>
           {defaultBrandOptions.map((brand) => (
@@ -171,7 +162,6 @@ export default function DesktopFilterSidebar({ onFilterChange }) {
             </label>
           ))}
         </div>
-        {/* Custom Desktop */}
         <div className="mb-4">
           <label className="flex items-center text-sm">
             <input

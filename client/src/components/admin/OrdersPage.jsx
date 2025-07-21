@@ -6,7 +6,6 @@ import {
 import { apiService } from '../../service/api';
 import toast from 'react-hot-toast';
 
-// A custom hook for debouncing input to prevent excessive API calls
 const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
     useEffect(() => {
@@ -29,30 +28,24 @@ const cambodianProvinces = [
 ];
 
 export default function OrdersPage() {
-    // Data and loading state
     const [orders, setOrders] = useState([]);
     const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Pagination state
     const [pagination, setPagination] = useState({ page: 1, totalPages: 1, limit: 10 });
 
-    // Filter state
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [provinceFilter, setProvinceFilter] = useState('all');
 
-    // Debounced search term for efficient API calls
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-    // Modal state
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [showOrderModal, setShowOrderModal] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [detailLoading, setDetailLoading] = useState(false);
 
-    // Centralized function to fetch data based on current filters and page
     const fetchData = useCallback(async (isRefresh = false) => {
         try {
             setLoading(true);
@@ -61,10 +54,10 @@ export default function OrdersPage() {
             const params = {
                 page: pagination.page,
                 limit: pagination.limit,
-                sortBy: 'date', // Assuming 'date' is a valid sort column in your API
-                sortType: 'DESC', // Assuming 'DESC' is a valid sort type in your API
-                search: debouncedSearchTerm || undefined, // Assuming API accepts 'search' for name/ID
-                status: statusFilter !== 'all' ? statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1) : undefined, // Convert to "Pending", "Processing" etc.
+                sortBy: 'date',
+                sortType: 'DESC',
+                search: debouncedSearchTerm || undefined,
+                status: statusFilter !== 'all' ? statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1) : undefined,
                 province: provinceFilter !== 'all' ? provinceFilter : undefined,
             };
 
@@ -78,26 +71,26 @@ export default function OrdersPage() {
             setPagination(prev => ({
                 ...prev,
                 totalPages: ordersResponse.meta.totalPages,
-                totalItems: ordersResponse.meta.totalItems, // Assuming totalItems is in meta
+                totalItems: ordersResponse.meta.totalItems,
             }));
 
             const mappedOrders = ordersResponse.data.map(order => ({
                 id: order.order_id,
-                customerName: order.customer.name || 'N/A', // Use optional chaining
-                customerEmail: 'N/A', // Not in provided API response
-                customerPhone: order.customer.phone_number || 'N/A', // Use optional chaining
+                customerName: order.customer.name || 'N/A',
+                customerEmail: 'N/A',
+                customerPhone: order.customer.phone_number || 'N/A',
                 orderDate: order.order_date,
-                status: order.order_status.toLowerCase(), // Convert to lowercase for UI consistency
+                status: order.order_status.toLowerCase(),
                 total: parseFloat(order.totalMoney),
-                items: [], // Will be fetched in detail modal
-                paymentMethod: 'N/A', // Not in provided API response
-                paymentStatus: 'paid', // Assuming payment is always 'paid' for fetched orders, or derive from API
+                items: [],
+                paymentMethod: 'N/A',
+                paymentStatus: 'paid',
                 shippingAddress: {
-                    street: order.address?.street_line || 'N/A', // Use optional chaining
-                    city: order.address?.district || 'N/A', // Use district as city for display
-                    state: order.address?.province || 'N/A', // Use province as state for display
+                    street: order.address?.street_line || 'N/A',
+                    city: order.address?.district || 'N/A',
+                    state: order.address?.province || 'N/A',
                 },
-                trackingNumber: null, // Not in provided API response
+                trackingNumber: null,
             }));
 
             setOrders(mappedOrders);
@@ -113,12 +106,10 @@ export default function OrdersPage() {
         }
     }, [pagination.page, pagination.limit, debouncedSearchTerm, statusFilter, provinceFilter, summary]);
 
-    // Effect to re-fetch data whenever filters or page change
     useEffect(() => {
         fetchData();
     }, [fetchData]);
 
-    // Reset page to 1 when filters change
     useEffect(() => {
         setPagination(p => ({ ...p, page: 1 }));
     }, [debouncedSearchTerm, statusFilter, provinceFilter]);
@@ -130,10 +121,10 @@ export default function OrdersPage() {
     };
 
     const openOrderDetails = async (order) => {
-        setSelectedOrder(order); // Set basic order data first
+        setSelectedOrder(order);
         setShowOrderModal(true);
         setDetailLoading(true);
-        setError(null); // Clear main error
+        setError(null);
         try {
             const detailedData = await apiService.getUserOrderdetail(order.id);
             const mappedItems = detailedData.items.map(item => ({
@@ -144,31 +135,30 @@ export default function OrdersPage() {
             }));
             const subtotal = mappedItems.reduce((acc, item) => acc + (item.quantity * item.price), 0);
             
-            // Use totalMoney from detail API if available, else subtotal for calculation
             const totalOrderAmount = parseFloat(detailedData.totalMoney || subtotal); 
             const shippingAndTax = totalOrderAmount - subtotal; 
 
             setSelectedOrder(prev => ({
                 ...prev,
-                ...detailedData, // Spread detailed data to update existing fields and add new ones
+                ...detailedData,
                 items: mappedItems,
                 subtotal: subtotal,
-                shipping: shippingAndTax > 0 ? shippingAndTax : 0, // Estimate shipping/tax
-                tax: 0, // Assuming tax is part of shippingAndTax or not explicitly given
-                total: totalOrderAmount, // Store as a number, NOT a formatted string
-                orderDate: detailedData.order_date, // Use detailed API's date
-                status: detailedData.order_status.toLowerCase(), // Use detailed API's status
+                shipping: shippingAndTax > 0 ? shippingAndTax : 0,
+                tax: 0,
+                total: totalOrderAmount,
+                orderDate: detailedData.order_date,
+                status: detailedData.order_status.toLowerCase(),
                 customerName: detailedData.customer?.name || 'N/A',
                 customerPhone: detailedData.customer?.phone_number || 'N/A',
                 shippingAddress: {
                     street: detailedData.address?.street_line || 'N/A',
                     city: detailedData.address?.district || 'N/A',
                     state: detailedData.address?.province || 'N/A',
-                    country: 'Cambodia' // Default
+                    country: 'Cambodia'
                 },
             }));
         } catch (err) {
-            setError(err.message || "Failed to fetch order details."); // Set error for the modal
+            setError(err.message || "Failed to fetch order details.");
             console.error("Failed to fetch order details:", err);
         } finally {
             setDetailLoading(false);
@@ -177,13 +167,11 @@ export default function OrdersPage() {
 
     const handleStatusUpdate = async (orderId, newStatus) => {
         try {
-            // Convert newStatus to uppercase as per API enum (e.g., "Pending", "Processing")
             const apiStatus = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
             await apiService.updateOrderStatus(orderId, apiStatus);
             toast.success(`Order ${orderId} status updated to ${newStatus}!`);
             setShowStatusModal(false);
-            fetchData(true); // Re-fetch all data to update the table and summary
-            // If order detail modal is open, update its status too
+            fetchData(true);
             if (selectedOrder && selectedOrder.id === orderId) {
                 setSelectedOrder(prev => ({ ...prev, status: newStatus }));
             }

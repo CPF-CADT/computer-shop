@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 
 export default function ProductBreadcrumb({ product }) {
-  // Determine category link and label
   let categoryLink = '/laptop';
   let categoryLabel = 'Laptops';
   if (product?.category?.title) {

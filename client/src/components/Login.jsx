@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { apiService } from '../service/api'; // Make sure this path is correct
-import { useAuth } from './context/AuthContext'; // Make sure this path is correct
+import { apiService } from '../service/api';
+import { useAuth } from './context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const LoginForm = () => {
@@ -9,7 +9,7 @@ const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { login } = useAuth(); // Destructure the login function from useAuth()
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -22,28 +22,24 @@ const LoginForm = () => {
       console.log('Login successful:', response);
 
       if (response && response.token && response.user) {
-        login(response); // Pass the entire response object (which contains token and user)
+        login(response); 
         console.log(response)
-        navigate('/'); // Navigate to home or dashboard after successful login
+        navigate('/'); 
       } else {
-        // This case might mean your API response was malformed or missing data
         setError('Login failed: Invalid response from server. Missing token or user data.');
       }
 
     } catch (err) {
       console.error('Login error:', err);
-      // Display a user-friendly error message
       setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false); 
     }
   };
 
   return (
     <div className="bg-white min-h-screen flex flex-col items-center justify-start p-4 pt-16">
-      {/* Position form at top center with proper spacing */}
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-md flex flex-col gap-6">
-        {/* Animated lock icon */}
         <div className="flex justify-center mb-2">
           <svg
             className="animate-bounce"

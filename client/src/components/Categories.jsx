@@ -1,7 +1,5 @@
-// src/components/Categories.jsx
-import React from 'react';
 import { useCategory } from './context/CategoryContext';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 
 export default function Categories() {
   const { categories, loadingCategories, categoryError } = useCategory();
@@ -28,7 +26,7 @@ export default function Categories() {
           <li
             key={category.id}
             className="text-gray-700 hover:text-orange-500 cursor-pointer"
-            onClick={() => handleCategoryClick(category.title)} // Call handler on click
+            onClick={() => handleCategoryClick(category.title)}
           >
             {category.title}
           </li>

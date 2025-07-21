@@ -11,7 +11,6 @@ export default function InventoryPage() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [stockAdjustment, setStockAdjustment] = useState({ type: 'add', quantity: 0, reason: '' });
 
-  // Mock inventory data
   useEffect(() => {
     const mockInventory = [
       {
@@ -109,7 +108,6 @@ export default function InventoryPage() {
     setFilteredInventory(mockInventory);
   }, []);
 
-  // Filter inventory based on search and filters
   useEffect(() => {
     let filtered = inventory.filter(item => 
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -271,7 +269,6 @@ export default function InventoryPage() {
           }
         }
       `}</style>
-      {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Inventory Management</h1>
@@ -287,7 +284,6 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
@@ -332,7 +328,6 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {/* Low Stock Alerts */}
       {lowStockItems.length > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-center mb-3">
@@ -361,7 +356,6 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {/* Search and Filters */}
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
@@ -403,7 +397,6 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {/* Inventory Table */}
       <div className="bg-white rounded-lg shadow-md overflow-x-auto">
         <table className="w-full min-w-[700px]">
           <thead className="bg-gray-50">
@@ -502,7 +495,6 @@ export default function InventoryPage() {
         </table>
       </div>
 
-      {/* Stock Adjustment Modal */}
       {showStockModal && selectedProduct && (
         <div className="flex items-center justify-center z-50 fixed inset-0 pointer-events-none">
           <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-md shadow-2xl pointer-events-auto mx-2">

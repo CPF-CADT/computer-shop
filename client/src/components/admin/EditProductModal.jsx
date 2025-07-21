@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiService } from '../../service/api'; // Adjust this import path if needed
+import { apiService } from '../../service/api';
 
 export default function EditProductModal({ isOpen, onClose, onSave, productCode, categories, brands, types }) {
     const [formData, setFormData] = useState(null);
@@ -45,11 +45,8 @@ export default function EditProductModal({ isOpen, onClose, onSave, productCode,
     }
 
     return (
-        /* ## THIS IS THE CHANGE ## */
-        /* This div creates the semi-transparent dark background. */
         <div className="fixed inset-0 z-40 flex justify-center items-center">
             
-            {/* Modal Content */}
             <div className="bg-white rounded-lg shadow-xl m-4 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="p-6 border-b flex justify-between items-center">
                     <div>

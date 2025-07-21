@@ -20,7 +20,6 @@ export default function Desktop() {
   }) => {
     let filtered = mockPC;
 
-    // Filter by case size (assume product.caseSize exists)
     if (sizes.length > 0) {
       filtered = filtered.filter((product) =>
         sizes.some((size) =>
@@ -29,7 +28,6 @@ export default function Desktop() {
       );
     }
 
-    // Filter by price
     if (prices.length > 0) {
       filtered = filtered.filter((product) => {
         const price = parseFloat(product.price.amount);
@@ -39,7 +37,6 @@ export default function Desktop() {
       });
     }
 
-    // Filter by case type (assume product.caseType exists, e.g. 'glass' or 'normal')
     if (caseTypes && caseTypes.length > 0) {
       filtered = filtered.filter((product) =>
         caseTypes.some((type) =>
@@ -48,7 +45,6 @@ export default function Desktop() {
       );
     }
 
-    // Filter by brand (assume product.brand exists)
     if (brands && brands.length > 0) {
       filtered = filtered.filter((product) =>
         brands.some((brand) =>
@@ -57,7 +53,6 @@ export default function Desktop() {
       );
     }
 
-    // Filter by custom desktop (assume product.isCustomDesktop is boolean)
     if (customDesktopOnly) {
       filtered = filtered.filter((product) => product.isCustomDesktop === true);
     }

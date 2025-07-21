@@ -2,7 +2,6 @@ import { latestProducts } from "../../data/mockData";
 import ProductCard from "../Product/ProductCard";
 
 export default function DesktopLatestProducts() {
-  // You may want to filter latestProducts for desktops only if needed
   return (
     <div className="w-64">
       <div className="bg-white rounded-lg shadow p-4 mt-6">

@@ -15,7 +15,7 @@ export default function LoopBanner({ height = "h-64", className = "", interval =
       handleNext();
     }, interval);
     return () => clearInterval(timer);
-    // eslint-disable-next-line
+    
   }, [currentIndex, interval]);
 
   const handleNext = () => {

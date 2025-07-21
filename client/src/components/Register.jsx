@@ -1,19 +1,16 @@
 import { useState } from 'react';
-import { apiService } from '../service/api'; // Ensure this path is correct
-import { useNavigate } from 'react-router-dom'; // To navigate after successful registration
-// Removed: import { useAuth } from './context/AuthContext'; // No direct login after register
+import { apiService } from '../service/api';
+import { useNavigate } from 'react-router-dom';
 
 const RegisterForm = () => {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [phone, setPhone] = useState(''); // Corresponds to phone_number in API
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  // Removed: const [successMessage, setSuccessMessage] = useState(''); // No direct success message here
 
   const navigate = useNavigate();
-  // Removed: const { login } = useAuth(); // No direct login after register
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,31 +20,25 @@ const RegisterForm = () => {
       return;
     }
 
-    setLoading(true); // Set loading state
+    setLoading(true); 
 
     try {
-      // Call the userRegister API
       const response = await apiService.userRegister(name, phone, password);
       console.log('Registration successful:', response);
 
-      // After successful registration, navigate to the verification page
-      // Pass the phone number so the VerificationCode component knows which number to send the code to
       navigate('/verify-code', { state: { phoneNumber: phone } });
 
     } catch (err) {
       console.error('Registration error:', err);
-      // Display a user-friendly error message
       setError(err.message || 'Registration failed. Please try again.');
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false); 
     }
   };
 
   return (
     <div className="bg-white min-h-screen flex flex-col items-center justify-start p-4 pt-16">
-      {/* Position form at top center with proper spacing */}
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-md flex flex-col gap-6">
-        {/* Animated hook icon */}
         <div className="flex justify-center mb-2">
           <svg
             className="animate-bounce"

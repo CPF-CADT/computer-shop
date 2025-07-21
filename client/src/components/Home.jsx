@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { apiService } from '../service/api';
-import { useCategory } from './context/CategoryContext'; // Import useCategory hook
+import { useCategory } from './context/CategoryContext';
 
-// Import Static Components and Assets
-import Categories from "./Categories"; // Assuming this component uses category data
+import Categories from "./Categories";
 import Navigate from "./Navigate";
 import { OverlayHome, OverlayBrands } from "./Overlay";
 import ProductCard from "./Product/ProductCard";
@@ -18,7 +17,6 @@ import Mouse from '../assets/Mouse/Rog Mouse.png';
 import Keyboard from '../assets/Keyboard/Keyboard Razer.png';
 
 
-// Reusable Carousel Component for horizontal product lists with pagination
 const ProductCarousel = ({ title, products, productsPerPage = 4 }) => {
   const scrollContainerRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -78,7 +76,7 @@ const ProductCarousel = ({ title, products, productsPerPage = 4 }) => {
             )
           })}
         </div>
-        {totalPages > 1 && ( // Only show buttons if there's more than one page
+        {totalPages > 1 && (
           <>
             <button onClick={handlePrevPage} className="absolute left-0 top-1/2 -translate-y-1/2 bg-orange-300 hover:bg-orange-500 p-3 rounded-full shadow-md transition z-10 opacity-75 hover:opacity-100" aria-label="Scroll left"><FaChevronLeft /></button>
             <button onClick={handleNextPage} className="absolute right-0 top-1/2 -translate-y-1/2 bg-orange-300 hover:bg-orange-500 p-3 rounded-full shadow-md transition z-10 opacity-75 hover:opacity-100" aria-label="Scroll right"><FaChevronRight /></button>
@@ -90,13 +88,12 @@ const ProductCarousel = ({ title, products, productsPerPage = 4 }) => {
 };
 
 
-// Main Home Page Component
 export default function Home() {
   const [newInProducts, setNewInProducts] = useState([]);
   const [lowEndPCs, setLowEndPCs] = useState([]);
   const [rogLaptops, setRogLaptops] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true); // Renamed to avoid conflict
-  const [errorProducts, setErrorProducts] = useState(null); // Renamed to avoid conflict
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [errorProducts, setErrorProducts] = useState(null);
 
   const { loadingCategories, categoryError } = useCategory();
 
@@ -105,11 +102,10 @@ export default function Home() {
       try {
         setLoadingProducts(true);
         setErrorProducts(null);
-        // Increased limits to allow for pagination within carousels
         const [newInResponse, lowEndResponse, rogResponse] = await Promise.all([
-          apiService.getProducts({ limit: 12, sort: 'desc', order_column: 'product_code' }), // Fetch more for pagination
-          apiService.getProducts({ limit: 12, type_product: 'VGA', sort: 'asc', order_column: 'price' }), // Fetch more for pagination
-          apiService.getProducts({ limit: 12, brand: 'ASUS', sort: 'asc', type_product: 'Labtop' }) // Fetch more for pagination
+          apiService.getProducts({ limit: 12, sort: 'desc', order_column: 'product_code' }),
+          apiService.getProducts({ limit: 12, type_product: 'VGA', sort: 'asc', order_column: 'price' }),
+          apiService.getProducts({ limit: 12, brand: 'ASUS', sort: 'asc', type_product: 'Labtop' })
         ]);
         setNewInProducts(newInResponse.data);
         setLowEndPCs(lowEndResponse.data);
@@ -122,11 +118,9 @@ export default function Home() {
       }
     };
     fetchHomeProducts();
-  }, []); // This useEffect now only fetches products
+  }, []);
 
-  // Combine loading states
   const overallLoading = loadingProducts || loadingCategories;
-  // Combine error states
   const overallError = errorProducts || categoryError;
 
 
@@ -135,10 +129,8 @@ export default function Home() {
 
   return (
     <div className="max-w-[1200px] mx-auto">
-      {/* Categories component can now receive categories data from context if it needs it */}
-      {/* For example: <Categories categories={categories} /> */}
       <div className="flex flex-row gap-x-10 mt-6">
-        <Categories /> {/* Assuming Categories component internally uses useCategory or receives props */}
+        <Categories />
         <div className="w-full flex flex-col gap-y-5 ">
           <Navigate />
           <OverlayHome />

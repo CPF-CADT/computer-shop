@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MdAdd, MdEdit, MdDelete, MdLocalOffer, MdSchedule, MdVisibility, MdCode, MdPercent, MdSearch, MdCheckCircle, MdCancel } from 'react-icons/md';
-import { apiService } from '../../service/api'; // Assuming apiService is correctly defined
-import toast from 'react-hot-toast'; // For user notifications
-import { useCategory } from '../context/CategoryContext'; // Import useCategory to get brands, categories, types
+import { apiService } from '../../service/api';
+import toast from 'react-hot-toast';
+import { useCategory } from '../context/CategoryContext';
 
 export default function PromotionsPage() {
   const { categories: allCategories, brands: allBrands, typeProducts: allTypeProducts, loadingCategories } = useCategory();

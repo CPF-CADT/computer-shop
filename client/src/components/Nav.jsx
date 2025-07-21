@@ -53,7 +53,7 @@ export default function Nav() {
                 className="h-10 w-10 rounded-full object-cover border border-gray-300"
               />
               <span className="font-medium text-gray-700 hidden sm:block">
-                {user.name || 'User'} {/* Display user's name */}
+                {user.name || 'User'}
               </span>
             </Link>
             <button

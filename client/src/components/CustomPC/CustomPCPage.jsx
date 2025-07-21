@@ -10,7 +10,7 @@ import {
   builderFans,
 } from "../../data/mockData";
 import SelectComponent from "./SelectComponent";
-import { useCart } from "../cart/CartContext"; // <-- Add this import
+import { useCart } from "../cart/CartContext";
 
 const COMPONENTS = [
   { key: "cpu", label: "CPU", items: builderCPUs },
@@ -25,7 +25,7 @@ const COMPONENTS = [
 
 export default function CustomPCPage() {
   const [selected, setSelected] = useState({});
-  const { addToCart } = useCart(); // <-- Use cart context
+  const { addToCart } = useCart();
 
   const handleSelect = (key, id) => {
     const comp = COMPONENTS.find((c) => c.key === key);
@@ -47,21 +47,16 @@ export default function CustomPCPage() {
     0
   );
 
-  // --- Add to Cart Handler ---
   const handleAddCustomPCToCart = () => {
     if (selectedList.length === 0) return;
-    // Generate a unique id for the custom build (timestamp + random)
     const customBuildId = `custompc-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-    // Compose a name and description
     const buildName =
       "Custom PC: " +
       selectedList.map(([cat, item]) => item.name).join(", ");
     const buildDescription =
       "Custom build with: " +
       selectedList.map(([cat, item]) => `${cat.toUpperCase()}: ${item.name}`).join(", ");
-    // Compose an image (use first selected component's image)
     const buildImage = selectedList[0]?.[1]?.image || selectedList[0]?.[1]?.image_path || "";
-    // Add to cart
     addToCart({
       id: customBuildId,
       name: buildName,
@@ -70,12 +65,11 @@ export default function CustomPCPage() {
       qty: 1,
       image: buildImage,
       isCustomPC: true,
-      components: selected, // Save the selected components for reference
+      components: selected,
     });
     alert("Custom PC added to cart!");
   };
 
-  // --- Summary Box Component ---
   const SummaryBox = () => (
     <div className="bg-white rounded-lg shadow p-4 sticky top-8 min-w-[260px]">
       <h3 className="font-bold text-lg mb-3">Your Build</h3>
@@ -115,7 +109,6 @@ export default function CustomPCPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6 flex flex-col md:flex-row gap-8">
-      {/* Breadcrumb and Back Button */}
       <div className="w-full mb-4">
         <nav aria-label="breadcrumb" className="mb-2">
           <ol className="breadcrumb flex text-sm text-gray-500 space-x-2">
@@ -133,7 +126,6 @@ export default function CustomPCPage() {
           &larr; Back
         </button>
       </div>
-      {/* Left: Selectors */}
       <div className="flex-1">
         {COMPONENTS.map((comp) => (
           <div key={comp.key} className="mb-8">
@@ -146,7 +138,6 @@ export default function CustomPCPage() {
           </div>
         ))}
       </div>
-      {/* Right: Summary Box */}
       <div className="w-full md:w-80">
         <SummaryBox />
       </div>

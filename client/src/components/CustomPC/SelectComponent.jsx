@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 
-// Pass in: { items, title, onSelect, selectedId }
 export default function SelectComponent({ items, title, onSelect, selectedId }) {
   return (
     <div>

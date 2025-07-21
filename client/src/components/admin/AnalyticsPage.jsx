@@ -5,7 +5,6 @@ export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState('30days');
   const [selectedReport, setSelectedReport] = useState('overview');
 
-  // Mock analytics data
   const analyticsData = {
     overview: {
       totalRevenue: 125340.50,
@@ -126,7 +125,6 @@ export default function AnalyticsPage() {
           }
         }
       `}</style>
-      {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Analytics & Reports</h1>
@@ -152,7 +150,6 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Report Tabs */}
       <div className="bg-white rounded-lg shadow-md">
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
@@ -177,10 +174,8 @@ export default function AnalyticsPage() {
           </nav>
         </div>
 
-        {/* Overview Tab */}
         {selectedReport === 'overview' && (
           <div className="p-6 space-y-6">
-            {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="bg-blue-50 p-6 rounded-lg">
                 <div className="flex items-center justify-between">
@@ -233,7 +228,6 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            {/* Revenue Chart */}
             <div className="bg-gray-50 p-6 rounded-lg">
               <h3 className="text-lg font-semibold mb-4">Monthly Revenue Trend</h3>
               <div className="h-64 flex items-end justify-between space-x-2">
@@ -251,11 +245,9 @@ export default function AnalyticsPage() {
           </div>
         )}
 
-        {/* Sales Tab */}
         {selectedReport === 'sales' && (
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Sales by Category */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Sales by Category</h3>
                 <div className="space-y-3">
@@ -278,7 +270,6 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              {/* Top Products */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Top Selling Products</h3>
                 <div className="space-y-3">
@@ -300,11 +291,9 @@ export default function AnalyticsPage() {
           </div>
         )}
 
-        {/* Products Tab */}
         {selectedReport === 'products' && (
           <div className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Product Performance */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Product Performance</h3>
                 <div className="overflow-x-auto w-full">
@@ -331,7 +320,6 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              {/* Category Distribution */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Category Distribution</h3>
                 <div className="space-y-4">
@@ -352,10 +340,8 @@ export default function AnalyticsPage() {
           </div>
         )}
 
-        {/* Inventory Tab */}
         {selectedReport === 'inventory' && (
           <div className="p-6 space-y-6">
-            {/* Inventory Alerts */}
             <div>
               <h3 className="text-lg font-semibold mb-4 text-red-600">Low Stock Alerts</h3>
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -378,7 +364,6 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            {/* Inventory Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-blue-50 p-6 rounded-lg">
                 <h4 className="font-medium text-blue-800">Total Products</h4>

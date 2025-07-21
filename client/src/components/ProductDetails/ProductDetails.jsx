@@ -18,7 +18,6 @@ const StarRating = ({ rating, size = 'text-xl' }) => {
   );
 };
 
-// --- Sub-component for the new two-column review section ---
 const RatingsAndReviews = ({ product }) => {
     const [newRating, setNewRating] = useState(5);
     const [userName, setUserName] = useState('');
@@ -48,7 +47,6 @@ const RatingsAndReviews = ({ product }) => {
         <div className="mt-12 pt-8 border-t">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Ratings & Reviews</h2>
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-                {/* Left Column: Existing Reviews List */}
                 <div className="lg:col-span-3">
                     <h3 className="text-lg font-semibold mb-4">What our customers are saying ({product.feedback.totalReview} Reviews)</h3>
                     <div className="space-y-6">
@@ -71,7 +69,6 @@ const RatingsAndReviews = ({ product }) => {
                     </div>
                 </div>
 
-                {/* Right Column: Submit Review Form */}
                 <div className="lg:col-span-2">
                     <div className="bg-gray-50 p-6 rounded-lg sticky top-8">
                            <h3 className="text-lg font-semibold mb-4">Write a review</h3>
@@ -114,8 +111,8 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { addToCart } = useCart(); // Get the addToCart function from CartContext
-  const { isAuthenticated, user } = useAuth(); // Get auth status and user from AuthContext
+  const { addToCart } = useCart(); 
+  const { isAuthenticated, user } = useAuth(); 
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -133,15 +130,11 @@ export default function ProductDetails() {
   }, [productId]);
 
   const handleAddToCart = () => {
-    // Check if user is authenticated and customerId is available before adding to cart
     if (!isAuthenticated || !user?.id) {
       toast.error("Please log in to add items to your cart.");
       return;
     }
-    // Call the addToCart function from CartContext.
-    // It will handle the API call to add the item to the backend cart.
     addToCart({ ...product, qty: quantity });
-    // The toast notification for adding to cart is now handled inside CartContext
   };
 
   const handleQuantityChange = (amount) => {
@@ -157,21 +150,20 @@ export default function ProductDetails() {
 
       <div className="grid md:grid-cols-2 gap-8 mt-4">
         <div className="bg-white p-4 rounded-lg shadow-sm">
-          {/* Using optional chaining for image_path to prevent errors if product.image_path is null */}
           <img src={product.image_path || 'https://placehold.co/600x400/cccccc/333333?text=No+Image'} alt={product.name} className="w-full object-contain" />
         </div>
 
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold mb-2">{product.name}</h1>
           <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-              <span>Brand: <strong>{product.brand?.name || 'N/A'}</strong></span> {/* Added optional chaining */}
+              <span>Brand: <strong>{product.brand?.name || 'N/A'}</strong></span> 
               <span>Code: <strong>{product.product_code}</strong></span>
           </div>
           <p className="text-gray-600 mb-4">{product.description}</p>
 
           <div className="mb-6">
             <span className="text-3xl font-bold text-gray-800">
-                ${parseFloat(product.price?.amount || 0).toFixed(2)} {/* Added optional chaining and default */}
+                ${parseFloat(product.price?.amount || 0).toFixed(2)} 
             </span>
           </div>
 
@@ -184,7 +176,7 @@ export default function ProductDetails() {
             <button
               onClick={handleAddToCart}
               className="flex-grow bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 font-semibold"
-              disabled={!isAuthenticated} // Disable if not logged in
+              disabled={!isAuthenticated} 
             >
               {isAuthenticated ? 'Add to Cart' : 'Log in to Add to Cart'}
             </button>
@@ -193,8 +185,8 @@ export default function ProductDetails() {
           <div className="border-t pt-6 text-sm">
             <h2 className="font-semibold mb-2 text-base">Specifications</h2>
             <div className="space-y-1">
-                <p><strong>Category:</strong> {product.category?.title || 'N/A'}</p> {/* Added optional chaining */}
-                <p><strong>Type:</strong> {product.type?.title || 'N/A'}</p> {/* Added optional chaining */}
+                <p><strong>Category:</strong> {product.category?.title || 'N/A'}</p> 
+                <p><strong>Type:</strong> {product.type?.title || 'N/A'}</p> 
             </div>
           </div>
         </div>

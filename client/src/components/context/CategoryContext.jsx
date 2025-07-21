@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
-import { apiService } from '../../service/api'; // Adjust path as needed
+import { apiService } from '../../service/api';
 
 const CategoryContext = createContext(null);
 
@@ -10,7 +10,6 @@ export function CategoryProvider({ children }) {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [categoryError, setCategoryError] = useState(null);
 
-  // Function to fetch all category-related data
   const fetchCategoryData = useCallback(async () => {
     try {
       setLoadingCategories(true);
@@ -33,9 +32,8 @@ export function CategoryProvider({ children }) {
   }, []); 
   useEffect(() => {
     fetchCategoryData();
-  }, [fetchCategoryData]); // Dependency on the memoized fetchCategoryData function
+  }, [fetchCategoryData]);
 
-  // State for active category (from your previous context version)
   const [activeCategory, setActiveCategory] = useState(null);
   const selectCategory = useCallback((path) => {
     setActiveCategory(path);

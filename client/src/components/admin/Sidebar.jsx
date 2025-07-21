@@ -17,18 +17,16 @@ const navItems = [
   { icon: <MdBackup />, label: 'Database Restore' },
 ];
 
-// Receive activePage and setActivePage as props
 export default function Sidebar({ activePage, setActivePage }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleNavClick = (itemLabel) => {
     setActivePage(itemLabel);
-    setIsMobileMenuOpen(false); // Close mobile menu after selection
+    setIsMobileMenuOpen(false);
   };
 
   return (
     <>
-      {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-orange-500 text-white rounded-lg shadow-lg"
@@ -36,7 +34,6 @@ export default function Sidebar({ activePage, setActivePage }) {
         {isMobileMenuOpen ? <MdClose size={24} /> : <MdMenu size={24} />}
       </button>
 
-      {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
@@ -44,7 +41,6 @@ export default function Sidebar({ activePage, setActivePage }) {
         />
       )}
 
-      {/* Sidebar */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-40
         w-64 bg-[#FFA726] text-white min-h-screen flex flex-col
@@ -52,12 +48,10 @@ export default function Sidebar({ activePage, setActivePage }) {
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         max-w-full
       `}>
-        {/* Logo */}
         <div className="flex items-center gap-2 text-2xl font-bold p-6 bg-white flex-shrink-0">
           <img src={mainLogo} alt="Logo" className="w-45 rounded" />
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 mt-4 space-y-1 overflow-y-auto scrollbar-hide min-h-0">
           {navItems.map((item, idx) => (
             <div
@@ -76,7 +70,6 @@ export default function Sidebar({ activePage, setActivePage }) {
           ))}
         </nav>
 
-        {/* Footer */}
         <div className="p-4 border-t border-orange-400 flex-shrink-0 mt-auto">
           <div className="text-xs text-orange-100 text-center">
             Computer Shop Admin v1.0

@@ -2,7 +2,6 @@ import { useState, useRef, useCallback,useEffect  } from "react";
 import { apiService } from "../../service/api";
 
 export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
-  // Form states
     const [categories, setCategories] = useState([]);
     const [brands, setBrands] = useState([]);
     const [type_products, setTypeProducts] = useState([]);
@@ -79,7 +78,6 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
     if (error) {
         return <div className="text-red-500">Error: {error}</div>;
     }
-  ///// HOOK RUN BEFORE HERE
   if (!isOpen) return null;
   
   
@@ -103,9 +101,6 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
     fileInputRef.current?.click();
   };
 
-  // Upload function using your apiServic
-
-  // Submit handler: upload file if not uploaded, then submit form data
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -113,8 +108,6 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
       alert("Please fill in all required fields.");
       return;
     }
-
-    // If file selected but not yet uploaded, upload it first
     if (selectedFile && !uploadedImageUrl) {
       await handleUpload();
 
@@ -127,8 +120,6 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
       alert("Please upload a product image.");
       return;
     }
-
-    // Prepare product data
     const productData = {
       name,
       Code,
@@ -141,7 +132,6 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
       image: uploadedImageUrl,
     };
     onAddProduct(productData);
-    // Reset all states
     setName("");
     setCode("10001");
     setPrice("");
@@ -157,8 +147,6 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
 
     onClose();
   };
-
-  // Render preview if uploaded image or local selected image exists
   const imagePreviewUrl = uploadedImageUrl
     ? uploadedImageUrl
     : selectedFile
@@ -170,7 +158,6 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
       <div className="bg-white p-6 rounded-lg shadow-xl z-50 w-full max-w-lg max-h-[90vh] overflow-auto">
         <h2 className="text-2xl font-bold mb-5">Add New Product</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Product Name */}
           <div>
             <label
               htmlFor="name"

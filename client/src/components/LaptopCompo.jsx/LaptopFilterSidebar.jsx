@@ -43,7 +43,7 @@ export default function LaptopFilterSidebar({ onFilterChange }) {
       ? selectedColors.filter(c => c !== color)
       : [...selectedColors, color];
     setSelectedColors(newColors);
-    onFilterChange({ sizes: selectedSizes, prices: selectedPrices, colors: newColors }); // Fixed: was passing prices instead of colors
+    onFilterChange({ sizes: selectedSizes, prices: selectedPrices, colors: newColors });
   };
 
   const clearFilters = () => {

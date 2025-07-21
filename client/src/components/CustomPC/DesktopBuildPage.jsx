@@ -16,7 +16,6 @@ const COMPONENT_CATEGORIES = [
 
 export default function DesktopBuildPage() {
   const [selectedComponents, setSelectedComponents] = useState({});
-  // Example: { motherboard: {...}, cpu: {...}, ... }
 
   const handleSelect = (categoryKey, product) => {
     setSelectedComponents((prev) => ({
@@ -33,10 +32,8 @@ export default function DesktopBuildPage() {
     });
   };
 
-  // For demo, use mockPC and mockLaptop as sources for all categories
   const allProducts = [...mockPC, ...mockLaptop];
 
-  // Group products by categoryKey (simulate, in real app use backend data)
   const productsByCategory = {
     motherboard: allProducts.filter((p) => p.name.toLowerCase().includes("motherboard")),
     cpu: allProducts.filter((p) => p.name.toLowerCase().includes("cpu") || p.description.toLowerCase().includes("intel") || p.description.toLowerCase().includes("amd")),
@@ -48,7 +45,6 @@ export default function DesktopBuildPage() {
     case: allProducts.filter((p) => p.name.toLowerCase().includes("case")),
   };
 
-  // Calculate total price
   const totalPrice = Object.values(selectedComponents).reduce(
     (sum, item) => sum + (parseFloat(item.price?.amount || item.price) || 0),
     0
@@ -70,7 +66,6 @@ export default function DesktopBuildPage() {
       </div>
       <h1 className="text-2xl font-bold mb-2">Custom Your PC</h1>
       <div className="flex flex-col md:flex-row gap-8">
-        {/* Left: Component Selectors */}
         <div className="flex-1">
           {COMPONENT_CATEGORIES.map((cat) => (
             <DesktopBuildSelector
@@ -83,7 +78,6 @@ export default function DesktopBuildPage() {
             />
           ))}
         </div>
-        {/* Right: Selected Components Summary */}
         <div className="w-full md:w-80">
           <DesktopBuildSummary
             selectedComponents={selectedComponents}

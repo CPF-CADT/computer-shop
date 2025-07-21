@@ -1,6 +1,6 @@
 import PC1 from '../../assets/RTX3080.png';
 
-export default function BannerGPU() { // <-- Change Banner to BannerGPU
+export default function BannerGPU() {
   return (
     
 

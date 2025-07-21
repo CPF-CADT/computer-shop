@@ -11,7 +11,7 @@ export default function StaffManagementPage() {
 
   const roles = ['Admin', 'Support', 'Delivery', 'Sales', 'Manager', 'Accountant'];
 
-  // Mock staff data
+  
   const [staffList, setStaffList] = useState([
     {
       id: 1,
@@ -203,7 +203,6 @@ export default function StaffManagementPage() {
           }
         }
       `}</style>
-      {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Staff Management</h1>
@@ -218,7 +217,6 @@ export default function StaffManagementPage() {
         </button>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
@@ -265,7 +263,6 @@ export default function StaffManagementPage() {
         </div>
       </div>
 
-      {/* Search and Filter */}
       <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative min-w-0">
@@ -294,7 +291,6 @@ export default function StaffManagementPage() {
         </div>
       </div>
 
-      {/* Create Staff Modal with improved UX */}
       {showCreateModal && (
         <div className="flex items-center justify-center z-50 fixed inset-0 pointer-events-none">
           <div className="bg-white rounded-lg p-4 sm:p-8 w-full max-w-xs sm:max-w-md shadow-2xl pointer-events-auto mx-2">
@@ -376,7 +372,6 @@ export default function StaffManagementPage() {
         </div>
       )}
 
-      {/* Staff Table */}
       <div className="bg-white rounded-lg shadow-md overflow-x-auto w-full">
         <table className="w-full min-w-[420px]">
           <thead className="bg-gray-50">
@@ -462,7 +457,6 @@ export default function StaffManagementPage() {
         </table>
       </div>
 
-      {/* Update Salary Modal */}
       {showSalaryModal && selectedStaff && (
         <div className="flex items-center justify-center z-50 fixed inset-0 pointer-events-none">
           <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-md shadow-2xl pointer-events-auto mx-2">

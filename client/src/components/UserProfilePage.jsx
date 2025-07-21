@@ -15,12 +15,11 @@ import {
   MdRadioButtonUnchecked,
   MdDelete
 } from 'react-icons/md';
-import { useAuth } from './context/AuthContext'; // Assuming useAuth provides user data
-import { apiService } from '../service/api'; // Assuming apiService is correctly defined
-import { useNavigate, useParams } from 'react-router-dom'; // Import useParams
-import toast from 'react-hot-toast'; // For user notifications
+import { useAuth } from './context/AuthContext';
+import { apiService } from '../service/api';
+import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
-// Reusable InputField component (from CheckoutPage, adapted)
 const InputField = ({ label, id, type = "text", placeholder, value, onChange, required = true, error, readOnly = false }) => (
   <div className="mb-4">
     <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -38,41 +37,37 @@ const InputField = ({ label, id, type = "text", placeholder, value, onChange, re
 
 
 export default function UserProfilePage() {
-  const { user: authUser, isAuthenticated, logout } = useAuth(); // Get user and logout from AuthContext
+  const { user: authUser, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const { id: customerIdFromUrl } = useParams(); // Get customer ID from URL parameter
+  const { id: customerIdFromUrl } = useParams();
 
-  // Use customerIdFromUrl for fetching data, fallback to authUser.id if URL param is not present
-  // This ensures that if the route is /user/profile (without ID), it uses the logged-in user's ID
   const customerId = customerIdFromUrl || authUser?.id;
 
   const [activeTab, setActiveTab] = useState('overview');
   const [showAddressModal, setShowAddressModal] = useState(false);
-  const [editingAddress, setEditingAddress] = useState(null); // Stores address being edited
-  const [showOrderDetailModal, setShowOrderDetailModal] = useState(false); // State for order detail modal
-  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null); // Stores details of the order to display
+  const [editingAddress, setEditingAddress] = useState(null);
+  const [showOrderDetailModal, setShowOrderDetailModal] = useState(false);
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
 
-  const [customerProfile, setCustomerProfile] = useState(null); // Full customer data from API
-  const [addresses, setAddresses] = useState([]); 
+  const [customerProfile, setCustomerProfile] = useState(null);
+  const [addresses, setAddresses] = useState([]);
   const [orders, setOrders] = useState([]);
 
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
-  const [loadingOrderDetail, setLoadingOrderDetail] = useState(false); // Loading for order detail modal
+  const [loadingOrderDetail, setLoadingOrderDetail] = useState(false);
   const [apiError, setApiError] = useState(null);
 
-  // State for Add/Edit Address Form
   const [addressFormData, setAddressFormData] = useState({
     street_line: '',
-    commune: '', // Include if your API requires it, even if not displayed
+    commune: '',
     district: '',
     province: '',
-    google_map_link: '', // Include if your API requires it, even if not displayed
-    phone: '', // This phone is for the address, not the user's main phone
+    google_map_link: '',
+    phone: '',
   });
 
-  // Redirect if not authenticated or if customerId is missing
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
@@ -100,9 +95,8 @@ export default function UserProfilePage() {
       }
     };
     fetchProfile();
-  }, [customerId]); // Re-fetch if customerId changes
+  }, [customerId]);
 
-  // Fetch addresses
   const fetchAddresses = useCallback(async () => {
     if (!customerId) return;
     setLoadingAddresses(true);
@@ -124,44 +118,39 @@ export default function UserProfilePage() {
     }
   }, [activeTab, isAuthenticated, customerId, fetchAddresses]);
 
-  // Fetch Orders
   const fetchOrders = useCallback(async () => {
     if (!customerId) return;
     setLoadingOrders(true);
     setApiError(null);
     try {
       const data = await apiService.getOrdersByCustomerId(customerId);
-      // Map API response to your UI's expected order structure
       const formattedOrders = data.map(order => {
-        // Calculate total from order items
         const total = order.items.reduce((sum, item) => sum + (item.OrderItem.qty * parseFloat(item.OrderItem.price_at_purchase)), 0);
-        // Determine status text for UI display
         let statusText = order.order_status;
 
         return {
           id: order.order_id,
-          order_date: order.order_date, // Keep original date for detail view
-          date: new Date(order.order_date).toLocaleDateString(), // Formatted date for display
-          total: total.toFixed(2), // Format total
-          status: statusText, // Use backend status directly
-          items_count: order.items.length, // Count of items
-          address: order.address, // Address details
-          products: order.items, // Array of products in the order
-          express_handle: order.express_handle, // Express handle
+          order_date: order.order_date,
+          date: new Date(order.order_date).toLocaleDateString(),
+          total: total.toFixed(2),
+          status: statusText,
+          items_count: order.items.length,
+          address: order.address,
+          products: order.items,
+          express_handle: order.express_handle,
         };
       });
       setOrders(formattedOrders);
     } catch (err) {
       setApiError(err.message || "Failed to load orders.");
       console.error("Failed to fetch orders:", err);
-      setOrders([]); // Clear orders on error
+      setOrders([]);
     } finally {
       setLoadingOrders(false);
     }
   }, [customerId]);
 
   useEffect(() => {
-    // Fetch orders when activeTab is 'overview'
     if (activeTab === 'overview' && isAuthenticated && customerId) {
       fetchOrders();
     }
@@ -172,14 +161,12 @@ export default function UserProfilePage() {
     setApiError(null);
     try {
       const orderDetails = await apiService.getUserOrderdetail(orderId);
-      // Calculate total for the single order detail fetched
       const totalCalculated = orderDetails.items.reduce((sum, item) => sum + (item.OrderItem.qty * parseFloat(item.OrderItem.price_at_purchase)), 0);
 
       setSelectedOrderDetails({
         ...orderDetails,
-        total: totalCalculated.toFixed(2), // Add calculated total
-        status: orderDetails.order_status, // Ensure status is consistent
-        // Add other fields you need for display that might not be directly from API but derived
+        total: totalCalculated.toFixed(2),
+        status: orderDetails.order_status,
       });
       setShowOrderDetailModal(true);
     } catch (err) {
@@ -192,7 +179,7 @@ export default function UserProfilePage() {
   }, []);
 
   const getStatusIcon = (status) => {
-    switch (status.toUpperCase()) { // Convert to uppercase for consistent matching
+    switch (status.toUpperCase()) {
       case 'DELIVERED': return <MdCheckCircle className="text-green-500" />;
       case 'SHIPPED': return <MdLocalShipping className="text-blue-500" />;
       case 'PENDING': return <MdRadioButtonUnchecked className="text-orange-500" />;
@@ -201,7 +188,7 @@ export default function UserProfilePage() {
   };
 
   const getStatusColor = (status) => {
-    switch (status.toUpperCase()) { // Convert to uppercase for consistent matching
+    switch (status.toUpperCase()) {
       case 'DELIVERED': return 'bg-green-100 text-green-800';
       case 'SHIPPED': return 'bg-blue-100 text-blue-800';
       case 'PENDING': return 'bg-orange-100 text-orange-800';
@@ -221,7 +208,6 @@ export default function UserProfilePage() {
     setApiError(null);
     try {
       if (editingAddress) {
-        // Update existing address
         await apiService.updateAddressCustomer(editingAddress.address_id, {
           street_line: addressFormData.street_line,
           commune: addressFormData.commune,
@@ -231,7 +217,6 @@ export default function UserProfilePage() {
         });
         toast.success("Address updated successfully!");
       } else {
-        // Add new address
         await apiService.addAddressCustomer(customerId, {
           street_line: addressFormData.street_line,
           commune: addressFormData.commune,
@@ -242,7 +227,7 @@ export default function UserProfilePage() {
         toast.success("Address added successfully!");
       }
       resetAddressForm();
-      fetchAddresses(); // Re-fetch addresses to update UI
+      fetchAddresses();
     } catch (err) {
       setApiError(err.message || "Failed to save address.");
       toast.error(err.message || "Failed to save address.");
@@ -256,7 +241,7 @@ export default function UserProfilePage() {
     try {
       await apiService.deleteAddressCustomer(addressId);
       toast.success("Address deleted successfully!");
-      fetchAddresses(); // Re-fetch addresses to update UI
+      fetchAddresses();
     } catch (err) {
       setApiError(err.message || "Failed to delete address.");
       toast.error(err.message || "Failed to delete address.");
@@ -272,7 +257,7 @@ export default function UserProfilePage() {
       district: address.district || '',
       province: address.province || '',
       google_map_link: address.google_map_link || '',
-      phone: address.phone || '', // Assuming you want to display phone in form
+      phone: address.phone || '', 
     });
     setShowAddressModal(true);
   };
@@ -285,22 +270,19 @@ export default function UserProfilePage() {
       district: '',
       province: '',
       google_map_link: '',
-      phone: customerProfile?.phone_number || '', // Reset to user's main phone
+      phone: customerProfile?.phone_number || '', 
     });
     setShowAddressModal(false);
   };
 
-  // Show loading state if profile is still loading or if customerId isn't available yet
   if (loadingProfile || !customerId) {
     return <div className="text-center py-20 text-xl font-semibold">Loading profile...</div>;
   }
 
-  // If not authenticated (and not just loading), redirect to login
   if (!isAuthenticated) {
-    return null; // The useEffect will handle navigation
+    return null;
   }
 
-  // Display error if API call failed after loading
   if (apiError && !loadingProfile && !loadingAddresses && !loadingOrders && !loadingOrderDetail) {
     return <div className="text-center py-20 text-xl font-semibold text-red-500">{apiError}</div>;
   }
@@ -320,7 +302,7 @@ export default function UserProfilePage() {
               return (
                 <button
                   key={item.id}
-                  onClick={logout} // Use the logout function from useAuth
+                  onClick={logout}
                   className={`flex items-center gap-2 lg:gap-3 px-2 py-2 lg:px-4 lg:py-3 rounded-lg text-left font-medium transition-colors w-full text-white hover:bg-orange-200/60`}
                 >
                   <Icon className={`text-lg lg:text-xl text-white`} />
@@ -677,14 +659,14 @@ export default function UserProfilePage() {
       {showOrderDetailModal && selectedOrderDetails && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Details - {selectedOrderDetails.order_id}</h2> {/* Use order_id */}
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Details - {selectedOrderDetails.order_id}</h2>
             {loadingOrderDetail ? (
               <div className="text-center text-gray-500 py-8">Loading order details...</div>
             ) : (
               <div className="space-y-4">
                 <p><strong>Order Date:</strong> {new Date(selectedOrderDetails.order_date).toLocaleString()}</p>
-                <p><strong>Status:</strong> <span className={`font-medium ${getStatusColor(selectedOrderDetails.order_status)} px-2 py-1 rounded-full text-xs`}>{selectedOrderDetails.order_status}</span></p> {/* Use order_status */}
-                <p><strong>Total Amount:</strong> ${selectedOrderDetails.total}</p> {/* Use calculated total */}
+                <p><strong>Status:</strong> <span className={`font-medium ${getStatusColor(selectedOrderDetails.order_status)} px-2 py-1 rounded-full text-xs`}>{selectedOrderDetails.order_status}</span></p>
+                <p><strong>Total Amount:</strong> ${selectedOrderDetails.total}</p>
                 <p><strong>Shipping Method:</strong> {selectedOrderDetails.express_handle || 'Standard'}</p>
                 
                 {selectedOrderDetails.address && (

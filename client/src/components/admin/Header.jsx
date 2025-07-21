@@ -9,7 +9,6 @@ export default function Header() {
 
   return (
     <header className="w-full h-16 flex items-center bg-white shadow-sm px-6 sticky top-0 z-20">
-      {/* Search bar */}
       <div className="flex items-center flex-1 max-w-lg bg-gray-100 rounded-lg px-3 py-2 mr-4">
         <AiOutlineSearch className="text-xl text-gray-400 mr-2" />
         <input
@@ -18,7 +17,6 @@ export default function Header() {
           className="bg-transparent outline-none flex-1 text-gray-700"
         />
       </div>
-      {/* Right icons */}
       <div className="flex items-center gap-4">
         <button className="relative p-2 rounded-full hover:bg-purple-100">
           <AiOutlineBell className="text-xl text-gray-500" />
