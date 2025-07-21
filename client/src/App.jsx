@@ -64,7 +64,7 @@ function App() {
                 <Route path="/service" element={<Service />} />
                 <Route path="/promotion" element={<Promotion />} />
                 <Route path="/about-us" element={<AboutUs />} />
-                {/* <Route path="/peripherals" element={<Peripherals />} /> */}
+                 <Route path="/peripherals" element={<Peripherals />} /> 
                 <Route path='/user/profile/:id' element={<UserProfilePage />}/>
               </Routes>
             </div>
