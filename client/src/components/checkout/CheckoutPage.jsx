@@ -154,6 +154,7 @@ const CheckoutPage = ({ onBackToCart }) => {
             setPaymentStatus('completed');
             clearInterval(interval);
             setPollingIntervalId(null);
+            
             navigate('/checkout/success');
           } else if (payment_status === 'Pending') {
             console.log(`(Attempt ${currentAttempt}/${MAX_POLLING_ATTEMPTS}) Payment status: Pending`);
