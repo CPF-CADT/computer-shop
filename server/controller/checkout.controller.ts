@@ -1,6 +1,6 @@
 import { OrderRepositories, PaymentTransactionRepositories } from "../repositories/checkout.repository";
 import { Request, Response } from 'express';
-import { TelegramBot } from "../service/TelgramBot";
+import { TelegramBot } from "../service/TelegramBot";
 import { Address, Customer, OrderItem, Orders } from "../db/models";
 import { AddressRepository } from "../repositories/address.repository";
 import { generateBillNumber } from '../service/TwoFA';
@@ -224,7 +224,7 @@ export async function createQrPayment(req: Request, res: Response):Promise<void>
  *         description: Internal server error while checking payment
  */
 
-export async function checkPayment(req: Request, res: Response):Promise<void> {
+export async function checkPayment(req: Request, res: Response, telegramBotInstance: TelegramBot):Promise<void> {
     try {
         const { unique_md5, order_id } = req.body;
 
@@ -232,6 +232,7 @@ export async function checkPayment(req: Request, res: Response):Promise<void> {
             res.status(400).json({
                 error: 'Missing required fields: unique_md5 and order_id'
             });
+            return; 
         }
 
         const existingTransaction = await PaymentTransactionRepositories.getTransactionByOrderId(order_id);
@@ -241,13 +242,14 @@ export async function checkPayment(req: Request, res: Response):Promise<void> {
                 payment_status: 'Completed',
                 message: 'This order has already been marked as paid.'
             });
+            return; 
         }
         const bakong = new KHQR(process.env.BAKONG_TOKEN || '');
         const bakongPayStatus = await bakong.checkPayment(unique_md5);
 
         if (bakongPayStatus === 'PAID') {
             await PaymentTransactionRepositories.updatePaymentStatus(order_id, 'Completed');
-            
+
             try {
                 const order = await Orders.findByPk(order_id);
                 if (order) {
@@ -256,9 +258,8 @@ export async function checkPayment(req: Request, res: Response):Promise<void> {
                     const order_items = await OrderItem.findAll({ where: { order_id: order.order_id } });
 
                     if (order_items && customer && customerAddress) {
-                        const botMessage = new TelegramBot();
                         const totalAmount = order_items.reduce((sum, item) => sum + (item.price_at_purchase * item.qty), 0);
-                        botMessage.sendOrderNotification({
+                        telegramBotInstance.sendOrderNotification({
                             orderId: order_items[0].order_id,
                             customerName: customer.name,
                             phoneNumber: customer.phone_number,
@@ -268,11 +269,11 @@ export async function checkPayment(req: Request, res: Response):Promise<void> {
                             expressHandle:order.express_handle,
                         });
                     }
-                }   
+                }
             } catch (notificationError) {
                 console.error(`[checkPayment] Notification failed for order ${order_id}:`, notificationError);
             }
-            
+
             res.status(200).json({
                 payment_status: 'Completed'
             });
@@ -285,15 +286,17 @@ export async function checkPayment(req: Request, res: Response):Promise<void> {
 
     } catch (err) {
         console.error(`[checkPayment] Error processing order ${req.body.order_id}:`, err);
-        
+
         if (err instanceof Error && err.message.includes('API request failed with status 404')) {
             res.status(404).json({
                 payment_status: 'NotFound',
                 error: 'Payment transaction not found by the payment provider. It may have expired or is invalid.'
             });
+            return;
         }
         res.status(500).json({
             error: 'An internal server error occurred while checking the payment status.'
         });
+        return;
     }
 }

@@ -63,8 +63,8 @@ const ShoppingCartPage = () => {
   const navigate = useNavigate();
 
   // Example values, you can make these dynamic
-  const shippingCost = cartItems.length > 0 ? 5.00 : 0.00;
-  const taxAmount = totalPrice * 0; // Assuming 0% tax for now
+  const shippingCost = 0.00;
+  const taxAmount = 0; // Assuming 0% tax for now
 
   return (
     <div className="bg-gray-50 p-4 sm:p-8 min-h-screen">

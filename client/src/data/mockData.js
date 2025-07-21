@@ -418,7 +418,6 @@ export const mockCases = [
   },
 ];
 
-// Combined products for cart and checkout
 export const mockProducts = [...mockLaptop, ...mockPC].map(p => ({
   ...p,
   id: p.product_code,
@@ -429,9 +428,7 @@ export const mockShippingMethods = [
   { id: 'express', name: 'Express Shipping (2-3 Days)', price: 15.00 },
 ];
 
-// --- Custom PC Builder Component Data (NEW) ---
 
-// CPU
 export const builderCPUs = [
   {
     id: 'cpu-1',

@@ -3,8 +3,7 @@ import { useCart } from '../cart/CartContext';
 
 const OrderSummaryCheckout = ({ shippingCost = 0, currency = "USD" }) => { // Added currency prop
   const { cartItems, totalPrice: cartTotal } = useCart(); // Use totalPrice from useCart for consistency
-
-  const taxRate = 0.07; // Updated to 7% as per CheckoutPage calculation
+  const taxRate = 0; // This is already set to 0, effectively removing tax calculation.
   const taxAmount = cartTotal * taxRate;
   // cartTotal already represents the sum of item.qty * item.price_at_purchase
   // so orderTotal is simply cartTotal before shipping and tax
