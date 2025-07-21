@@ -10,7 +10,27 @@ const apiClient = axios.create({
 const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB
 
 export const apiService = {
-   // --- Promotion Management API Methods ---
+   sendVerificationCode: async (phoneNumber) => {
+    try {
+      const response = await apiClient.post('user/request-otp', { phone_number: phoneNumber });
+      return response.data;
+    } catch (error) {
+      console.error("API Error (sendVerificationCode):", error.response?.data || error.message);
+      const errorMessage = error.response?.data?.message || "Failed to send verification code.";
+      throw new Error(errorMessage);
+    }
+  },
+
+  verifyCode: async (phoneNumber, code) => {
+    try {
+      const response = await apiClient.post('user/verify-otp', { phone_number: phoneNumber, code: parseInt(code, 10) });
+      return response.data;
+    } catch (error) {
+      console.error("API Error (verifyCode):", error.response?.data || error.message);
+      const errorMessage = error.response?.data?.message || "Failed to verify code.";
+      throw new Error(errorMessage);
+    }
+  },
   getAllPromotions: async () => {
     try {
       const response = await apiClient.get('promotions');

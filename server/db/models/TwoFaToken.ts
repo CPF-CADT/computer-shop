@@ -38,6 +38,10 @@ export class TwoFaToken extends Model {
   @Column(DataType.BOOLEAN)
   is_used!: boolean;
 
+  @AllowNull(true) 
+  @Column(DataType.DATE)
+  last_sent_at?: Date; 
+
   @BelongsTo(() => Customer)
   customer!: Customer;
 }

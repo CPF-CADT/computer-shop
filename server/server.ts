@@ -39,7 +39,7 @@ try {
   
   const bot = new TelegramBot();
   bot.startPolling();
-  console.log('Telegram Bot is polling for updates.');
+    console.log('Telegram Bot is polling for updates.');
     app.use('/api/service', express.raw({ type: 'application/octet-stream', limit: '100mb' }));
     app.use('/api/product', productRouter);
     app.use('/api/category', categoryRouter);

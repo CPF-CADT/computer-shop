@@ -40,43 +40,94 @@ describe('Checkout Controller - Unit Tests', () => {
 
     describe('placeOrder', () => {
         it('[CO-001] should place an order successfully and return order details', async () => {
-            mockRequest.body = { customer_id: 1, address_id: 1 };
+            // Updated mockRequest.body to include express_handle
+            mockRequest.body = { customer_id: 1, address_id: 1, express_handle: 'VET' }; // Assuming 'VET' is a valid handle
+            
             const fakeOrderItems = [
                 { order_id: 99, product_code: 'P1', qty: 2, price_at_purchase: 100 },
                 { order_id: 99, product_code: 'P2', qty: 1, price_at_purchase: 50 },
             ];
+            
             mockedCustomerModel.findByPk.mockResolvedValue({ name: 'Test' } as Customer);
             mockedAddressRepo.getAddressById.mockResolvedValue({} as Address);
             mockedOrderRepo.placeAnOrder.mockResolvedValue(fakeOrderItems as any[]);
+            
             await CheckoutController.placeOrder(mockRequest, mockResponse);
-            expect(mockedOrderRepo.placeAnOrder).toHaveBeenCalledWith(1, 1);
+            
+            expect(mockedOrderRepo.placeAnOrder).toHaveBeenCalledWith(1, 1, 'VET'); 
+            
             expect(responseStatus).toHaveBeenCalledWith(200);
             expect(responseJson).toHaveBeenCalledWith({
                 order_id: 99,
-                amount_pay: 250,
+                amount_pay: 250, // (2*100) + (1*50) = 250
                 message: 'Order placed successfully'
             });
         });
 
-        it('[CO-002] should return 400 if the order fails (e.g., empty cart)', async () => {
-            mockRequest.body = { customer_id: 1, address_id: 1 };
-            mockedOrderRepo.placeAnOrder.mockResolvedValue(null);
+        it('[CO-002] should return 400 if the order fails (e.g., missing express_handle)', async () => {
+            mockRequest.body = { customer_id: 1, address_id: 1 }; // Missing express_handle
+            
             await CheckoutController.placeOrder(mockRequest, mockResponse);
+            expect(responseStatus).toHaveBeenCalledWith(400);
+            expect(responseJson).toHaveBeenCalledWith({ message: "Invalid input data" }); 
+        });
+        it('[CO-002-2] should return 400 if customer or address IDs are invalid/missing', async () => {
+            mockRequest.body = { customer_id: 'abc', address_id: 1, express_handle: 'VET' }; // Invalid customer_id
+            await CheckoutController.placeOrder(mockRequest, mockResponse);
+            expect(responseStatus).toHaveBeenCalledWith(400);
+            expect(responseJson).toHaveBeenCalledWith({ message: "Invalid input data" }); 
+        });
+
+        it('[CO-002-3] should return 400 if order fails (e.g. no order items returned)', async () => {
+            mockRequest.body = { customer_id: 1, address_id: 1, express_handle: 'VET' };
+            mockedCustomerModel.findByPk.mockResolvedValue({ name: 'Test' } as Customer);
+            mockedAddressRepo.getAddressById.mockResolvedValue({} as Address);
+            mockedOrderRepo.placeAnOrder.mockResolvedValue(null); // Simulate failure in repository
+            
+            await CheckoutController.placeOrder(mockRequest, mockResponse);
+            
             expect(responseStatus).toHaveBeenCalledWith(400);
             expect(responseJson).toHaveBeenCalledWith({ message: "Order failed. Please check customer, address, or cart items." });
         });
     });
 
-    describe('createQrPayment', () => {
+   describe('createQrPayment', () => {
         it('[CO-003] should generate a KHQR string and update transaction status', async () => {
             mockRequest.body = { order_id: 1, amount_pay: 2400.00, typeCurrency: 'USD' };
-            mockedTwoFA.generateBillNumber.mockReturnValue('12345');
+            
+            // CORRECTED: Mock generateBillNumber to return ONLY the raw number part
+            mockedTwoFA.generateBillNumber.mockReturnValue('12345'); 
+            
             mockedKHQR.prototype.createQR.mockReturnValue('mock_khqr_string');
             mockedKHQR.prototype.generateMD5.mockReturnValue('mock_md5_hash');
             mockedPaymentRepo.updatePaymentStatus.mockResolvedValue(true);
+            
+            // Mock console.error to prevent it from polluting test output if you have console.error in controller
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+            // Mock process.env variables used by KHQR constructor and createQR
+            process.env.BAKONG_TOKEN = 'mock_bakong_token';
+            process.env.BAKONG_BANK_ACCOUNT = 'mock_bank_account';
+            process.env.MERCHANT_NAME = 'mock_merchant_name';
+            process.env.MERCHANT_CITY = 'mock_merchant_city';
+            process.env.PHONE_NUMBER = 'mock_phone_number';
+
             await CheckoutController.createQrPayment(mockRequest, mockResponse);
-            expect(mockedKHQR).toHaveBeenCalled();
-            expect(mockedKHQR.prototype.createQR).toHaveBeenCalled();
+            
+            expect(mockedTwoFA.generateBillNumber).toHaveBeenCalled(); // Ensure it was called
+            expect(mockedKHQR).toHaveBeenCalledWith('mock_bakong_token'); // Ensure KHQR is instantiated with token
+            expect(mockedKHQR.prototype.createQR).toHaveBeenCalledWith({
+                bankAccount: 'mock_bank_account',
+                merchantName: 'mock_merchant_name',
+                merchantCity: 'mock_merchant_city',
+                amount: 2400.00, // Should be 2400.00 for USD
+                currency: 'USD',
+                storeLabel: "ComputerShop",
+                phoneNumber: 'mock_phone_number',
+                billNumber: 'TRX1', // 'TRX' + orderID.toString()
+                terminalLabel: "Online PAY",
+                isStatic: false,
+            });
             expect(mockedKHQR.prototype.generateMD5).toHaveBeenCalledWith('mock_khqr_string');
             expect(mockedPaymentRepo.updatePaymentStatus).toHaveBeenCalledWith(1, 'Pending');
             expect(responseStatus).toHaveBeenCalledWith(200);
@@ -85,8 +136,9 @@ describe('Checkout Controller - Unit Tests', () => {
                 unique_md5: 'mock_md5_hash',
                 order_id: 1,
                 amount: 2400.00,
-                bill_number: 'BILL12345'
+                bill_number: 'BILL12345' // Now this should match
             });
+            consoleErrorSpy.mockRestore(); // Restore console.error
         });
 
         it('[CO-004] should return 400 for an invalid currency type', async () => {

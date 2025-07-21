@@ -8,24 +8,26 @@ export  function normalizePhoneNumber(phoneNumber: string): string {
   }
   return phoneNumber;
 }
-export function sentSMS(phone_number:string,messageToSent:string){
-    axios.post(`${process.env.INFOBIP_BASE_URL}/sms/2/text/advanced`, {
-
-    messages: [
-        {
-        from: 'Tech Gear Shop',
-        destinations: [{ to: normalizePhoneNumber(phone_number) }],
-        text: messageToSent
-        }
-    ]
-    }, {
-    headers: {
-        Authorization: `App ${process.env.INFOBIP_API_KEY}`,
-        'Content-Type': 'application/json'
-    }
-    }).then(response => {
+export async function sentSMS(phone_number:string,messageToSent:string): Promise<any> {
+    try {
+        const response = await axios.post(`${process.env.INFOBIP_BASE_URL}/sms/2/text/advanced`, {
+            messages: [
+                {
+                    from: 'Tech Gear',
+                    destinations: [{ to: normalizePhoneNumber(phone_number) }],
+                    text: messageToSent
+                }
+            ]
+        }, {
+            headers: {
+                Authorization: `App ${process.env.INFOBIP_API_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
         console.log('SMS sent:', response.data);
-    }).catch(error => {
-        console.error('Error sending SMS:', error.response?.data || error.message);
-    });
+        return response.data;
+    } catch (error) {
+        console.error('Error sending SMS:', (error as Error).message);
+        throw error;
+    }
 }

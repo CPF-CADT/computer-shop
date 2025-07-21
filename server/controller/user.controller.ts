@@ -163,7 +163,7 @@ export async function customerLogin(req: Request, res: Response): Promise<void> 
                         }
                     });
                 }else{
-                res.status(400).json({ success: false, message: 'user need to verified' });
+                    res.status(400).json({ success: false, message: 'user need to verified' });
                 }
             }else{
                 const token = JWT.create({customer_id:customer.id,customer_phone_number:customer.phone_number});
@@ -333,7 +333,7 @@ export async function updateCustomerInfor(req:Request,res:Response):Promise<void
 
 /**
  * @swagger
- * /api/2fa/send-code:
+ * /api/user/request-code:
  *   post:
  *     summary: Send a 4-digit verification code to a user's phone number
  *     tags: [Customer]
@@ -382,30 +382,73 @@ export async function updateCustomerInfor(req:Request,res:Response):Promise<void
  *                   example: server fail + error message
  */
 
-export async function sendVerificationCode(req: Request, res: Response):Promise<void> {
+export async function sendVerificationCode(req: Request, res: Response): Promise<void> {
     const body: {
         phone_number: string;
     } = req.body;
     const { phone_number } = body;
-    try{
+    try {
         const customer = await CusomerRepository.getUser(phone_number);
-        if(customer){
-            const code:string = generate4DigitToken();
-            const exp_date:Date = getExpiryDate(15);
-            await TwoFaTokenRepository.addToken(customer.customer_id,code,exp_date);
-            sentSMS(phone_number,code)
-            res.status(201).json({message:'send sms to verifycation code'});
-        }else{
-        res.status(404).json({ message: 'phone number does not exixts' })
+        if (customer) {
+            const existingToken = await TwoFaTokenRepository.getToken(customer.customer_id);
+            const now = new Date();
+
+            let codeToSend: string;
+            let exp_date: Date;
+            let shouldSendSms = false;
+
+            if (existingToken && existingToken.expire_at > now && existingToken.is_used === false) {
+                codeToSend = existingToken.code;
+                exp_date = existingToken.expire_at; // Keep the existing expiry
+                const COOLDOWN_SECONDS = 30;
+                const lastSentTime = existingToken.last_sent_at ? new Date(existingToken.last_sent_at).getTime() : 0;
+                const currentTime = now.getTime();
+
+                if ((currentTime - lastSentTime) / 1000 > COOLDOWN_SECONDS) {
+                    shouldSendSms = true;
+                    // Update the last_sent_at timestamp for the existing token
+                    await TwoFaTokenRepository.updateTokenLastSent(customer.customer_id, now);
+                    console.log(`Reusing existing token and resent SMS for customer ${customer.customer_id}: ${codeToSend}`);
+                } else {
+                    console.log(`Reusing existing token for customer ${customer.customer_id}, but SMS is on cooldown.`);
+                    // Even if on cooldown, return success as the request was processed.
+                    res.status(201).json({ message: 'Verification code request processed. SMS on cooldown.' });
+                    return;
+                }
+            } else {
+                // If no valid existing token, generate a new one
+                codeToSend = generate4DigitToken();
+                exp_date = getExpiryDate(15); // 15 minutes expiry
+
+                // Assuming addToken will either create a new entry or update an existing one if a unique constraint exists.
+                // If addToken always creates, then getToken should be updated to get the LATEST valid token.
+                await TwoFaTokenRepository.addToken(customer.customer_id, codeToSend, exp_date);
+                // After adding/updating, set last_sent_at for the newly created/updated token
+                await TwoFaTokenRepository.updateTokenLastSent(customer.customer_id, now); // Assuming this method exists
+                shouldSendSms = true;
+                console.log(`Created new token and sent SMS for customer ${customer.customer_id}: ${codeToSend}`);
+            }
+
+            if (shouldSendSms) {
+                await sentSMS(phone_number, codeToSend); // Only send SMS if shouldSendSms is true
+            }
+
+            res.status(201).json({ message: 'Verification code sent successfully!' });
+            return;
+        } else {
+            res.status(404).json({ message: 'Phone number not found.' });
+            return;
         }
-    }catch(err){
-        res.status(500).json({ err: 'sever fail ' + err })
+    } catch (err) {
+        console.error("Error in sendVerificationCode:", err);
+        res.status(500).json({ err: 'Server failed to process verification code request: ' + (err instanceof Error ? err.message : String(err)) });
+        return;
     }
 }
 
 /**
  * @swagger
- * /api/2fa/verify-code:
+ * /api/user/verify-otp:
  *   post:
  *     summary: Verify the 4-digit two-factor authentication code
  *     tags: [Customer]
@@ -468,39 +511,74 @@ export async function sendVerificationCode(req: Request, res: Response):Promise<
  *                   example: server fail + error message
  */
 
-export async function verifyTwoFaCode(req: Request, res: Response):Promise<void> {
+
+
+export async function verifyTwoFaCode(req: Request, res: Response): Promise<void> {
     const body: {
         phone_number: string;
-        code:number;
+        code: number;
     } = req.body;
-    const { phone_number,code } = body;
-    try{
+    const { phone_number, code } = body;
+    try {
         const customer = await CusomerRepository.getUser(phone_number);
-        if(customer){
-            const userToken =  await TwoFaTokenRepository.getToken(customer.customer_id);
-            if(userToken){
+        if (customer) {
+            const userToken = await TwoFaTokenRepository.getToken(customer.customer_id);
+            if (userToken) {
                 const now = new Date();
-                if ( now < userToken.expire_at) {
-                    if(userToken.is_used!==true){
+                if (now < userToken.expire_at) {
+                    if (userToken.is_used !== true) {
                         const success: boolean = code.toString() === userToken.code;
-                        if(success){
+                        console.log("Verification attempt:");
+                        console.log("Input Code:", code.toString());
+                        console.log("Stored Code:", userToken.code);
+                        console.log("Success:", success);
+
+                        if (success) {
                             await TwoFaTokenRepository.markTokenAsUsed(customer.customer_id);
-                            res.status(201).json({message:'verify code successful'});
-                        }else{
-                        res.status(401).json({message:'verify code is incorrect'});
+                            await CusomerRepository.markCustomerAsVerified(customer.customer_id);
+
+                            const token = JWT.create({
+                                customer_id: customer.customer_id,
+                                customer_phone_number: customer.phone_number
+                            });
+
+                            res.status(201).json({
+                                success: true,
+                                message: 'Verification successful and logged in',
+                                token,
+                                user: {
+                                    id: customer.customer_id,
+                                    phone_number: customer.phone_number,
+                                    name: customer.name,
+                                    profile_img_path: customer.profile_img_path // Ensure this field exists on your Customer model
+                                }
+                            });
+                            return;
+                        } else {
+                            res.status(401).json({ message: 'verify code is incorrect' });
+                            return;
                         }
-                    }else{
-                    res.status(401).json({message:'verify code is already used'});
+                    } else {
+                        res.status(401).json({ message: 'verify code is already used' });
+                        return;
                     }
-                }else{
-                res.status(401).json({message:'verify code is expired'});
+                } else {
+                    res.status(401).json({ message: 'verify code is expired' });
+                    return;
                 }
+            } else {
+                res.status(400).json({ message: 'Verification token not found for this user.' });
+                return;
             }
-        }else{
-        res.status(404).json({ message: 'phone number does not exixts' })
+        } else {
+            res.status(404).json({ message: 'phone number does not exixts' });
+            return;
         }
-        res.status(400).json({ message: 'Invalid request or missing token' });
-    }catch(err){
-        res.status(500).json({ err: 'sever fail ' + err })
+    } catch (err) {
+        console.error("Error in verifyTwoFaCode:", err);
+        res.status(500).json({ err: 'server fail ' + (err instanceof Error ? err.message : String(err)) });
+        return;
     }
 }
+
+
