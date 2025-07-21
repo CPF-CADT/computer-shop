@@ -16,12 +16,34 @@ import GPU from '../assets/RTX3080.png';
 import Monitor from '../assets/Monitor/Rog Monitor.png';
 import Mouse from '../assets/Mouse/Rog Mouse.png';
 import Keyboard from '../assets/Keyboard/Keyboard Razer.png';
-
+import CustomPCPromo from './CustomePC';
 
 // Reusable Carousel Component for horizontal product lists with pagination
-const ProductCarousel = ({ title, products, productsPerPage = 4 }) => {
+const ProductCarousel = ({ title, products, productsPerPage = 4, isLoading, error }) => {
   const scrollContainerRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(0);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col mt-8">
+        <h3 className="font-bold text-xl mb-4">{title}</h3>
+        <div className="text-center py-10 text-lg">Loading products...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col mt-8">
+        <h3 className="font-bold text-xl mb-4">{title}</h3>
+        <div className="text-center py-10 text-lg text-red-500">{error}</div>
+      </div>
+    );
+  }
+
+  if (!products || products.length === 0) {
+    return null; 
+  }
 
   const totalPages = Math.ceil(products.length / productsPerPage);
 
@@ -42,10 +64,6 @@ const ProductCarousel = ({ title, products, productsPerPage = 4 }) => {
   const startIndex = currentPage * productsPerPage;
   const endIndex = startIndex + productsPerPage;
   const displayedProducts = products.slice(startIndex, endIndex);
-
-  if (!products || products.length === 0) {
-    return null;
-  }
 
   return (
     <div className="flex flex-col mt-8">
@@ -90,55 +108,82 @@ const ProductCarousel = ({ title, products, productsPerPage = 4 }) => {
 };
 
 
-// Main Home Page Component
 export default function Home() {
   const [newInProducts, setNewInProducts] = useState([]);
   const [lowEndPCs, setLowEndPCs] = useState([]);
   const [rogLaptops, setRogLaptops] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true); // Renamed to avoid conflict
-  const [errorProducts, setErrorProducts] = useState(null); // Renamed to avoid conflict
 
+  // Loading states for each carousel's data
+  const [loadingNewIn, setLoadingNewIn] = useState(true);
+  const [errorNewIn, setErrorNewIn] = useState(null);
+
+  const [loadingLowEnd, setLoadingLowEnd] = useState(true);
+  const [errorLowEnd, setErrorLowEnd] = useState(null);
+
+  const [loadingRog, setLoadingRog] = useState(true);
+  const [errorRog, setErrorRog] = useState(null);
+
+  // useCategory handles its own loading and error internally for the Categories component
   const { loadingCategories, categoryError } = useCategory();
 
+
   useEffect(() => {
-    const fetchHomeProducts = async () => {
+    const fetchNewInProducts = async () => {
       try {
-        setLoadingProducts(true);
-        setErrorProducts(null);
-        // Increased limits to allow for pagination within carousels
-        const [newInResponse, lowEndResponse, rogResponse] = await Promise.all([
-          apiService.getProducts({ limit: 12, sort: 'desc', order_column: 'product_code' }), // Fetch more for pagination
-          apiService.getProducts({ limit: 12, type_product: 'VGA', sort: 'asc', order_column: 'price' }), // Fetch more for pagination
-          apiService.getProducts({ limit: 12, brand: 'ASUS', sort: 'asc', type_product: 'Labtop' }) // Fetch more for pagination
-        ]);
-        setNewInProducts(newInResponse.data);
-        setLowEndPCs(lowEndResponse.data);
-        setRogLaptops(rogResponse.data);
+        setLoadingNewIn(true);
+        setErrorNewIn(null);
+        const response = await apiService.getProducts({ limit: 12, sort: 'desc', order_column: 'product_code' });
+        setNewInProducts(response.data);
       } catch (err) {
-        setErrorProducts('Failed to load products. Please try again later.');
+        setErrorNewIn('Failed to load new in products.');
         console.error(err);
       } finally {
-        setLoadingProducts(false);
+        setLoadingNewIn(false);
       }
     };
-    fetchHomeProducts();
-  }, []); // This useEffect now only fetches products
+    fetchNewInProducts();
+  }, []);
 
-  // Combine loading states
-  const overallLoading = loadingProducts || loadingCategories;
-  // Combine error states
-  const overallError = errorProducts || categoryError;
+  useEffect(() => {
+    const fetchLowEndPCs = async () => {
+      try {
+        setLoadingLowEnd(true);
+        setErrorLowEnd(null);
+        const response = await apiService.getProducts({ limit: 12, type_product: 'VGA', sort: 'asc', order_column: 'price' });
+        setLowEndPCs(response.data);
+      } catch (err) {
+        setErrorLowEnd('Failed to load budget-friendly PCs.');
+        console.error(err);
+      } finally {
+        setLoadingLowEnd(false);
+      }
+    };
+    fetchLowEndPCs();
+  }, []);
 
+  useEffect(() => {
+    const fetchRogLaptops = async () => {
+      try {
+        setLoadingRog(true);
+        setErrorRog(null);
+        const response = await apiService.getProducts({ limit: 12, brand: 'ASUS', sort: 'asc', type_product: 'Labtop' });
+        setRogLaptops(response.data);
+      } catch (err) {
+        setErrorRog('Failed to load ROG series laptops.');
+        console.error(err);
+      } finally {
+        setLoadingRog(false);
+      }
+    };
+    fetchRogLaptops();
+  }, []);
 
-  if (overallLoading) return <div className="text-center py-20 text-xl font-semibold">Loading awesome gear...</div>;
-  if (overallError) return <div className="text-center py-20 text-xl font-semibold text-red-500">{overallError}</div>;
 
   return (
     <div className="max-w-[1200px] mx-auto">
-      {/* Categories component can now receive categories data from context if it needs it */}
-      {/* For example: <Categories categories={categories} /> */}
       <div className="flex flex-row gap-x-10 mt-6">
-        <Categories /> {/* Assuming Categories component internally uses useCategory or receives props */}
+        {/* Categories component will handle its own loading, potentially via useCategory context */}
+        <Categories />
         <div className="w-full flex flex-col gap-y-5 ">
           <Navigate />
           <OverlayHome />
@@ -154,13 +199,31 @@ export default function Home() {
         <HotProduct brand_model={'Razer Wireless'} type_product={'Mouse'} slogan={'Hurry Up, Limited time offer!'} box_width={100} image={Mouse}/>
         <HotProduct brand_model={'Razer Wireless'} type_product={'Keyboard'} slogan={'Hurry Up, Limited time offer!'} box_width={100} image={Keyboard}/>
       </div>
+      <div>
+        <CustomPCPromo />
+      </div>
+      {/* Pass loading and error states to ProductCarousel */}
+      <ProductCarousel
+        title="New In"
+        products={newInProducts}
+        isLoading={loadingNewIn}
+        error={errorNewIn}
+      />
 
-      <ProductCarousel title="New In" products={newInProducts} />
-
-      <ProductCarousel title="Budget-Friendly Gaming PCs" products={lowEndPCs} />
+      <ProductCarousel
+        title="Budget-Friendly Gaming PCs"
+        products={lowEndPCs}
+        isLoading={loadingLowEnd}
+        error={errorLowEnd}
+      />
 
       <div className="mt-8"><BannerGPU /></div>
-      <ProductCarousel title="ROG Series Laptops" products={rogLaptops} />
+      <ProductCarousel
+        title="ROG Series Laptops"
+        products={rogLaptops}
+        isLoading={loadingRog}
+        error={errorRog}
+      />
       <div className="mt-10"><ServiceProvide /></div>
     </div>
   );

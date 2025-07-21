@@ -3,17 +3,16 @@ import * as CheckoutController from '../controller/checkout.controller';
 import { OrderRepositories, PaymentTransactionRepositories } from '../repositories/checkout.repository';
 import { AddressRepository } from '../repositories/address.repository'; 
 import { Customer, Orders, OrderItem, Address } from '../db/models'; 
-import { TelegramBot } from '../service/TelgramBot'; 
 import KHQR from '../service/BakongKHQR'; 
 import * as TwoFA from '../service/TwoFA'; 
-
+import { TelegramBot } from '../service/TelegramBot';
+import { telegramBotInstance } from '../server';
 jest.mock('../repositories/checkout.repository');
 jest.mock('../repositories/address.repository');
 jest.mock('../db/models');
-jest.mock('../service/TelgramBot');
+jest.mock('../service/TelegramBot');
 jest.mock('../service/BakongKHQR');
 jest.mock('../service/TwoFA');
-
 const mockedOrderRepo = OrderRepositories as jest.Mocked<typeof OrderRepositories>;
 const mockedPaymentRepo = PaymentTransactionRepositories as jest.Mocked<typeof PaymentTransactionRepositories>;
 const mockedAddressRepo = AddressRepository as jest.Mocked<typeof AddressRepository>;
@@ -24,18 +23,20 @@ const mockedKHQR = KHQR as jest.MockedClass<typeof KHQR>;
 const mockedTelegramBot = TelegramBot as jest.MockedClass<typeof TelegramBot>;
 const mockedTwoFA = TwoFA as jest.Mocked<typeof TwoFA>;
 
+
 describe('Checkout Controller - Unit Tests', () => {
     let mockRequest: Request;
     let mockResponse: Response;
     let responseJson: jest.Mock;
     let responseStatus: jest.Mock;
-
+    let mockedTelegramBotInstance: TelegramBot; 
     beforeEach(() => {
         jest.clearAllMocks();
         responseJson = jest.fn();
         responseStatus = jest.fn().mockReturnValue({ json: responseJson });
         mockRequest = { params: {}, body: {} } as Request;
         mockResponse = { status: responseStatus, json: responseJson } as unknown as Response;
+        mockedTelegramBotInstance = new TelegramBot();
     });
 
     describe('placeOrder', () => {
@@ -159,7 +160,7 @@ describe('Checkout Controller - Unit Tests', () => {
             mockedCustomerModel.findByPk.mockResolvedValue({ name: 'Test User', phone_number: '0123' } as Customer);
             mockedAddressRepo.getAddressById.mockResolvedValue({ street_line: 'St 1', district: 'BKK', province: 'PP' } as Address);
             mockedOrderItemModel.findAll.mockResolvedValue([{ product_code: 'P1', price_at_purchase: 1200, qty: 2 }] as any[]);
-            await CheckoutController.checkPayment(mockRequest, mockResponse);
+            await CheckoutController.checkPayment(mockRequest, mockResponse,telegramBotInstance);
             expect(mockedKHQR.prototype.checkPayment).toHaveBeenCalledWith('paid_md5_hash');
             expect(mockedPaymentRepo.updatePaymentStatus).toHaveBeenCalledWith(99, 'Completed');
             expect(mockedTelegramBot).toHaveBeenCalled();
@@ -172,7 +173,7 @@ describe('Checkout Controller - Unit Tests', () => {
             mockRequest.body = { unique_md5: 'unpaid_md5_hash', order_id: 100 };
             mockedPaymentRepo.getTransactionByOrderId.mockResolvedValue({ status: 'Pending' } as any);
             mockedKHQR.prototype.checkPayment.mockResolvedValue('UNPAID');
-            await CheckoutController.checkPayment(mockRequest, mockResponse);
+            await CheckoutController.checkPayment(mockRequest, mockResponse,telegramBotInstance);
             expect(mockedKHQR.prototype.checkPayment).toHaveBeenCalledWith('unpaid_md5_hash');
             expect(mockedPaymentRepo.updatePaymentStatus).not.toHaveBeenCalled();
             expect(mockedTelegramBot.prototype.sendOrderNotification).not.toHaveBeenCalled();
@@ -183,7 +184,7 @@ describe('Checkout Controller - Unit Tests', () => {
         it('[CO-007] should return Completed if transaction is already marked as Completed in DB', async () => {
             mockRequest.body = { unique_md5: 'some_hash', order_id: 101 };
             mockedPaymentRepo.getTransactionByOrderId.mockResolvedValue({ status: 'Completed' } as any);
-            await CheckoutController.checkPayment(mockRequest, mockResponse);
+            await CheckoutController.checkPayment(mockRequest, mockResponse,telegramBotInstance);
             expect(responseStatus).toHaveBeenCalledWith(200);
             expect(responseJson).toHaveBeenCalledWith({
                 payment_status: 'Completed',

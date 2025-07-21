@@ -4,7 +4,6 @@ import {
   MdPhone,
   MdEdit,
   MdHome,
-  MdBusiness,
   MdAdd,
   MdLocationOn,
   MdShoppingBag,
@@ -15,10 +14,10 @@ import {
   MdRadioButtonUnchecked,
   MdDelete
 } from 'react-icons/md';
-import { useAuth } from './context/AuthContext'; // Assuming useAuth provides user data
-import { apiService } from '../service/api'; // Assuming apiService is correctly defined
-import { useNavigate, useParams } from 'react-router-dom'; // Import useParams
-import toast from 'react-hot-toast'; // For user notifications
+import { useAuth } from './context/AuthContext';
+import { apiService } from '../service/api';
+import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 // Reusable InputField component (from CheckoutPage, adapted)
 const InputField = ({ label, id, type = "text", placeholder, value, onChange, required = true, error, readOnly = false }) => (
@@ -38,85 +37,89 @@ const InputField = ({ label, id, type = "text", placeholder, value, onChange, re
 
 
 export default function UserProfilePage() {
-  const { user: authUser, isAuthenticated, logout } = useAuth(); // Get user and logout from AuthContext
+  // Get user data and authentication status directly from AuthContext
+  const { user: authUser, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const { id: customerIdFromUrl } = useParams(); // Get customer ID from URL parameter
+  const { id: customerIdFromUrl } = useParams();
 
-  // Use customerIdFromUrl for fetching data, fallback to authUser.id if URL param is not present
-  // This ensures that if the route is /user/profile (without ID), it uses the logged-in user's ID
+  // Determine the customerId to use. Prioritize URL param, then authUser.id
+  // This will ensure customerId is available as early as authUser.id is.
   const customerId = customerIdFromUrl || authUser?.id;
 
   const [activeTab, setActiveTab] = useState('overview');
   const [showAddressModal, setShowAddressModal] = useState(false);
-  const [editingAddress, setEditingAddress] = useState(null); // Stores address being edited
-  const [showOrderDetailModal, setShowOrderDetailModal] = useState(false); // State for order detail modal
-  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null); // Stores details of the order to display
+  const [editingAddress, setEditingAddress] = useState(null);
+  const [showOrderDetailModal, setShowOrderDetailModal] = useState(false);
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
 
-  const [customerProfile, setCustomerProfile] = useState(null); // Full customer data from API
-  const [addresses, setAddresses] = useState([]); 
+  // Initialize customerProfile state with authUser data if available.
+  // This ensures the profile header has data immediately.
+  const [customerProfile, setCustomerProfile] = useState(authUser || null);
+  const [addresses, setAddresses] = useState([]);
   const [orders, setOrders] = useState([]);
 
-  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(false); // Set to false initially as authUser might already populate customerProfile
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
-  const [loadingOrderDetail, setLoadingOrderDetail] = useState(false); // Loading for order detail modal
+  const [loadingOrderDetail, setLoadingOrderDetail] = useState(false);
   const [apiError, setApiError] = useState(null);
 
-  // State for Add/Edit Address Form
   const [addressFormData, setAddressFormData] = useState({
     street_line: '',
-    commune: '', // Include if your API requires it, even if not displayed
+    commune: '',
     district: '',
     province: '',
-    google_map_link: '', // Include if your API requires it, even if not displayed
-    phone: '', // This phone is for the address, not the user's main phone
+    google_map_link: '',
+    phone: '',
   });
 
-  // Redirect if not authenticated or if customerId is missing
+  // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
       toast.error("Please log in to view your profile.");
-    } else if (!customerId) {
-        setApiError("Customer ID is missing. Cannot load profile.");
-        setLoadingProfile(false); 
     }
-  }, [isAuthenticated, navigate, customerId]);
+  }, [isAuthenticated, navigate]);
 
+  // Fetch customer profile from API for the most up-to-date data
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!customerId) return; 
+    // Only fetch if authenticated AND customerId is available
+    if (isAuthenticated && customerId) {
       setLoadingProfile(true);
       setApiError(null);
-      try {
-        const data = await apiService.getOneCustomer(customerId); 
-        setCustomerProfile(data);
-        setAddressFormData(prev => ({ ...prev, phone: data.phone_number || '' }));
-      } catch (err) {
-        setApiError(err.message || "Failed to load profile data.");
-        console.error("Failed to fetch profile:", err);
-      } finally {
-        setLoadingProfile(false);
-      }
-    };
-    fetchProfile();
-  }, [customerId]); // Re-fetch if customerId changes
+      apiService.getOneCustomer(customerId)
+        .then(data => {
+          setCustomerProfile(data); // This will update the profile with fresh API data
+          setAddressFormData(prev => ({ ...prev, phone: data.phone_number || '' }));
+        })
+        .catch(err => {
+          setApiError(err.message || "Failed to load profile data.");
+          console.error("Failed to fetch profile:", err);
+        })
+        .finally(() => {
+          setLoadingProfile(false);
+        });
+    }
+    // If not authenticated or customerId is not available, we don't attempt to fetch.
+    // The initial `customerProfile` will be from `authUser` if available.
+  }, [isAuthenticated, customerId]);
+
 
   // Fetch addresses
   const fetchAddresses = useCallback(async () => {
     if (!customerId) return;
     setLoadingAddresses(true);
-    setApiError(null);
     try {
-      const data = await apiService.getAddressCustomer(customerId); 
+      const data = await apiService.getAddressCustomer(customerId);
       setAddresses(data);
     } catch (err) {
-      setApiError(err.message || "Failed to load addresses.");
+      toast.error("Failed to load addresses.");
       console.error("Failed to fetch addresses:", err);
+      setAddresses([]);
     } finally {
       setLoadingAddresses(false);
     }
-  }, [customerId]); 
+  }, [customerId]);
 
   useEffect(() => {
     if (activeTab === 'addresses' && isAuthenticated && customerId) {
@@ -128,40 +131,32 @@ export default function UserProfilePage() {
   const fetchOrders = useCallback(async () => {
     if (!customerId) return;
     setLoadingOrders(true);
-    setApiError(null);
     try {
       const data = await apiService.getOrdersByCustomerId(customerId);
-      // Map API response to your UI's expected order structure
       const formattedOrders = data.map(order => {
-        // Calculate total from order items
         const total = order.items.reduce((sum, item) => sum + (item.OrderItem.qty * parseFloat(item.OrderItem.price_at_purchase)), 0);
-        // Determine status text for UI display
-        let statusText = order.order_status;
-
         return {
           id: order.order_id,
-          order_date: order.order_date, // Keep original date for detail view
-          date: new Date(order.order_date).toLocaleDateString(), // Formatted date for display
-          total: total.toFixed(2), // Format total
-          status: statusText, // Use backend status directly
-          items_count: order.items.length, // Count of items
-          address: order.address, // Address details
-          products: order.items, // Array of products in the order
-          express_handle: order.express_handle, // Express handle
+          order_date: order.order_date,
+          date: new Date(order.order_date).toLocaleDateString(),
+          total: total.toFixed(2),
+          status: order.order_status,
+          items_count: order.items.length,
+          address: order.address,
+          express_handle: order.express_handle,
         };
       });
       setOrders(formattedOrders);
     } catch (err) {
-      setApiError(err.message || "Failed to load orders.");
+      toast.error("Failed to load orders.");
       console.error("Failed to fetch orders:", err);
-      setOrders([]); // Clear orders on error
+      setOrders([]);
     } finally {
       setLoadingOrders(false);
     }
   }, [customerId]);
 
   useEffect(() => {
-    // Fetch orders when activeTab is 'overview'
     if (activeTab === 'overview' && isAuthenticated && customerId) {
       fetchOrders();
     }
@@ -169,21 +164,17 @@ export default function UserProfilePage() {
 
   const handleViewOrderDetails = useCallback(async (orderId) => {
     setLoadingOrderDetail(true);
-    setApiError(null);
     try {
       const orderDetails = await apiService.getUserOrderdetail(orderId);
-      // Calculate total for the single order detail fetched
       const totalCalculated = orderDetails.items.reduce((sum, item) => sum + (item.OrderItem.qty * parseFloat(item.OrderItem.price_at_purchase)), 0);
 
       setSelectedOrderDetails({
         ...orderDetails,
-        total: totalCalculated.toFixed(2), // Add calculated total
-        status: orderDetails.order_status, // Ensure status is consistent
-        // Add other fields you need for display that might not be directly from API but derived
+        total: totalCalculated.toFixed(2),
+        status: orderDetails.order_status,
       });
       setShowOrderDetailModal(true);
     } catch (err) {
-      setApiError(err.message || "Failed to load order details.");
       toast.error(err.message || "Failed to load order details.");
       console.error("Failed to fetch order details:", err);
     } finally {
@@ -192,7 +183,7 @@ export default function UserProfilePage() {
   }, []);
 
   const getStatusIcon = (status) => {
-    switch (status.toUpperCase()) { // Convert to uppercase for consistent matching
+    switch (status?.toUpperCase()) {
       case 'DELIVERED': return <MdCheckCircle className="text-green-500" />;
       case 'SHIPPED': return <MdLocalShipping className="text-blue-500" />;
       case 'PENDING': return <MdRadioButtonUnchecked className="text-orange-500" />;
@@ -201,7 +192,7 @@ export default function UserProfilePage() {
   };
 
   const getStatusColor = (status) => {
-    switch (status.toUpperCase()) { // Convert to uppercase for consistent matching
+    switch (status?.toUpperCase()) {
       case 'DELIVERED': return 'bg-green-100 text-green-800';
       case 'SHIPPED': return 'bg-blue-100 text-blue-800';
       case 'PENDING': return 'bg-orange-100 text-orange-800';
@@ -218,10 +209,8 @@ export default function UserProfilePage() {
 
   const handleAddEditAddress = async (e) => {
     e.preventDefault();
-    setApiError(null);
     try {
       if (editingAddress) {
-        // Update existing address
         await apiService.updateAddressCustomer(editingAddress.address_id, {
           street_line: addressFormData.street_line,
           commune: addressFormData.commune,
@@ -231,20 +220,19 @@ export default function UserProfilePage() {
         });
         toast.success("Address updated successfully!");
       } else {
-        // Add new address
         await apiService.addAddressCustomer(customerId, {
           street_line: addressFormData.street_line,
           commune: addressFormData.commune,
           district: addressFormData.district,
           province: addressFormData.province,
           google_map_link: addressFormData.google_map_link,
+          phone: addressFormData.phone,
         });
         toast.success("Address added successfully!");
       }
       resetAddressForm();
-      fetchAddresses(); // Re-fetch addresses to update UI
+      fetchAddresses();
     } catch (err) {
-      setApiError(err.message || "Failed to save address.");
       toast.error(err.message || "Failed to save address.");
       console.error("Address save error:", err);
     }
@@ -252,13 +240,11 @@ export default function UserProfilePage() {
 
   const handleDeleteAddress = async (addressId) => {
     if (!window.confirm("Are you sure you want to delete this address?")) return;
-    setApiError(null);
     try {
       await apiService.deleteAddressCustomer(addressId);
       toast.success("Address deleted successfully!");
-      fetchAddresses(); // Re-fetch addresses to update UI
+      fetchAddresses();
     } catch (err) {
-      setApiError(err.message || "Failed to delete address.");
       toast.error(err.message || "Failed to delete address.");
       console.error("Address delete error:", err);
     }
@@ -272,7 +258,7 @@ export default function UserProfilePage() {
       district: address.district || '',
       province: address.province || '',
       google_map_link: address.google_map_link || '',
-      phone: address.phone || '', // Assuming you want to display phone in form
+      phone: address.phone || customerProfile?.phone_number || '',
     });
     setShowAddressModal(true);
   };
@@ -285,24 +271,27 @@ export default function UserProfilePage() {
       district: '',
       province: '',
       google_map_link: '',
-      phone: customerProfile?.phone_number || '', // Reset to user's main phone
+      phone: customerProfile?.phone_number || '',
     });
     setShowAddressModal(false);
   };
 
-  // Show loading state if profile is still loading or if customerId isn't available yet
-  if (loadingProfile || !customerId) {
-    return <div className="text-center py-20 text-xl font-semibold">Loading profile...</div>;
-  }
-
-  // If not authenticated (and not just loading), redirect to login
+  // If not authenticated, the useEffect will handle redirection.
   if (!isAuthenticated) {
-    return null; // The useEffect will handle navigation
+    return null;
   }
 
-  // Display error if API call failed after loading
-  if (apiError && !loadingProfile && !loadingAddresses && !loadingOrders && !loadingOrderDetail) {
+  // If customerProfile is null (meaning either not yet loaded, or failed to load),
+  // AND it's not currently loading, AND there's an API error, then show the error.
+  // Otherwise, if it's still loading (and customerProfile is null), show a loading message.
+  if (!customerProfile && !loadingProfile && apiError) {
     return <div className="text-center py-20 text-xl font-semibold text-red-500">{apiError}</div>;
+  }
+
+  // If there's no customerProfile yet (either still loading or failed), show a loading indicator.
+  // This ensures the page doesn't show "N/A" if `authUser` was also initially null.
+  if (!customerProfile && loadingProfile) {
+    return <div className="text-center py-20 text-xl font-semibold">Loading profile data...</div>;
   }
 
 
@@ -320,7 +309,7 @@ export default function UserProfilePage() {
               return (
                 <button
                   key={item.id}
-                  onClick={logout} // Use the logout function from useAuth
+                  onClick={logout}
                   className={`flex items-center gap-2 lg:gap-3 px-2 py-2 lg:px-4 lg:py-3 rounded-lg text-left font-medium transition-colors w-full text-white hover:bg-orange-200/60`}
                 >
                   <Icon className={`text-lg lg:text-xl text-white`} />
@@ -353,7 +342,8 @@ export default function UserProfilePage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
               <div className="relative">
                 <img
-                  src={customerProfile?.profile_img_path || `https://ui-avatars.com/api/?name=${customerProfile?.name || 'User'}&background=6366f1&color=fff`}
+                  // Prioritize customerProfile.profile_img_path, then authUser.profile_img_path
+                  src={customerProfile?.profile_img_path || authUser?.profile_img_path || `https://ui-avatars.com/api/?name=${customerProfile?.name || authUser?.name || 'User'}&background=6366f1&color=fff`}
                   alt="Profile"
                   className="w-20 h-20 rounded-full object-cover"
                 />
@@ -362,74 +352,86 @@ export default function UserProfilePage() {
                 </button>
               </div>
               <div className="flex-1">
-                <h1 className="text-2xl font-bold text-gray-900">{customerProfile?.name || 'N/A'}</h1>
+                {/* Prioritize customerProfile.name, then authUser.name */}
+                <h1 className="text-2xl font-bold text-gray-900">{customerProfile?.name || authUser?.name || 'N/A'}</h1>
                 <div className="flex items-center gap-2 text-gray-600 mt-1">
                   <MdPhone className="text-lg" />
-                  <span>{customerProfile?.phone_number || 'N/A'}</span>
+                  {/* Prioritize customerProfile.phone_number, then authUser.phone_number */}
+                  <span>{customerProfile?.phone_number || authUser?.phone_number || 'N/A'}</span>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Conditional rendering for tabs */}
           {activeTab === 'overview' && (
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white rounded-xl shadow-sm p-6 text-center">
                   <MdShoppingBag className="text-3xl text-blue-600 mx-auto mb-2" />
-                  <h3 className="text-2xl font-bold text-gray-900">{orders.length}</h3>
+                  {loadingOrders ? (
+                      <h3 className="text-2xl font-bold text-gray-900">...</h3>
+                  ) : (
+                      <h3 className="text-2xl font-bold text-gray-900">{orders.length}</h3>
+                  )}
                   <p className="text-gray-600">Total Orders</p>
                 </div>
                 <div className="bg-white rounded-xl shadow-sm p-6 text-center">
                   <MdLocationOn className="text-3xl text-green-600 mx-auto mb-2" />
-                  <h3 className="text-2xl font-bold text-gray-900">{addresses.length}</h3>
+                  {loadingAddresses ? (
+                      <h3 className="text-2xl font-bold text-gray-900">...</h3>
+                  ) : (
+                      <h3 className="text-2xl font-bold text-gray-900">{addresses.length}</h3>
+                  )}
                   <p className="text-gray-600">Saved Addresses</p>
                 </div>
               </div>
 
-              {/* My Orders (now part of Overview) */}
+              {/* My Orders */}
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">My Orders</h2>
                 {loadingOrders ? (
-                  <div className="text-center text-gray-500">Loading orders...</div>
-                ) : orders.length > 0 ? (
-                  <div className="space-y-4">
-                    {orders.map((order) => (
-                      <div key={order.id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            {getStatusIcon(order.status)}
-                            <div>
-                              <p className="font-medium text-gray-900">Order ID: {order.id}</p>
-                              <p className="text-sm text-gray-500">Date: {order.date}</p>
-                              <p className="text-sm text-gray-500">Shipping: {order.express_handle || 'Standard'}</p>
+                  <div className="text-center text-gray-500 py-4">Loading orders...</div>
+                ) : (
+                  orders.length > 0 ? (
+                    <div className="space-y-4">
+                      {orders.map((order) => (
+                        <div key={order.id} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              {getStatusIcon(order.status)}
+                              <div>
+                                <p className="font-medium text-gray-900">Order ID: {order.id}</p>
+                                <p className="text-sm text-gray-500">Date: {order.date}</p>
+                                <p className="text-sm text-gray-500">Shipping: {order.express_handle || 'Standard'}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium text-gray-900">Total: ${order.total}</p>
+                              <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
+                                {order.status}
+                              </span>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-medium text-gray-900">Total: ${order.total}</p>
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
-                              {order.status}
-                            </span>
+                          <div className="flex gap-3 mt-4">
+                            <button
+                              onClick={() => handleViewOrderDetails(order.id)}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                              View Details
+                            </button>
+                            {order.status === 'DELIVERED' && (
+                              <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                Reorder
+                              </button>
+                            )}
                           </div>
                         </div>
-                        {/* Removed progress bar */}
-                        <div className="flex gap-3 mt-4">
-                          <button
-                            onClick={() => handleViewOrderDetails(order.id)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            View Details
-                          </button>
-                          {order.status === 'DELIVERED' && (
-                            <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                              Reorder
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center text-gray-500 py-4">No orders found.</div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-500 py-4">No orders found.</div>
+                  )
                 )}
               </div>
             </div>
@@ -450,56 +452,55 @@ export default function UserProfilePage() {
               </div>
 
               {loadingAddresses ? (
-                <div className="text-center text-gray-500">Loading addresses...</div>
-              ) : addresses.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {addresses.map((address) => (
-                    <div key={address.address_id} className="border border-gray-200 rounded-lg p-6 relative">
-                      {/* Assuming your API returns an 'is_default' flag */}
-                      {address.is_default && (
-                        <span className="absolute top-4 right-4 bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-                          Default
-                        </span>
-                      )}
-
-                      <div className="flex items-center gap-3 mb-4">
-                        {/* You might need to define address.type or derive it */}
-                        {address.type === 'Home' ? ( // Assuming 'type' field is available or can be derived
-                          <MdHome className="text-2xl text-blue-600" />
-                        ) : (
-                          <MdLocationOn className="text-2xl text-purple-600" /> // Generic icon if type is unknown
-                        )}
-                        <h3 className="font-semibold text-gray-900">{address.type || 'Address'}</h3>
-                      </div>
-
-                      <div className="space-y-2 mb-4">
-                        {/* Assuming address.name is not directly from API, using user's name */}
-                        <p className="font-medium text-gray-900">{customerProfile?.name}</p>
-                        <p className="text-gray-600">{address.street_line}</p>
-                        <p className="text-gray-600">{address.commune ? `${address.commune}, ` : ''}{address.district}, {address.province}</p>
-                        <p className="text-gray-600">{address.phone || customerProfile?.phone_number}</p> {/* Use address phone if available, else user's main phone */}
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => openEditAddressModal(address)}
-                          className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          <MdEdit className="inline mr-1" />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAddress(address.address_id)}
-                          className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
-                        >
-                          <MdDelete />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <div className="text-center text-gray-500 py-4">Loading addresses...</div>
               ) : (
-                <div className="text-center text-gray-500 py-4">No addresses found. Click "Add Address" to add one.</div>
+                addresses.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {addresses.map((address) => (
+                      <div key={address.address_id} className="border border-gray-200 rounded-lg p-6 relative">
+                        {address.is_default && (
+                          <span className="absolute top-4 right-4 bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                            Default
+                          </span>
+                        )}
+
+                        <div className="flex items-center gap-3 mb-4">
+                          {address.type === 'Home' ? (
+                            <MdHome className="text-2xl text-blue-600" />
+                          ) : (
+                            <MdLocationOn className="text-2xl text-purple-600" />
+                          )}
+                          <h3 className="font-semibold text-gray-900">{address.type || 'Address'}</h3>
+                        </div>
+
+                        <div className="space-y-2 mb-4">
+                          <p className="font-medium text-gray-900">{customerProfile?.name || authUser?.name}</p>
+                          <p className="text-gray-600">{address.street_line}</p>
+                          <p className="text-gray-600">{address.commune ? `${address.commune}, ` : ''}{address.district}, {address.province}</p>
+                          <p className="text-gray-600">{address.phone || customerProfile?.phone_number || authUser?.phone_number}</p>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openEditAddressModal(address)}
+                            className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            <MdEdit className="inline mr-1" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAddress(address.address_id)}
+                            className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+                          >
+                            <MdDelete />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 py-4">No addresses found. Click "Add Address" to add one.</div>
+                )
               )}
             </div>
           )}
@@ -516,7 +517,8 @@ export default function UserProfilePage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                       <input
                         type="text"
-                        defaultValue={customerProfile?.name || ''}
+                        // Prioritize customerProfile.name, then authUser.name
+                        defaultValue={customerProfile?.name || authUser?.name || ''}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
@@ -524,19 +526,11 @@ export default function UserProfilePage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                       <input
                         type="text"
-                        defaultValue={customerProfile?.phone_number || ''}
+                        // Prioritize customerProfile.phone_number, then authUser.phone_number
+                        defaultValue={customerProfile?.phone_number || authUser?.phone_number || ''}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-                    {/* Assuming email is not in your customer profile API, or you'd add it here */}
-                    {/* <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                      <input
-                        type="email"
-                        defaultValue={customerProfile?.email || ''}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div> */}
                   </div>
                 </div>
 
@@ -572,13 +566,12 @@ export default function UserProfilePage() {
       </div>
       {/* Add/Edit Address Modal */}
       {showAddressModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-4 w-full max-w-xs sm:max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               {editingAddress ? 'Edit Address' : 'Add New Address'}
             </h2>
-            <form onSubmit={handleAddEditAddress} className="space-y-3">
-              {/* Address Type (mocked, as not in your API schema) */}
+            <form id="address-form" onSubmit={handleAddEditAddress} className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Address Type</label>
                 <select
@@ -592,12 +585,11 @@ export default function UserProfilePage() {
                   <option value="Other">Other</option>
                 </select>
               </div>
-              {/* Full Name (mocked, as not in your API schema for address) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                 <input
                   type="text"
-                  value={customerProfile?.name || ''}
+                  value={customerProfile?.name || authUser?.name || ''} // Use authUser as fallback
                   readOnly
                   className="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100 cursor-not-allowed"
                 />
@@ -675,18 +667,18 @@ export default function UserProfilePage() {
 
       {/* Order Detail Modal */}
       {showOrderDetailModal && selectedOrderDetails && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Details - {selectedOrderDetails.order_id}</h2> {/* Use order_id */}
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Details - {selectedOrderDetails.order_id}</h2>
             {loadingOrderDetail ? (
               <div className="text-center text-gray-500 py-8">Loading order details...</div>
             ) : (
               <div className="space-y-4">
                 <p><strong>Order Date:</strong> {new Date(selectedOrderDetails.order_date).toLocaleString()}</p>
-                <p><strong>Status:</strong> <span className={`font-medium ${getStatusColor(selectedOrderDetails.order_status)} px-2 py-1 rounded-full text-xs`}>{selectedOrderDetails.order_status}</span></p> {/* Use order_status */}
-                <p><strong>Total Amount:</strong> ${selectedOrderDetails.total}</p> {/* Use calculated total */}
+                <p><strong>Status:</strong> <span className={`font-medium ${getStatusColor(selectedOrderDetails.order_status)} px-2 py-1 rounded-full text-xs`}>{selectedOrderDetails.order_status}</span></p>
+                <p><strong>Total Amount:</strong> ${selectedOrderDetails.total}</p>
                 <p><strong>Shipping Method:</strong> {selectedOrderDetails.express_handle || 'Standard'}</p>
-                
+
                 {selectedOrderDetails.address && (
                   <div className="border-t pt-4 mt-4">
                     <h3 className="font-semibold text-gray-800 mb-2">Shipping Address:</h3>
@@ -697,12 +689,12 @@ export default function UserProfilePage() {
 
                 <div className="border-t pt-4 mt-4">
                   <h3 className="font-semibold text-gray-800 mb-2">Items:</h3>
-                  {selectedOrderDetails.items && selectedOrderDetails.items.length > 0 ? ( 
+                  {selectedOrderDetails.items && selectedOrderDetails.items.length > 0 ? (
                     <ul className="space-y-2">
                       {selectedOrderDetails.items.map(item => (
                         <li key={item.product_code} className="flex justify-between text-sm text-gray-700">
-                          <span>{item.name} (x{item.OrderItem.qty})</span> 
-                          <span>${(item.OrderItem.qty * parseFloat(item.OrderItem.price_at_purchase)).toFixed(2)}</span> 
+                          <span>{item.name} (x{item.OrderItem.qty})</span>
+                          <span>${(item.OrderItem.qty * parseFloat(item.OrderItem.price_at_purchase)).toFixed(2)}</span>
                         </li>
                       ))}
                     </ul>

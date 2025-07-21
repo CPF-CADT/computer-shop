@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaArrowLeft, FaLock, FaChevronDown, FaChevronUp, FaCreditCard, FaShippingFast, FaMapMarkerAlt, FaMobileAlt, FaShoppingCart } from 'react-icons/fa';
 import { useCart } from '../cart/CartContext';
-import { useAuth } from '../context/AuthContext'; // Import useAuth to get customerId
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import CheckoutStepper from './CheckoutStepper';
 import OrderSummaryCheckout from './OrderSummaryCheckout';
 import Khqr from './Khqr';
-import { apiService } from '../../service/api'; // Import the updated apiService
+import { apiService } from '../../service/api';
 
-// --- Reusable InputField ---
 const InputField = ({ label, id, type = "text", placeholder, value, onChange, required = true, error, readOnly = false }) => (
   <div className="mb-4">
     <label htmlFor={id} className="block text-xs font-medium text-gray-700 mb-1.5">
@@ -24,7 +23,6 @@ const InputField = ({ label, id, type = "text", placeholder, value, onChange, re
   </div>
 );
 
-// --- Collapsible Section Component ---
 const CollapsibleSection = ({ title, icon, children, isOpen, onToggle, isCompleted, disabled = false }) => (
   <div className={`border rounded-lg mb-5 ${isCompleted && !isOpen ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-white'} ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}>
     <button
@@ -47,12 +45,10 @@ const CollapsibleSection = ({ title, icon, children, isOpen, onToggle, isComplet
 );
 
 const CheckoutPage = ({ onBackToCart }) => {
-  // Removed clearCart from useCart destructuring as it won't be used
   const { cartItems, totalPrice: cartTotal } = useCart();
-  const { user, isAuthenticated } = useAuth(); // Get user and isAuthenticated from AuthContext
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Ensure customerId is available from authenticated user
   const customerId = user?.id;
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -62,9 +58,8 @@ const CheckoutPage = ({ onBackToCart }) => {
   // --- Address State ---
   const [userAddresses, setUserAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
-  // Updated newAddressForm to only include relevant fields as per new API schema
   const [newAddressForm, setNewAddressForm] = useState({
-    street_line: '', district: '', province: '', phone: user?.phone_number || '' // Pre-fill phone from user
+    street_line: '', district: '', province: '', phone: user?.phone_number || ''
   });
   const [useNewAddress, setUseNewAddress] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({});
@@ -79,18 +74,17 @@ const CheckoutPage = ({ onBackToCart }) => {
   const [amountToPay, setAmountToPay] = useState(0);
   const [qrCodeString, setQrCodeString] = useState('');
   const [uniqueMd5, setUniqueMd5] = useState('');
-  const [paymentStatus, setPaymentStatus] = useState('idle'); // 'idle', 'generating_qr', 'pending_payment', 'completed', 'failed'
-  const [pollingIntervalId, setPollingIntervalId] = useState(null); // Stores the interval ID
-  const [pollingAttempts, setPollingAttempts] = useState(0); // Track polling attempts
-  const MAX_POLLING_ATTEMPTS = 30; // Max attempts for polling
+  const [paymentStatus, setPaymentStatus] = useState('idle');
+  const [pollingIntervalId, setPollingIntervalId] = useState(null);
+  const [pollingAttempts, setPollingAttempts] = useState(0);
+  const MAX_POLLING_ATTEMPTS = 30;
 
   const [errors, setErrors] = useState({});
 
-  // Mock shipping methods (can be fetched from API if available)
   const mockShippingMethods = [
-    { id: 'standard', name: 'Standard Shipping', price: 5.00, estimatedDelivery: '5-7 business days', type: 'standard' },
-    { id: 'vet_express', name: 'VET Express', price: 2.50, estimatedDelivery: '1-2 business days', type: 'express' },
-    { id: 'j_t_express', name: 'J&T Express', price: 3.00, estimatedDelivery: '2-3 business days', type: 'express' },
+    { id: 'standard', name: 'Standard Shipping', price:0, estimatedDelivery: '5-7 business days', type: 'standard' },
+    { id: 'vet_express', name: 'VET Express', price: 0, estimatedDelivery: '1-2 business days', type: 'express' },
+    { id: 'j_t_express', name: 'J&T Express', price: 0, estimatedDelivery: '2-3 business days', type: 'express' },
   ];
 
   // --- Handlers ---
@@ -121,30 +115,27 @@ const CheckoutPage = ({ onBackToCart }) => {
     return Object.keys(newErrors).length === 0 && (selectedAddressId !== null || (useNewAddress && newAddressForm.district && newAddressForm.province && newAddressForm.phone));
   }, [useNewAddress, newAddressForm, shippingAddress, selectedAddressId]);
 
-  // Function to start polling for payment status
   const startPollingPayment = useCallback((md5, orderId) => {
-    // Clear any existing interval before starting a new one
     if (pollingIntervalId) {
       clearInterval(pollingIntervalId);
       setPollingIntervalId(null);
     }
 
-    setPollingAttempts(0); // Reset attempts for new polling session
+    setPollingAttempts(0);
 
     const interval = setInterval(async () => {
-      setPollingAttempts(prev => prev + 1); // Increment attempt count
-      const currentAttempt = pollingAttempts + 1; // Use updated attempt count
+      setPollingAttempts(prev => prev + 1);
+      const currentAttempt = pollingAttempts + 1;
 
       if (currentAttempt > MAX_POLLING_ATTEMPTS) {
         console.warn("Polling timed out. Payment not completed.");
         setPaymentStatus('failed');
-        clearInterval(interval); // Stop polling on timeout
+        clearInterval(interval);
         setPollingIntervalId(null);
         return;
       }
 
       try {
-        // Ensure apiService.checkPaymentStatus is defined and imported correctly
         if (typeof apiService.checkPaymentStatus !== 'function') {
           console.error("apiService.checkPaymentStatus is not a function. Stopping polling.");
           setApiError("Payment check service is unavailable. Please try again later.");
@@ -161,13 +152,12 @@ const CheckoutPage = ({ onBackToCart }) => {
           if (payment_status === 'Completed') {
             console.log("Payment successful!");
             setPaymentStatus('completed');
-            clearInterval(interval); // Stop polling on success
+            clearInterval(interval);
             setPollingIntervalId(null);
             navigate('/checkout/success');
           } else if (payment_status === 'Pending') {
             console.log(`(Attempt ${currentAttempt}/${MAX_POLLING_ATTEMPTS}) Payment status: Pending`);
           } else {
-            // If status is neither Completed nor Pending, consider it a failure and stop polling
             console.error(`Unexpected payment status: ${payment_status}. Stopping polling.`);
             setPaymentStatus('failed');
             clearInterval(interval);
@@ -176,26 +166,18 @@ const CheckoutPage = ({ onBackToCart }) => {
         }
       } catch (error) {
         console.error(`(Attempt ${currentAttempt}/${MAX_POLLING_ATTEMPTS}) Error checking payment status:`, error.message);
-        // Do NOT immediately set to 'failed' or stop polling here.
-        // The polling loop will continue until MAX_POLLING_ATTEMPTS is reached or a 'Completed' status is received.
-        // This allows for transient network issues or temporary backend problems.
-        // Only set a general API error message without stopping the polling loop,
-        // as the user explicitly requested to wait for 30 attempts.
-        // setApiError(`Payment check failed: ${error.message}. Retrying...`); // Optional: show a temporary error
       }
-    }, 5000); // Poll every 5 seconds
+    }, 5000);
     setPollingIntervalId(interval);
-  }, [pollingIntervalId, pollingAttempts, navigate]); // Removed clearCart from dependencies
+  }, [pollingIntervalId, pollingAttempts, navigate]);
 
   const initiatePaymentFlow = useCallback(async () => {
-    // Only proceed if payment is idle or failed, and customerId is available
     if ((paymentStatus !== 'idle' && paymentStatus !== 'failed') || !customerId) {
       console.log("Payment process already initiated/completed, or customerId is missing. Not re-initiating.");
       if (!customerId) setApiError("Customer ID is missing. Please log in.");
       return;
     }
 
-    // Reset payment status to idle only if it was 'failed'
     if (paymentStatus === 'failed') {
       setPaymentStatus('idle');
       setQrCodeString('');
@@ -205,7 +187,7 @@ const CheckoutPage = ({ onBackToCart }) => {
     }
 
     setLoading(true);
-    setApiError(null); // Clear previous API errors
+    setApiError(null);
 
     try {
       const addressIdForOrder = selectedAddressId;
@@ -233,19 +215,17 @@ const CheckoutPage = ({ onBackToCart }) => {
 
       setQrCodeString(qrData.khqr_string);
       setUniqueMd5(qrData.unique_md5);
-      setPaymentStatus('pending_payment'); // Now waiting for actual payment
-      setLoading(false); // Stop loading indicator for initial setup
+      setPaymentStatus('pending_payment');
+      setLoading(false);
       console.log("KHQR generated. Starting payment polling...");
 
-      // Start polling only if QR generation was successful
       startPollingPayment(qrData.unique_md5, qrData.order_id);
 
     } catch (error) {
       console.error("Error during checkout initiation:", error.message);
       setApiError(error.message || "An unexpected error occurred during checkout initiation.");
-      setPaymentStatus('failed'); // Set status to failed
-      setLoading(false); // Stop loading indicator
-      // Clear any existing polling interval if an error occurred before polling started or during QR generation
+      setPaymentStatus('failed');
+      setLoading(false);
       if (pollingIntervalId) {
         clearInterval(pollingIntervalId);
         setPollingIntervalId(null);
@@ -255,7 +235,6 @@ const CheckoutPage = ({ onBackToCart }) => {
 
   // --- Data Fetching and Initialization ---
 
-  // Fetch user addresses on component mount or when customerId changes
   useEffect(() => {
     const fetchUserAddresses = async () => {
       if (!isAuthenticated || !customerId) {
@@ -283,7 +262,6 @@ const CheckoutPage = ({ onBackToCart }) => {
     fetchUserAddresses();
   }, [isAuthenticated, customerId, selectedAddressId, useNewAddress]);
 
-  // Update shippingAddress and displayPhoneNumber when selection/input changes
   useEffect(() => {
     if (!selectedShippingMethod && mockShippingMethods.length > 0) {
       setSelectedShippingMethod(mockShippingMethods[0]);
@@ -303,11 +281,10 @@ const CheckoutPage = ({ onBackToCart }) => {
       setSelectedAddressId(userAddresses[0].address_id);
       setDisplayPhoneNumber(userAddresses[0].phone || user?.phone_number || '');
     } else if (!selectedAddressId && !useNewAddress && userAddresses.length === 0) {
-        setDisplayPhoneNumber(user?.phone_number || '');
+      setDisplayPhoneNumber(user?.phone_number || '');
     }
   }, [selectedAddressId, useNewAddress, newAddressForm, userAddresses, selectedShippingMethod, user?.phone_number]);
 
-  // Cleanup polling interval on component unmount
   useEffect(() => {
     return () => {
       if (pollingIntervalId) {
@@ -316,12 +293,7 @@ const CheckoutPage = ({ onBackToCart }) => {
     };
   }, [pollingIntervalId]);
 
-
-  // --- New useEffect to trigger QR generation when entering Step 3 ---
   useEffect(() => {
-    // Only attempt to initiate payment if on step 3
-    // AND payment is either 'idle' (first time) or 'failed' (retry)
-    // AND it's not already generating or pending.
     if (currentStep === 3 && (paymentStatus === 'idle' || paymentStatus === 'failed')) {
       console.log("Entering payment step (3). Initiating payment flow...");
       initiatePaymentFlow();
@@ -348,43 +320,36 @@ const CheckoutPage = ({ onBackToCart }) => {
 
       if (useNewAddress) {
         try {
-          // Call API to add new address
           await apiService.addAddressCustomer(customerId, {
             street_line: newAddressForm.street_line,
-            commune: '', // Sending empty string as it's not collected by form but in API schema
+            commune: '',
             district: newAddressForm.district,
             province: newAddressForm.province,
-            google_map_link: null, // Sending null as it's not collected by form but in API schema
-            // phone is intentionally omitted from this payload as per API schema provided
+            google_map_link: null,
           });
           console.log("New address added to backend. Re-fetching addresses...");
 
-          // Re-fetch all addresses to get the newly added one with its ID
           const updatedAddresses = await apiService.getAddressCustomer(customerId);
           setUserAddresses(updatedAddresses);
 
-          // Find the newly added address by its unique properties
-          // This is more robust than assuming it's the last one or relying on API returning ID directly
           const newlyAddedAddress = updatedAddresses.find(
             addr => addr.street_line === newAddressForm.street_line &&
                     addr.district === newAddressForm.district &&
                     addr.province === newAddressForm.province &&
-                    (addr.phone === newAddressForm.phone || !newAddressForm.phone) // Match phone if provided
+                    (addr.phone === newAddressForm.phone || !newAddressForm.phone)
           );
 
           if (newlyAddedAddress) {
             setSelectedAddressId(newlyAddedAddress.address_id);
           } else if (updatedAddresses.length > 0) {
-            // Fallback to selecting the first address if new one not found (shouldn't happen with re-fetch)
             setSelectedAddressId(updatedAddresses[0].address_id);
           }
 
-
-          setUseNewAddress(false); // Switch back to using existing addresses
-          setNewAddressForm({ // Clear new address form, but keep phone number for next new address if needed
+          setUseNewAddress(false);
+          setNewAddressForm({
             street_line: '', district: '', province: '', phone: user?.phone_number || ''
           });
-          setCurrentStep(2); // Move to the next step
+          setCurrentStep(2);
         } catch (err) {
           console.error("Failed to add new address:", err.message);
           setApiError(`Failed to add new address: ${err.message}`);
@@ -396,7 +361,8 @@ const CheckoutPage = ({ onBackToCart }) => {
       }
     } else if (currentStep === 2) {
       if (!selectedShippingMethod) {
-        alert("Please select a shipping method.");
+        // Changed alert to a more user-friendly toast or state update
+        setApiError("Please select a shipping method."); // Use API error state for user feedback
         setLoading(false);
         return;
       }
@@ -410,14 +376,16 @@ const CheckoutPage = ({ onBackToCart }) => {
     setLoading(false);
   };
 
-
+  // --- MODIFIED CALCULATIONS ---
   const orderSubtotal = cartTotal;
-  const shippingCost = selectedShippingMethod?.price || 0;
-  const tax = orderSubtotal * 0.07;
-  const finalTotal = orderSubtotal + shippingCost + tax;
+  // Remove delivery fee from final total calculation
+  // The service name will still be displayed in the shipping method section
+  const shippingCost = selectedShippingMethod?.price || 0; // Keep for display, but not for finalTotal
+  // Remove tax calculation entirely
+  const tax = 0; // Set tax to 0 or remove the variable if not used anywhere else
+  const finalTotal = orderSubtotal; // Final total is now just the product subtotal
 
   const customerNameForKhqr = user?.name || "Customer";
-
 
   if (!isAuthenticated) {
     return (
@@ -496,7 +464,6 @@ const CheckoutPage = ({ onBackToCart }) => {
                           className="form-radio h-4 w-4 text-orange-600 focus:ring-orange-500"
                         />
                         <span className="ml-3 text-sm font-medium text-gray-700">
-                          {/* Updated display to only show street_line, district, province */}
                           {addr.street_line}, {addr.district}, {addr.province}
                         </span>
                       </label>
@@ -512,7 +479,7 @@ const CheckoutPage = ({ onBackToCart }) => {
                     checked={useNewAddress}
                     onChange={() => {
                       setUseNewAddress(true);
-                      setSelectedAddressId(null); // Deselect existing address when adding new
+                      setSelectedAddressId(null);
                     }}
                     className="form-radio h-4 w-4 text-orange-600 focus:ring-orange-500"
                   />
@@ -523,8 +490,7 @@ const CheckoutPage = ({ onBackToCart }) => {
               {(useNewAddress || userAddresses.length === 0) && (
                 <>
                   <p className="text-xs text-gray-500 mb-4">You can create an account after checkout.</p>
-                  <InputField label="Street Line" id="street_line" name="street_line" value={newAddressForm.street_line} onChange={handleAddressInputChange} error={errors.street_line} required={false} /> {/* street_line is now optional */}
-                  {/* Removed Commune, Zip/Postal Code, and Country fields as per request */}
+                  <InputField label="Street Line" id="street_line" name="street_line" value={newAddressForm.street_line} onChange={handleAddressInputChange} error={errors.street_line} required={false} />
                   <InputField label="District" id="district" name="district" value={newAddressForm.district} onChange={handleAddressInputChange} error={errors.district} />
                   <InputField label="Province" id="province" name="province" value={newAddressForm.province} onChange={handleAddressInputChange} error={errors.province} />
                   <InputField label="Phone Number" id="phone" name="phone" type="tel" placeholder="(012) 345-6789" value={newAddressForm.phone} onChange={handleAddressInputChange} error={errors.phone} />
@@ -555,6 +521,7 @@ const CheckoutPage = ({ onBackToCart }) => {
                       onChange={() => setSelectedShippingMethod(method)}
                       className="form-radio h-4 w-4 text-orange-600 focus:ring-orange-500" />
                     <span className="ml-3 text-sm font-medium text-gray-700 flex-grow">{method.name} ({method.estimatedDelivery})</span>
+                    {/* Display the price for the shipping method, but it won't be added to finalTotal */}
                     <span className="text-sm text-gray-600">${method.price.toFixed(2)}</span>
                   </label>
                 ))}
@@ -637,9 +604,9 @@ const CheckoutPage = ({ onBackToCart }) => {
                   </div>
                 )}
                 {paymentStatus === 'pending_payment' && qrCodeString ? (
+                  // Pass finalTotal (which is now just orderSubtotal) to Khqr
                   <Khqr name={customerNameForKhqr} amount={finalTotal} qrValue={qrCodeString} />
                 ) : (
-                    // Only show error message if paymentStatus is 'failed' and not generating/idle/completed
                     paymentStatus === 'failed' && (
                       <div className="text-gray-500 text-center py-10">QR code not available or an error occurred.</div>
                     )
@@ -666,13 +633,13 @@ const CheckoutPage = ({ onBackToCart }) => {
               {/* Only show retry button if payment failed */}
               {currentStep === 3 && paymentStatus === 'failed' && (
                 <button onClick={() => {
-                  setPaymentStatus('idle'); // Reset status to idle to trigger re-initiation
+                  setPaymentStatus('idle');
                   setQrCodeString('');
                   setUniqueMd5('');
                   setOrderId(null);
                   setAmountToPay(0);
                   setApiError(null);
-                  initiatePaymentFlow(); // Immediately try again
+                  initiatePaymentFlow();
                 }}
                   className="mt-5 w-full bg-red-500 text-white px-7 py-3 rounded-md font-semibold hover:bg-red-600 text-sm">
                   Retry Payment
@@ -681,7 +648,6 @@ const CheckoutPage = ({ onBackToCart }) => {
             </CollapsibleSection>
           </div>
 
-          {/* Right Side: Order Summary */}
           <div className="lg:w-[40%]">
             <OrderSummaryCheckout shippingCost={shippingCost} currency="KHR" />
             <div className="mt-5 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-xs flex items-center">

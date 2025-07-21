@@ -1,18 +1,19 @@
 // src/components/cart/CartSummary.js
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 
 const CartSummary = () => {
-  const { cartTotal, itemCount } = useCart();
+  const { cartTotal, totalItems: itemCount } = useCart(); 
+
   const navigate = useNavigate();
   const [discountCode, setDiscountCode] = useState('');
 
-  // These are illustrative values
-  const shippingEstimate = itemCount > 0 ? 5.00 : 0.00;
-  const taxRate = 0.05; // 5%
+  const shippingEstimate = 0.00; 
+  const taxRate = 0; 
+  
   const taxAmount = cartTotal * taxRate;
-  const orderTotal = cartTotal + shippingEstimate + taxAmount;
+  const orderTotal = cartTotal + shippingEstimate + taxAmount; 
 
   const handleProceedToCheckout = () => {
     navigate('/checkout');
@@ -25,17 +26,6 @@ const CartSummary = () => {
         <div className="flex justify-between">
           <span>Subtotal ({itemCount} items)</span>
           <span>${cartTotal.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Shipping</span>
-          <span>${shippingEstimate.toFixed(2)}</span>
-        </div>
-        <p className="text-xs text-gray-500">
-          (Standard shipping. Calculated at next step if other options available)
-        </p>
-        <div className="flex justify-between">
-          <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
-          <span>${taxAmount.toFixed(2)}</span>
         </div>
         <div className="flex justify-between font-bold text-gray-800 text-base pt-2 border-t mt-2">
           <span>Order Total</span>
