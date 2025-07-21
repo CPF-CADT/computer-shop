@@ -7,7 +7,7 @@ import Nav from "./components/Nav";
 import Home from "./components/Home";
 import LoginForm from "./components/Login";
 import RegisterForm from "./components/Register";
-// import Laptop from "./components/ProductShow"; // This will be replaced by CategoryProductPage
+import VerificationCode from "./components/VerificationCode";
 import Desktop from "./components/Desktop";
 import ProductDetails from './components/ProductDetails/ProductDetails';
 import PCBuilderPage from "./components/CustomPC/PCBuilderPage";
@@ -50,6 +50,7 @@ function App() {
                 <Route path='/' element={<Home />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/register" element={<RegisterForm />} />
+                <Route path="/verification" element={<VerificationCode />} />
                 <Route path="/category/:categoryName" element={<CategoryProductPage />} />
                 {/* <Route path="/desktop" element={<Desktop />} /> */}
                 <Route path="/product/:productId/detail" element={<ProductDetails />} />
