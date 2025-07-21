@@ -15,7 +15,7 @@ export default function AdminDashboard() {
 
   const roles = ['Admin', 'Support', 'Delivery', 'Sales', 'Manager', 'Accountant'];
 
-  // Mock staff data
+
   const [staffList, setStaffList] = useState([
     {
       id: 1,
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+     
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Staff Management</h1>
@@ -176,7 +176,7 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* Summary Cards */}
+     
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Search and Filter */}
+      
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">

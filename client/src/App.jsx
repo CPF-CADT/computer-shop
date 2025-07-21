@@ -28,6 +28,7 @@ import { CategoryProvider } from './components/context/CategoryContext';
 import UserProfilePage from './components/UserProfilePage';
 
 import CategoryProductPage from './components/CategoryProductPage'; 
+import Footer from "./components/Footer";
 
 const VerifyCodePage = () => {
   const location = useLocation();
@@ -70,8 +71,10 @@ function App() {
                 <Route path="/about-us" element={<AboutUs />} />
                 <Route path="/peripherals" element={<Peripherals />} />
                 <Route path='/user/profile/:id' element={<UserProfilePage />}/>
+                
               </Routes>
             </div>
+            
           </CartProvider>
         </AuthProvider>
       </CategoryProvider>

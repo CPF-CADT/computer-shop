@@ -7,7 +7,7 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
     const [type_products, setTypeProducts] = useState([]);
 
     const [name, setName] = useState("");
-    const [Code, setCode] = useState(""); // example Code default
+    const [Code, setCode] = useState(""); 
     const [price, setPrice] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [description, setDescription] = useState("");
