@@ -3,30 +3,26 @@ import * as fs from 'fs';
 import dotenv from 'dotenv';
 dotenv.config();
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is not set. Example: mysql://user:password@host:port/database");
-}
-
-const dbUrl = new URL(process.env.DATABASE_URL);
 const dbConfig = {
-  host: dbUrl.hostname,
-  port: dbUrl.port,
-  user: dbUrl.username,
-  password: dbUrl.password,
-  database: process.env.DB_RECOVERY as string
-//   database: dbUrl.pathname.slice(1) 
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_RECOVERY,
 };
 
+if (!dbConfig.host || !dbConfig.user || !dbConfig.password || !dbConfig.database) {
+  throw new Error("Missing required database environment variables.");
+}
 
 function executeSqlCommand(sql: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Arguments for connecting to the MySQL server without selecting a specific database.
     const mysqlAdminArgs: string[] = [
       `--host=${dbConfig.host}`,
       `--user=${dbConfig.user}`,
       `--password=${dbConfig.password}`,
-      ...(dbConfig.port ? [`--port=${dbConfig.port}`] : []), // Add port if it exists
-      `-e`, // Option to execute the following command string
+      ...(dbConfig.port ? [`--port=${dbConfig.port}`] : []),
+      `-e`,
       sql,
     ];
 
@@ -43,33 +39,31 @@ function executeSqlCommand(sql: string): Promise<void> {
 
     mysqlProcess.on('close', (code: number | null) => {
       if (code === 0) {
-        console.log(`Successfully executed SQL: "${sql}"`);
+        console.log(`Executed SQL: "${sql}"`);
         resolve();
       } else {
-        reject(new Error(`Error executing SQL. Process exited with code ${code}.\n${stderr}`));
+        reject(new Error(` SQL execution failed. Exit code: ${code}\n${stderr}`));
       }
     });
   });
 }
 
-
 async function cleanDatabase(dbName: string): Promise<void> {
-    console.log(`--- Cleaning database '${dbName}' ---`);
-    try {
-        await executeSqlCommand(`DROP DATABASE IF EXISTS \`${dbName}\`;`);
-        await executeSqlCommand(`CREATE DATABASE \`${dbName}\`;`);
-        console.log(`--- Database '${dbName}' cleaned and recreated successfully ---`);
-    } catch (error) {
-        console.error(`--- Failed to clean database '${dbName}' ---`);
-        throw error;
-    }
+  console.log(`--- Cleaning database '${dbName}' ---`);
+  try {
+    await executeSqlCommand(`DROP DATABASE IF EXISTS \`${dbName}\`;`);
+    await executeSqlCommand(`CREATE DATABASE \`${dbName}\`;`);
+    console.log(`--- Database '${dbName}' cleaned and recreated ---`);
+  } catch (error) {
+    console.error(` Failed to clean database '${dbName}'`);
+    throw error;
+  }
 }
-
 
 function applyBackup(mysqlCommandArgs: string[], filePath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     if (!fs.existsSync(filePath)) {
-      return reject(new Error(`Backup file not found: ${filePath}`));
+      return reject(new Error(` Backup file not found: ${filePath}`));
     }
 
     const mysqlProcess = spawn('mysql', mysqlCommandArgs);
@@ -88,10 +82,10 @@ function applyBackup(mysqlCommandArgs: string[], filePath: string): Promise<void
 
     mysqlProcess.on('close', (code: number | null) => {
       if (code === 0) {
-        console.log(`Successfully applied backup: ${filePath}`);
+        console.log(`Applied backup: ${filePath}`);
         resolve();
       } else {
-        reject(new Error(`Error applying backup '${filePath}'. Process exited with code ${code}.\n${stderr}`));
+        reject(new Error(`Backup failed '${filePath}'. Exit code: ${code}\n${stderr}`));
       }
     });
   });
@@ -99,30 +93,29 @@ function applyBackup(mysqlCommandArgs: string[], filePath: string): Promise<void
 
 export async function restoreDatabase(backupFiles: string[]): Promise<void> {
   if (!backupFiles || backupFiles.length === 0) {
-    console.warn('No backup files provided. Exiting.');
+    console.warn('⚠️ No backup files provided.');
     return;
   }
-  
+
   const dbName = dbConfig.database;
-  console.log(`--- Starting database restore for '${dbName}' ---`);
+  console.log(`--- Starting restore for '${dbName}' ---`);
 
   const mysqlCommandArgs: string[] = [
     `--host=${dbConfig.host}`,
     `--user=${dbConfig.user}`,
     `--password=${dbConfig.password}`,
-    ...(dbConfig.port ? [`--port=${dbConfig.port}`] : []), // Add port if it exists
+    ...(dbConfig.port ? [`--port=${dbConfig.port}`] : []),
     `--database=${dbName}`,
   ];
 
   try {
-    await cleanDatabase(dbName);
-
+    await cleanDatabase(dbName as string);
     for (const file of backupFiles) {
       await applyBackup(mysqlCommandArgs, file);
     }
-    console.log('\n--- Database restore completed successfully! ---');
+    console.log('\ Database restore completed!');
   } catch (error) {
-    console.error(`\n--- Database restore failed ---`);
+    console.error('\n Database restore failed');
     console.error((error as Error).message);
     throw error;
   }
