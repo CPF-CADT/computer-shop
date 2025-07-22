@@ -2,10 +2,10 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "server.ts",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon --watch . --ext ts --exec ts-node server.ts",
-    "start": "ts- nodemon server.ts",
+    "start": "node dist/server.js",
     "test": "jest",
     "build": "tsc"
   },
