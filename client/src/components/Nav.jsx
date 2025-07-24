@@ -63,19 +63,17 @@ export default function Nav() {
   };
 
   return (
-    // Use flex-wrap to allow items to wrap into multiple lines on mobile.
-    // Add padding for mobile screen edges.
     <nav className="max-w-[1200px] flex flex-row flex-wrap items-center justify-between mx-auto py-3 px-4 gap-y-4">
-      {/* LOGO */}
-      <Link to="/" className="shrink-0">
+      
+      <Link to="/" className="shrink-0 hidden md:block">
         <img src={mainLogo} alt="gear-tech" className="h-[40px] md:h-[50px]" />
       </Link>
 
-      {/* SEARCH FORM
-        - On mobile: Takes full width (w-full) and appears last (order-last).
-        - On desktop (lg): Takes its defined width, is centered (order-none), and removes the top margin.
-      */}
-      <form onSubmit={handleSearchSubmit} className="flex items-center h-12 w-full max-w-lg bg-white rounded-full shadow-md overflow-hidden border border-gray-300 order-last lg:order-none lg:mx-4">
+     
+      <form
+        onSubmit={handleSearchSubmit}
+        className="flex items-center h-12 w-full max-w-lg bg-white rounded-full shadow-md overflow-hidden border border-gray-300 order-last lg:order-none lg:mx-4 mt-6 md:mt-0"
+      >
         <input
           type="text"
           placeholder="What are you looking for?"
@@ -92,9 +90,8 @@ export default function Nav() {
           <FaSearch />
         </button>
       </form>
-
-      {/* USER ACTIONS (CART & LOGIN/PROFILE) */}
-      <div className="flex items-center gap-x-2 md:gap-x-4">
+      
+      <div className="hidden md:flex items-center gap-x-2 md:gap-x-4">
         {isAuthenticated && user ? (
           <>
             <button
@@ -103,7 +100,7 @@ export default function Nav() {
               aria-label="My Cart"
             >
               <BsCart2 size={24} />
-              {/* Hide "My Cart" text on mobile, show on medium screens up */}
+              
               <span className="ml-2 hidden md:inline">My Cart</span>
 
               {itemCount > 0 && (
@@ -132,14 +129,17 @@ export default function Nav() {
             </div>
           </>
         ) : (
-          <div className="flex items-center justify-center border border-gray-400 rounded-full h-12 px-4 text-sm md:text-base gap-x-2">
-            <Link to={'/register'} className="hover:font-bold whitespace-nowrap">
-              Register
-            </Link>
-            <span className="text-gray-300">|</span>
-            <Link to={'/login'} className="hover:font-bold whitespace-nowrap">
-              Login
-            </Link>
+          <div className="hidden">
+            
+            <div className="flex items-center justify-center border border-gray-400 rounded-full h-12 px-4 text-sm md:text-base gap-x-2">
+              <Link to={'/register'} className="hover:font-bold whitespace-nowrap">
+                Register
+              </Link>
+              <span className="text-gray-300">|</span>
+              <Link to={'/login'} className="hover:font-bold whitespace-nowrap">
+                Login
+              </Link>
+            </div>
           </div>
         )}
       </div>

@@ -21,14 +21,14 @@ export default function Categories() {
   }
 
   return (
-    <div className="w-64 p-4 bg-white rounded-lg shadow-md">
+    <div className="w-64 p-4 bg-white rounded-lg shadow-md mt-0 md:mt-4">
       <h3 className="text-lg font-bold mb-4">Product Categories</h3>
       <ul className="space-y-2">
         {categories.map(category => (
           <li
             key={category.id}
             className="text-gray-700 hover:text-orange-500 cursor-pointer"
-            onClick={() => handleCategoryClick(category.title)} // Call handler on click
+            onClick={() => handleCategoryClick(category.title)} 
           >
             {category.title}
           </li>
