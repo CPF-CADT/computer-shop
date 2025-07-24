@@ -15,10 +15,11 @@ Key highlights include:
 
 This project was developed by **G3 (SE GEN 10)**. Below are the team members:
 
- Phy Vathanak    
- Choun Rathanak   
- Cheng Chanpanha 
- Chhun Sivheng    
+- **Phy Vathanak** — Frontend & Backend, Database Design  
+- **Choun Rathanak** — Frontend, UML Design  
+- **Chhun Sivheng** — UI/UX Design, Frontend
+- **Cheng Chanpanha** — UML Design  
+
 
 ---
 
@@ -43,13 +44,12 @@ This project was developed by **G3 (SE GEN 10)**. Below are the team members:
 
 | Category        | Technology                            |
 |-----------------|----------------------------------------|
-| Frontend        | React.js                               |
+| Frontend        | React.js, tailwind css                 |
 | Backend         | Node.js, Express.js, TypeScript        |
 | Database        | MySQL                                  |
 | Authentication  | JWT (JSON Web Tokens), bcrypt          |
 | Payments        | KHQR (Bakong Network)                  |
 | Notifications   | Telegram Bot API                       |
-| Version Control | Git, GitHub                            |
 
 ---
 
