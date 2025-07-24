@@ -13,35 +13,29 @@ Key highlights include:
 
 ## 👥 Meet the Team
 
-This project was developed by **G3 (SE GEN 10)**. Below are the team members and their roles:
+This project was developed by **G3 (SE GEN 10)**. Below are the team members:
 
-| Name             | Student ID   | Project Role                   | Scrum Role         |
-|------------------|--------------|--------------------------------|--------------------|
-| Phy Vathanak     | IDTB100037   | Project Lead, Backend Developer| Developer          |
-| Choun Rathanak   | IDTB100043   | Front-End, UML Assistant       | Developer          |
-| Cheng Chanpanha  | IDTB100070   | UML, Database Admin            | Developer          |
-| Lim Lyheang      | IDTB100001   | Documentation                  | Product Owner      |
-| Sat Panha        | IDTB100033   | Scrum, Slide Assistant         | Scrum Master       |
-| Chhun Sivheng    | IDTB100035   | Figma, Slide                   | Business Analyst   |
+ Phy Vathanak    
+ Choun Rathanak   
+ Cheng Chanpanha 
+ Chhun Sivheng    
 
 ---
 
 ## ✨ Key Features
 
-### 🛒 Customer-Facing Features
+### 🛒 Customer Side
+- Browse and search for tech products by category or brand
+- Add items to cart and checkout easily
+- Secure login & order history tracking
+- Pay in real-time using **Bakong KHQR**
+- Instant order confirmation after payment
 
-- **Product Discovery:** Browse products by categories (phones, accessories, laptops), search by name, and filter by brand or price.
-- **Shopping Cart:** Add, update, or remove items before checking out.
-- **Authentication:** Register, log in, and log out securely using JWT.
-- **Order History:** Logged-in users can view all their past orders.
-- **KHQR Payments:** Checkout generates a KHQR code for real-time Bakong payment with success confirmation.
-
-### 🛠️ Administrator Features
-
-- **Secure Admin Dashboard:** Only authorized admins can access the dashboard.
-- **Telegram Notifications:** Admins receive real-time notifications when orders are paid.
-- **Order Management:** View and update order status (e.g., pending, preparing, delivered).
-- **Product Management:** Admins can create, update, and delete product entries (CRUD operations).
+### 🛠️ Admin Side
+- Secure admin dashboard for managing orders and inventory
+- Real-time Telegram notifications on successful payments
+- Track order status and update delivery stages
+- Full control over product listings and discounts
 
 ---
 
