@@ -15,7 +15,7 @@ export default function Navigate() {
   ];
 
   return (
-    <nav className="relative flex items-center justify-between h-14">
+    <nav className="hidden md:flex relative flex items-center justify-between h-14">
       <ul className="hidden md:flex flex-row items-center gap-x-10 font-bold text-lg text-gray-700">
         {navLinks.map((link) => (
           <li key={link.title} className="hover:text-[#FFA726] transition-colors duration-200">
@@ -44,7 +44,7 @@ export default function Navigate() {
             <li key={link.title} className="w-full text-center py-3">
               <Link
                 to={link.path}
-                onClick={closeMobileMenu} // Close menu on link click
+                onClick={closeMobileMenu} 
                 className="font-bold text-gray-700 hover:text-[#FFA726] transition-colors duration-200"
               >
                 {link.title}

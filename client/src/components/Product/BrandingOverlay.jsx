@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useAnimationFrame } from "framer-motion";
 
-// Statically import all brand logos
+
 import adataLogo from "../../assets/BrandLogo/adata.png";
 import asusLogo from "../../assets/BrandLogo/asus.png";
 import gigabyteLogo from "../../assets/BrandLogo/gigabyte.png";
@@ -10,7 +10,7 @@ import msiLogo from "../../assets/BrandLogo/msi.png";
 import razerLogo from "../../assets/BrandLogo/razer.png";
 import rogLogo from "../../assets/BrandLogo/rog.png";
 
-// Map logo file names to imported images
+
 const logoImports = {
   "adata.png": adataLogo,
   "asus.png": asusLogo,
@@ -23,7 +23,6 @@ const logoImports = {
 
 const logoFiles = Object.keys(logoImports);
 
-// Helper to match brand name to logo file (case-insensitive, ignore spelling)
 function getLogoFile(brandName) {
   const lowerName = brandName.toLowerCase();
   return logoFiles.find((file) =>
@@ -43,7 +42,7 @@ const brands = [
   "ROG",
 ];
 
-// Only show brands with a matching logo file, and avoid duplicates
+
 const filteredBrands = brands
   .map((brand) => {
     const logoFile = getLogoFile(brand);
@@ -51,15 +50,14 @@ const filteredBrands = brands
   })
   .filter(Boolean);
 
-// Double the list for smooth looping
 const loopBrands = [...filteredBrands, ...filteredBrands];
 
 export default function BrandingOverlay() {
   const containerRef = useRef(null);
   const x = useRef(0);
-  const speed = 1; // Adjust scroll speed
+  const speed = 1; 
 
-  // Animate manually using requestAnimationFrame for smooth flow
+  
   useAnimationFrame((t, delta) => {
     if (containerRef.current) {
       x.current += speed;
