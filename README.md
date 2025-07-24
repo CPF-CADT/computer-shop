@@ -62,7 +62,6 @@ The backend uses a **modular structure** with clear separation of controllers, s
 
 ### 👣 User Flow
 
-```text
 Login/Register → Browse Products → View Details → Add to Cart → Checkout → KHQR Payment → Success
 
 ## 🌐 Hosting & Deployment
