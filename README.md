@@ -1,4 +1,4 @@
-# 🖥️ Computer Shop E-Commerce System
+# 🖥️ Online Marketplace for Tech Products
 
 This project is a full-featured e-commerce platform developed specifically for the Cambodian tech retail market. It enables customers to browse, purchase, and pay for technology products through a user-friendly, mobile-responsive interface.
 
