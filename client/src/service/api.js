@@ -1,13 +1,13 @@
 import axios from 'axios';
 const apiClient = axios.create({
-  // baseURL: 'https://computer-shop-89hq.onrender.com/api/',
-  baseURL: 'http://localhost:3000/api/',
+  baseURL: 'https://computer-shop-89hq.onrender.com/api/',
+  // baseURL: 'http://localhost:3000/api/',
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-const CHUNK_SIZE = 6 * 1024 * 1024; 
+const CHUNK_SIZE = 6 * 1024 * 1024;
 
 export const apiService = {
   sendVerificationCode: async (phoneNumber) => {
@@ -395,12 +395,12 @@ export const apiService = {
       throw error;
     }
   },
-  addFeedbackForProduct:async(customer_id,product_id,rating,comment) =>{
+  addFeedbackForProduct: async (customer_id, product_id, rating, comment) => {
     try {
-      const response = await apiClient.post(`product/${product_id}/feedback`,{
-        customer_id:customer_id,
-        rating:rating,
-        comment:comment
+      const response = await apiClient.post(`product/${product_id}/feedback`, {
+        customer_id: customer_id,
+        rating: rating,
+        comment: comment
       });
       return response.data;
     } catch (error) {
