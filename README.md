@@ -89,9 +89,12 @@ Hosted on **Vercel**
 This architecture allows for independent scaling and maintenance of frontend, backend, and database components.
 
 ---
-## 📄 License
-This project is licensed under the **MIT License**.
-
----
 ## 🙏 Acknowledgments
-Thanks to the **Cambodia Academy of Digital Technology** for supporting this project and providing the Software Engineering course framework.
+
+Special thanks to:
+
+- Mr. Kim Ang Kheang, Backend Lecturer  
+- Mrs. Sim Sisavuthary, Software Engineering Lecturer  
+- Mr. Thear Sophal, Database Lecturer  
+
+for their valuable guidance and support throughout this project.
