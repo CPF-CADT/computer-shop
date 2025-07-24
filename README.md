@@ -1,6 +1,8 @@
 # 🖥️ Computer Shop E-Commerce System
 
+This project is a full-featured e-commerce platform developed specifically for the Cambodian tech retail market. It enables customers to browse, purchase, and pay for technology products through a user-friendly, mobile-responsive interface.
 
+Designed with the local ecosystem in mind, the platform integrates real-time KHQR payments via the Bakong system and provides instant Telegram notifications to administrators upon successful transactions. It also features secure user authentication, efficient order management, and a robust admin dashboard—making it a powerful solution for digital commerce in Cambodia.
 
 Key highlights include:
 
