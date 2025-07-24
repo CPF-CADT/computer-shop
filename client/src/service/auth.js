@@ -32,7 +32,7 @@ export function getStoredUser() {
     try {
         return JSON.parse(userJson);
     } catch (e) {
-        return null; // Return null if data is corrupted
+        return null; 
     }
 }
 

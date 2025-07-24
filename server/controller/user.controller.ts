@@ -150,7 +150,7 @@ export async function customerLogin(req: Request, res: Response): Promise<void> 
         } else {
             if(process.env.IS_CHECK_2FA==='1'){
                 if(customer.is_verifyed){
-                    const token = JWT.create({customer_id:customer.id,customer_phone_number:customer.phone_number});
+                    const token = JWT.create({id:customer.id,phone_number:customer.phone_number,role:'customer'});
                     res.status(200).json({
                         success: true, 
                         message: 'Login successful', 
@@ -160,13 +160,14 @@ export async function customerLogin(req: Request, res: Response): Promise<void> 
                             phone_number: customer.phone_number,
                             name: customer.name,
                             profile_img_path:customer.profile_img_path
-                        }
+                        },
+                        role:'customer'
                     });
                 }else{
                     res.status(400).json({ success: false, message: 'user need to verified' });
                 }
             }else{
-                const token = JWT.create({customer_id:customer.id,customer_phone_number:customer.phone_number});
+                const token = JWT.create({id:customer.id,phone_number:customer.phone_number,role:'customer'});
                 res.status(200).json({
                     success: true, 
                     message: 'Login successful', 
@@ -537,11 +538,7 @@ export async function verifyTwoFaCode(req: Request, res: Response): Promise<void
                             await TwoFaTokenRepository.markTokenAsUsed(customer.customer_id);
                             await CusomerRepository.markCustomerAsVerified(customer.customer_id);
 
-                            const token = JWT.create({
-                                customer_id: customer.customer_id,
-                                customer_phone_number: customer.phone_number
-                            });
-
+                            const token = JWT.create({id:customer.id,phone_number:customer.phone_number,role:'customer'});
                             res.status(201).json({
                                 success: true,
                                 message: 'Verification successful and logged in',

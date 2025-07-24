@@ -21,7 +21,6 @@ import { apiService } from '../service/api';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
-// Reusable InputField component
 const InputField = ({ label, id, type = "text", placeholder, value, onChange, required = true, error, readOnly = false }) => (
   <div className="mb-4">
     <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1.5">

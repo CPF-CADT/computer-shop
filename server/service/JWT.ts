@@ -5,11 +5,11 @@ dotenv.config();
 export default class JWT {
     private static JWT_SECRET = process.env.JWT_SECRET as string;
 
-    static create({ customer_id, customer_phone_number }: { customer_id: number; customer_phone_number: string }): string {
+    static create({ id, phone_number, email,role }: { id: number; phone_number?: string,email?:string ,role:string}): string {
         return jwt.sign(
             {
-                id: customer_id,
-                phone_number: customer_phone_number,
+                id , phone_number,email,role
+
             },
             JWT.JWT_SECRET,
             { expiresIn: '24h' }

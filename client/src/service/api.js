@@ -1,15 +1,32 @@
 import axios from 'axios';
 const apiClient = axios.create({
-  baseURL: 'https://computer-shop-89hq.onrender.com/api/',
-  // baseURL: 'http://localhost:3000/api/',
+  // baseURL: 'https://computer-shop-89hq.onrender.com/api/',
+  baseURL: 'http://localhost:3000/api/',
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
 const CHUNK_SIZE = 6 * 1024 * 1024;
-
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 export const apiService = {
+  staffLogin: async (email, password) => {
+    try {
+      const response = await apiClient.post(`staff/login`, { email, password })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message);
+    }
+  },
   sendVerificationCode: async (phoneNumber) => {
     try {
       const response = await apiClient.post('user/request-otp', { phone_number: phoneNumber });
