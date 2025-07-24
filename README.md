@@ -9,8 +9,6 @@ Key highlights include:
 - ✅ KHQR Payments via Bakong
 - ✅ Real-time Telegram notifications for new orders
 - ✅ Secure authentication with JWT
-- ✅ Scalable modular backend architecture
-
 ---
 
 ## 👥 Meet the Team
