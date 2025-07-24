@@ -1,18 +1,20 @@
-import { Staff } from '../db/models/Staff'; 
+import { Staff } from '../db/models/Staff';
 import { CreationAttributes } from 'sequelize';
 
 export class StaffRepository {
     static async create(staffData: CreationAttributes<Staff>): Promise<Staff> {
         return await Staff.create(staffData);
     }
-
+    static async findByEmail(email: string): Promise<Staff | null> {
+        return await Staff.findOne({ where: { email } });
+    }
     static async findAll(activeOnly: boolean = true): Promise<Staff[]> {
         return await Staff.findAll({
             where: activeOnly ? { is_active: true } : {},
             include: [{
                 model: Staff,
                 as: 'manager',
-                attributes: ['staff_id', 'name', 'position'] 
+                attributes: ['staff_id', 'name', 'position']
             }]
         });
     }
@@ -20,7 +22,6 @@ export class StaffRepository {
         return await Staff.findByPk(staffId, {
             include: [
                 { model: Staff, as: 'manager' },
-                { model: Staff, as: 'subordinates' }
             ]
         });
     }

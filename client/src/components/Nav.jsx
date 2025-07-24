@@ -11,11 +11,10 @@ import toast from 'react-hot-toast';
 export default function Nav() {
   const { totalItems: itemCount } = useCart();
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { brands = [], typeProducts = [], loadingCategories } = useCategory();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Your handleSearchSubmit function remains the same...
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     const trimmedSearchTerm = searchTerm.trim();
@@ -23,7 +22,6 @@ export default function Nav() {
       navigate('/search');
       return;
     }
-    // ... all the smart search logic is unchanged.
     const lowerCaseSearchTerm = trimmedSearchTerm.toLowerCase();
     const queryParams = new URLSearchParams();
     const brandKeywords = brands.filter(b => b && typeof b.name === 'string').map(b => b.name.toLowerCase()).sort((a,b) => b.length - a.length);
@@ -120,16 +118,10 @@ export default function Nav() {
                   {user.name}
                 </p>
               </Link>
-              <button
-                onClick={logout}
-                className="px-3 py-2 text-sm bg-red-500 text-white rounded-full hover:bg-red-600 focus:outline-none"
-              >
-                Logout
-              </button>
             </div>
           </>
         ) : (
-          <div className="hidden">
+          <div className="">
             
             <div className="flex items-center justify-center border border-gray-400 rounded-full h-12 px-4 text-sm md:text-base gap-x-2">
               <Link to={'/register'} className="hover:font-bold whitespace-nowrap">
