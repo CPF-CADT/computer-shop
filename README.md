@@ -64,3 +64,35 @@ The backend uses a **modular structure** with clear separation of controllers, s
 
 ```text
 Login/Register → Browse Products → View Details → Add to Cart → Checkout → KHQR Payment → Success
+
+## 🌐 Hosting & Deployment
+This project is hosted using a modern multi-service architecture to ensure scalability and performance:
+
+### **Database**
+MySQL hosted on **AWS RDS**
+
+### **Backend API**
+Hosted on **Render**
+* **URL**: [https://computer-shop-89hq.onrender.com](https://computer-shop-89hq.onrender.com)
+
+### **Frontend**
+Hosted on **Vercel**
+* **URL**: [https://computer-shop-henna.vercel.app/](https://computer-shop-henna.vercel.app/)
+
+---
+## 🔄 Data Flow
+1.  The user interacts with the frontend application hosted on **Vercel**.
+2.  The frontend sends API requests to the backend server hosted on **Render**.
+3.  The backend communicates with the **MySQL** database on **AWS** to store and retrieve data.
+4.  On successful order payment, the backend triggers notifications via **Telegram** and **InfoBip SMS** services.
+5.  Payments are processed using the **Bakong KHQR system** integrated into the backend.
+
+This architecture allows for independent scaling and maintenance of frontend, backend, and database components.
+
+---
+## 📄 License
+This project is licensed under the **MIT License**.
+
+---
+## 🙏 Acknowledgments
+Thanks to the **Cambodia Academy of Digital Technology** for supporting this project and providing the Software Engineering course framework.
