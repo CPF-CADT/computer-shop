@@ -1,13 +1,13 @@
 import axios from 'axios';
-// Create a pre-configured instance of axios
 const apiClient = axios.create({
-  baseURL: 'https://computer-shop-89hq.onrender.com/api/',
+  // baseURL: 'https://computer-shop-89hq.onrender.com/api/',
+  baseURL: 'http://localhost:3000/api/',
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB
+const CHUNK_SIZE = 6 * 1024 * 1024; 
 
 export const apiService = {
   sendVerificationCode: async (phoneNumber) => {
@@ -395,7 +395,19 @@ export const apiService = {
       throw error;
     }
   },
-
+  addFeedbackForProduct:async(customer_id,product_id,rating,comment) =>{
+    try {
+      const response = await apiClient.post(`product/${product_id}/feedback`,{
+        customer_id:customer_id,
+        rating:rating,
+        comment:comment
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch products:', error.message);
+      throw error;
+    }
+  },
   getOneProduct: async (product_id) => {
     try {
       const response = await apiClient.get(`product/${product_id}`);
