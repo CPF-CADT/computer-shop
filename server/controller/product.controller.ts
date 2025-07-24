@@ -461,10 +461,8 @@ export async function addNewProduct(req: Request, res: Response): Promise<void> 
  */
 export async function addProductFeedback(req: Request, res: Response): Promise<void> {
     try {
-        // Assuming JWT middleware adds auth_payload to req.body
         const { product_code } = req.params;
-        const { rating, comment, auth_payload } = req.body;
-        const customer_id = auth_payload?.customer_id;
+        const { rating, comment,customer_id } = req.body;
 
         if (!customer_id) {
             res.status(401).json({ message: 'Unauthorized: No customer ID found in token.' });

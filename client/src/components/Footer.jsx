@@ -6,7 +6,7 @@ import khqrLogo from "../assets/Logo/khqr-5.png";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#FFA726] mt-16 relative overflow-hidden border-t border-black">
+    <footer className="bg-[#FFA726] relative overflow-hidden border-t border-black">
    
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-2xl translate-x-1/3 -translate-y-1/3"></div>

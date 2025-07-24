@@ -26,7 +26,7 @@ import { CategoryProvider } from './components/context/CategoryContext';
 import UserProfilePage from './components/UserProfilePage';
 import SearchPage from './components/SearchPage';
 import CategoryProductPage from './components/CategoryProductPage'; 
-
+import Footer from './components/Footer';
 const VerifyCodePage = () => {
   const location = useLocation();
   const phoneNumber = location.state?.phoneNumber; 
@@ -47,7 +47,7 @@ function App() {
             />
             {!isAdminRoute && <Head />}
             {!isAdminRoute && <Nav />}
-            <div className="pt-4 pb-8 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
+            <div className="pt-4 pb-8 mx-auto">
               <Routes>
                 <Route path='/' element={<Home />} />
                 <Route path="/login" element={<LoginForm />} />
@@ -73,6 +73,7 @@ function App() {
 
               </Routes>
             </div>
+            <Footer />
           </CartProvider>
         </AuthProvider>
       </CategoryProvider>
