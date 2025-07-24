@@ -40,16 +40,17 @@ This project was developed by **G3 (SE GEN 10)**. Below are the team members:
 
 ---
 
-## 🚀 Technology Stack
+## 🚀 Technology Used
 
-| Category        | Technology                            |
-|-----------------|----------------------------------------|
-| Frontend        | React.js, tailwind css                 |
-| Backend         | Node.js, Express.js, TypeScript        |
-| Database        | MySQL                                  |
-| Authentication  | JWT (JSON Web Tokens), bcrypt          |
-| Payments        | KHQR (Bakong Network)                  |
-| Notifications   | Telegram Bot API                       |
+| Category         | Technology                             |
+|------------------|-----------------------------------------|
+| Frontend         | React.js, Tailwind CSS                  |
+| Backend          | Node.js, Express.js, TypeScript         |
+| Database         | MySQL                                   |
+| Authentication   | JWT (JSON Web Tokens), bcrypt           |
+| Payments         | KHQR (Bakong Network)                   |
+| Notifications    | Telegram Bot API, InfoBip SMS API       |
+| File Upload      | Cloudinary                              |
 
 ---
 
