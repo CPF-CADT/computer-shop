@@ -80,7 +80,7 @@ export default function Service() {
           </div>
         </div>
       </div>
-      <Footer />
+     
     </div>
   );
 }

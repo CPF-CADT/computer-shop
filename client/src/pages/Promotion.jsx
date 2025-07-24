@@ -53,7 +53,7 @@ export default function Promotion() {
           </div>
         </div>
       </div>
-      <Footer />
+      
     </div>
   );
 }

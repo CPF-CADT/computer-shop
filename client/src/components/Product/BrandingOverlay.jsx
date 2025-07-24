@@ -81,7 +81,7 @@ export default function BrandingOverlay() {
         {loopBrands.map(({ brand, logoFile }, index) => (
           <div
             key={logoFile + "-" + index}
-            className="inline-block bg-amber-200 px-6 py-2 rounded flex items-center justify-center"
+            className="inline-block bg-white px-6 py-2 rounded flex items-center justify-center"
           >
             <img
               src={logoImports[logoFile]}

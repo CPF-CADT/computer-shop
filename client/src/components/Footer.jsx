@@ -34,8 +34,8 @@ export default function Footer() {
         <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-10 items-start max-w-4xl mx-auto">
           
           <div className="col-span-2 flex flex-col md:flex-row gap-10 items-start justify-center">
-            
-            <div className="flex flex-col items-center md:items-center flex-1">
+            {/* On mobile, center the Company section */}
+            <div className="flex flex-col items-center w-full md:items-center flex-1">
               <h3 className="font-bold text-black mb-3 text-base uppercase tracking-wider">
                 Company
               </h3>

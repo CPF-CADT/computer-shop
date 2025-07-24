@@ -44,11 +44,21 @@ export default function ProductCarousel({ title, products, isLoading, error }) {
         </div>
         
         <div className="hidden md:block">
-          <button onClick={() => scroll("left")} className="absolute left-0 top-1/2 -translate-y-1/2 bg-orange-300 hover:bg-orange-500 p-3 rounded-full shadow-md z-10">
-            <FaChevronLeft />
+          <button
+            onClick={() => scroll("left")}
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white border border-orange-300 text-orange-500 hover:bg-orange-300 hover:text-white hover:scale-110 transition-all duration-200 p-2 rounded-full shadow-lg z-10 flex items-center justify-center"
+            style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.12)" }}
+            aria-label="Scroll left"
+          >
+            <FaChevronLeft size={18} />
           </button>
-          <button onClick={() => scroll("right")} className="absolute right-0 top-1/2 -translate-y-1/2 bg-orange-300 hover:bg-orange-500 p-3 rounded-full shadow-md z-10">
-            <FaChevronRight />
+          <button
+            onClick={() => scroll("right")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white border border-orange-300 text-orange-500 hover:bg-orange-300 hover:text-white hover:scale-110 transition-all duration-200 p-2 rounded-full shadow-lg z-10 flex items-center justify-center"
+            style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.12)" }}
+            aria-label="Scroll right"
+          >
+            <FaChevronRight size={18} />
           </button>
         </div>
       </div>
