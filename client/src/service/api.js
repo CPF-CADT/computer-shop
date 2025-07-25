@@ -1,7 +1,7 @@
 import axios from 'axios';
 const apiClient = axios.create({
-  baseURL: 'https://computer-shop-89hq.onrender.com/api/',
-  // baseURL: 'http://localhost:3000/api/',
+  // baseURL: 'https://computer-shop-89hq.onrender.com/api/',
+  baseURL: 'http://localhost:3000/api/',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -448,7 +448,7 @@ export const apiService = {
     try {
 
       const response = await apiClient.delete(`product/${productId}`);
-      return response.data;
+      return response.status;
     } catch (error) {
       console.error('API error:', error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Failed to delete product");

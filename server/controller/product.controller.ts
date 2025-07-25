@@ -215,7 +215,7 @@ export async function getAllProduct(req: Request, res: Response): Promise<void> 
     const brandProduct = (req.query.brand as string);
     const nameProductSearch = (req.query.name as string);
     const sortType = (req.query.sort as string) || 'asc';
-    const sortColumn = (req.query.order_column as string) || 'name';
+    const sortColumn = (req.query.order_column as string);
     const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 10;
     const page = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : 1;
 
@@ -522,7 +522,7 @@ export async function addProductFeedback(req: Request, res: Response): Promise<v
  *                 format: float
  *                 description: The new price of the product NOT (USD).
  *                 example: 1300.00
- *               quantity:
+ *              stock_quantity:
  *                 type: integer
  *                 description: The new quantity in stock.
  *                 example: 45
@@ -594,23 +594,84 @@ export async function addProductFeedback(req: Request, res: Response): Promise<v
  */
 
 export async function updateProduct(req: Request, res: Response): Promise<void> {
-    try {
-        const { productCode } = req.params;
-        const {updateData} = req.body;
+  try {
+    const { productCode } = req.params;
+    const updateData = req.body;
 
-        if (Object.keys(updateData).length === 0) {
-            res.status(400).json({ message: 'No update data provided.' });
-            return
-        }
-
-        const success = await ProductRepository.updateProduct(productCode, updateData);
-
-        if (success) {
-            res.status(200).json({ message: 'Product updated successfully.' });
-        } else {
-            res.status(404).json({ message: `Product with code ${productCode} not found or no changes made.` });
-        }
-    } catch (err) {
-        res.status(500).json({ message: (err as Error).message || 'Internal server error.' });
+    if (!updateData || Object.keys(updateData).length === 0) {
+      res.status(400).json({ message: 'No update data provided.' });
+      return;
     }
+
+    const success = await ProductRepository.updateProduct(productCode, updateData);
+
+    if (success) {
+      res.status(200).json({ message: 'Product updated successfully.' });
+    } else {
+      res.status(404).json({ message: `Product with code ${productCode} not found or no changes made.` });
+    }
+  } catch (err) {
+    res.status(500).json({ message: (err as Error).message || 'Internal server error.' });
+  }
+}
+
+/**
+ * @swagger
+ * /api/product/{productCode}:
+ *   delete:
+ *     summary: Soft delete a product (set is_active = false)
+ *     tags: [Product]
+ *     parameters:
+ *       - in: path
+ *         name: productCode
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique code of the product to deactivate.
+ *         example: "P1001"
+ *     responses:
+ *       200:
+ *         description: Product deactivated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Product deactivated successfully.
+ *       404:
+ *         description: Product not found or already deactivated.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Product with code P1001 not found or already inactive.
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error.
+ */
+
+export async function deleteProduct(req: Request, res: Response): Promise<void> {
+  try {
+    const { productCode } = req.params;
+    const success = await ProductRepository.softDeleteProduct(productCode);
+    if (success) {
+      res.status(200).json({ message: 'Product deactivated successfully.' });
+    } else {
+      res.status(404).json({ message: `Product with code ${productCode} not found or no changes made.` });
+    }
+  } catch (err) {
+    res.status(500).json({ message: (err as Error).message || 'Internal server error.' });
+  }
 }
