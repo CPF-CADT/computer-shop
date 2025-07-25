@@ -128,36 +128,7 @@ export default function AdminDashboard() {
     return colors[role] || 'bg-gray-100 text-gray-800';
   };
 
-  const renderPage = () => {
-    switch (activePage) {
-      case 'Dashboard':
-        return <DashboardPage />;
-      case 'Orders':
-        return <OrdersPage />;
-      case 'Products':
-        return <ProductsPage />;
-      case 'Categories':
-        return <CategoriesPage />;
-      case 'Inventory':
-        return <InventoryPage />;
-      case 'Customers':
-        return <CustomersPage />;
-      case 'Payments':
-        return <PaymentsPage />;
-      case 'Promotions':
-        return <PromotionsPage />;
-      case 'Analytics':
-        return <AnalyticsPage />;
-      case 'Staff Management':
-        return <StaffManagementPage />;
-      case 'User Management':
-        return <UserManagementPage />;
-      case 'Database Restore':
-        return <DatabaseRestorePage />;
-      default:
-        return <DashboardPage />;
-    }
-  };
+  
 
   return (
     <div className="space-y-6">
