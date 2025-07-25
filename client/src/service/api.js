@@ -1,7 +1,7 @@
 import axios from 'axios';
 const apiClient = axios.create({
-  // baseURL: 'https://computer-shop-89hq.onrender.com/api/',
-  baseURL: 'http://localhost:3000/api/',
+  baseURL: 'https://computer-shop-89hq.onrender.com/api/',
+  // baseURL: 'http://localhost:3000/api/',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -756,5 +756,19 @@ export const apiService = {
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to revoke role permissions');
     }
-  }
+  },
+
+  // --- Staff Profile Upload ---
+  uploadProfileImage: async (formData) => {
+    try {
+      const response = await apiClient.post('staff/upload-profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to upload staff profile image");
+    }
+  },
 };
