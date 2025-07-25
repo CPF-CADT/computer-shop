@@ -7,7 +7,6 @@ const apiClient = axios.create({
   }
 });
 
-const CHUNK_SIZE = 6 * 1024 * 1024;
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -437,8 +436,8 @@ export const apiService = {
 
   addNewProduct: async (productData) => {
     try {
-      const response = await apiClient.post('product', productData);
-      return response.data;
+      const response = await apiClient.post('product/', productData);
+      return response.status;
     } catch (error) {
       console.error('API error:', error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Failed to Create Product");
@@ -578,50 +577,21 @@ export const apiService = {
     }
   },
 
-  // --- File Upload Service ---
-  uploadFileInChunksService: async (file, { onProgress, onStatusChange, onSuccess, onError }) => {
-    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-    const uploadId = crypto.randomUUID();
+    uploadImageToCloudinary: async (file) => {
+    const formData = new FormData();
+    formData.append('image', file); 
 
-    onStatusChange('Starting upload...');
+    try {
+      const res = await apiClient.post('service/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
-    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-      const start = chunkIndex * CHUNK_SIZE;
-      const end = Math.min(start + CHUNK_SIZE, file.size);
-      const chunk = file.slice(start, end);
+      return res.data.url;
 
-      try {
-        onStatusChange(`Uploading chunk ${chunkIndex + 1} of ${totalChunks}...`);
-
-        // Using axios for the chunk upload
-        const response = await apiClient.post('service/upload', chunk, {
-          headers: {
-            'Content-Type': 'application/octet-stream',
-            'x-unique-upload-id': uploadId,
-            'content-range': `bytes ${start}-${end - 1}/${file.size}`,
-          },
-        });
-
-        const newProgress = ((chunkIndex + 1) / totalChunks) * 100;
-        onProgress(newProgress);
-
-        const result = response.data;
-
-        if (result.url) {
-          const transformedUrl = result.url.replace('upload/', '/upload/w_400/');
-          onSuccess(transformedUrl);
-          onStatusChange('Upload complete! File available on Cloudinary.');
-          return; // Exit the loop and function
-        } else {
-          onStatusChange(`Chunk ${chunkIndex + 1} uploaded. Server status: ${result.status}`);
-        }
-      } catch (error) {
-        console.error('Error uploading chunk:', error);
-        const errorMessage = error.response?.data?.error || error.message || 'Chunk upload failed';
-        onError(new Error(errorMessage));
-        onStatusChange(`Error: ${errorMessage}`);
-        return; // Stop the upload on error
-      }
+    } catch (error) {
+      throw new Error(error.response?.data?.error || "Failed to upload image");
     }
   },
 
