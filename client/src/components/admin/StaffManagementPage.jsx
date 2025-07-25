@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MdPeople, MdAdd, MdEdit, MdDelete, MdSearch, MdFilterList, MdAttachMoney, MdEmail, MdPhone, MdBadge } from 'react-icons/md';
+import { apiService } from '../../service/api';// Adjust the import based on your project structure
 
 export default function StaffManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -11,51 +12,46 @@ export default function StaffManagementPage() {
 
   const roles = ['Admin', 'Support', 'Delivery', 'Sales', 'Manager', 'Accountant'];
 
-  // Mock staff data
+
   const [staffList, setStaffList] = useState([
     {
       id: 1,
-      name: 'John Smith',
-      email: 'john.smith@company.com',
-      phone: '+855 12 345 678',
-      role: 'Admin',
-      salary: 1200,
-      status: 'active',
-      hireDate: '2023-01-15',
-      department: 'IT'
+      name: 'Eleanor Vance',
+      email: '',
+      phone_number: '555-0101',
+      salary: 95000,
+      work_schedule: 'Mon-Fri 9am-5pm',
+      is_active: true,
+      hire_date: '2018-03-15',
+      position: 'General Manager',
+      manager_id: 1,
+      department: '',
     },
     {
       id: 2,
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@company.com',
-      phone: '+855 98 765 432',
-      role: 'Support',
-      salary: 800,
-      status: 'active',
-      hireDate: '2023-03-20',
-      department: 'Customer Service'
+      name: 'Theo Crain',
+      email: '',
+      phone_number: '555-0202',
+      salary: 70000,
+      work_schedule: 'Mon-Fri 8am-4pm',
+      is_active: true,
+      hire_date: '2019-06-10',
+      position: 'Sales Manager',
+      manager_id: 1,
+      department: '',
     },
     {
       id: 3,
-      name: 'Mike Wilson',
-      email: 'mike.wilson@company.com',
-      phone: '+855 77 123 456',
-      role: 'Delivery',
-      salary: 600,
-      status: 'active',
-      hireDate: '2023-05-10',
-      department: 'Logistics'
-    },
-    {
-      id: 4,
-      name: 'Lisa Brown',
-      email: 'lisa.brown@company.com',
-      phone: '+855 88 987 654',
-      role: 'Sales',
-      salary: 900,
-      status: 'inactive',
-      hireDate: '2022-11-05',
-      department: 'Sales'
+      name: 'Luke Sanderson',
+      email: '',
+      phone_number: '555-0303',
+      salary: 50000,
+      work_schedule: 'Tue-Sat 10am-6pm',
+      is_active: false,
+      hire_date: '2020-01-20',
+      position: 'Delivery Lead',
+      manager_id: 2,
+      department: '',
     }
   ]);
 
@@ -69,21 +65,29 @@ export default function StaffManagementPage() {
   });
 
   const filteredStaff = staffList.filter(staff => {
-    const matchesSearch = staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         staff.department.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || staff.role === roleFilter;
+    const matchesSearch =
+      (staff.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (staff.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (staff.department || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = roleFilter === 'all' || staff.position === roleFilter || staff.role === roleFilter;
     return matchesSearch && matchesRole;
   });
 
   const handleCreateStaff = () => {
+    
     const newId = Math.max(...staffList.map(s => s.id)) + 1;
     const staffToAdd = {
-      ...newStaff,
       id: newId,
-      status: 'active',
-      hireDate: new Date().toISOString().split('T')[0],
-      salary: parseFloat(newStaff.salary)
+      name: newStaff.name,
+      email: newStaff.email,
+      phone_number: newStaff.phone,
+      salary: parseFloat(newStaff.salary),
+      work_schedule: newStaff.work_schedule || "Mon-Fri 9am-5pm",
+      is_active: newStaff.is_active !== false,
+      hire_date: newStaff.hire_date || new Date().toISOString().split('T')[0],
+      position: newStaff.position || newStaff.role,
+      manager_id: newStaff.manager_id || 1,
+      department: newStaff.department || ''
     };
     setStaffList([...staffList, staffToAdd]);
     setNewStaff({ name: '', email: '', phone: '', role: 'Support', salary: '', department: '' });
@@ -310,41 +314,11 @@ export default function StaffManagementPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={newStaff.email}
-                  onChange={(e) => setNewStaff({...newStaff, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                 <input
                   type="text"
                   value={newStaff.phone}
                   onChange={(e) => setNewStaff({...newStaff, phone: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                <select
-                  value={newStaff.role}
-                  onChange={(e) => setNewStaff({...newStaff, role: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {roles.map(role => (
-                    <option key={role} value={role}>{role}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                <input
-                  type="text"
-                  value={newStaff.department}
-                  onChange={(e) => setNewStaff({...newStaff, department: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -354,6 +328,53 @@ export default function StaffManagementPage() {
                   type="number"
                   value={newStaff.salary}
                   onChange={(e) => setNewStaff({...newStaff, salary: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Work Schedule</label>
+                <input
+                  type="text"
+                  value={newStaff.work_schedule || "Mon-Fri 9am-5pm"}
+                  onChange={(e) => setNewStaff({...newStaff, work_schedule: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Active</label>
+                <select
+                  value={newStaff.is_active === false ? "false" : "true"}
+                  onChange={(e) => setNewStaff({...newStaff, is_active: e.target.value === "true"})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hire Date</label>
+                <input
+                  type="date"
+                  value={newStaff.hire_date || ""}
+                  onChange={(e) => setNewStaff({...newStaff, hire_date: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
+                <input
+                  type="text"
+                  value={newStaff.position || ""}
+                  onChange={(e) => setNewStaff({...newStaff, position: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Manager ID</label>
+                <input
+                  type="number"
+                  value={newStaff.manager_id || ""}
+                  onChange={(e) => setNewStaff({...newStaff, manager_id: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -379,53 +400,49 @@ export default function StaffManagementPage() {
       {/* Staff Table */}
       <div className="bg-white rounded-lg shadow-md overflow-x-auto w-full">
         <table className="w-full min-w-[420px]">
-          <thead className="bg-gray-50">
+          <thead className="bg-gradient-to-r from-blue-100 to-blue-200">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Salary</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase">Staff</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase">Contact</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase">Role</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase">Salary</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase">Work Schedule</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase">Status</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredStaff.map((staff) => (
-              <tr key={staff.id} className="hover:bg-gray-50">
+              <tr key={staff.id} className="hover:bg-blue-50 transition">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{staff.name}</div>
-                    <div className="text-sm text-gray-500">Hired: {new Date(staff.hireDate).toLocaleDateString()}</div>
+                    <div className="text-base font-semibold text-gray-900">{staff.name}</div>
+                    <div className="text-xs text-gray-500">Hired: {staff.hire_date ? new Date(staff.hire_date).toLocaleDateString() : '-'}</div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 flex items-center gap-1">
-                    <MdEmail className="text-gray-400" />
-                    {staff.email}
-                  </div>
                   <div className="text-sm text-gray-500 flex items-center gap-1">
-                    <MdPhone className="text-gray-400" />
-                    {staff.phone}
+                    <MdPhone className="text-blue-400" />
+                    {staff.phone_number || '-'}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(staff.role)}`}>
-                    {staff.role}
+                  <span className={`inline-flex px-3 py-1 text-xs font-bold rounded-full ${getRoleColor(staff.position || staff.role)}`}>
+                    {staff.position || staff.role}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {staff.department}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-base font-semibold text-gray-900">${staff.salary ? staff.salary.toLocaleString() : '-'}</div>
+                  <div className="text-xs text-gray-500">per month</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">${staff.salary.toLocaleString()}</div>
-                  <div className="text-sm text-gray-500">per month</div>
+                  <span className="text-sm text-gray-700">{staff.work_schedule || '-'}</span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    staff.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  <span className={`inline-flex px-3 py-1 text-xs font-bold rounded-full ${
+                    staff.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
-                    {staff.status}
+                    {staff.is_active ? 'active' : 'inactive'}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -435,24 +452,30 @@ export default function StaffManagementPage() {
                         setSelectedStaff(staff);
                         setShowEditModal(true);
                       }}
-                      className="text-blue-600 hover:text-blue-900"
+                      className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-3 py-2 shadow transition flex items-center gap-1"
+                      title="Edit"
                     >
-                      <MdEdit />
+                      <MdEdit size={18} />
+                      <span className="hidden sm:inline">Edit</span>
                     </button>
                     <button
                       onClick={() => {
                         setSelectedStaff(staff);
                         setShowSalaryModal(true);
                       }}
-                      className="text-green-600 hover:text-green-900"
+                      className="bg-green-500 hover:bg-green-600 text-white rounded-lg px-3 py-2 shadow transition flex items-center gap-1"
+                      title="Update Salary"
                     >
-                      <MdAttachMoney />
+                      <MdAttachMoney size={18} />
+                      <span className="hidden sm:inline">Salary</span>
                     </button>
                     <button
                       onClick={() => handleDeleteStaff(staff.id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="bg-red-500 hover:bg-red-600 text-white rounded-lg px-3 py-2 shadow transition flex items-center gap-1"
+                      title="Delete"
                     >
-                      <MdDelete />
+                      <MdDelete size={18} />
+                      <span className="hidden sm:inline">Delete</span>
                     </button>
                   </div>
                 </td>
@@ -461,6 +484,98 @@ export default function StaffManagementPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Edit Staff Modal */}
+      {showEditModal && selectedStaff && (
+        <div className="flex items-center justify-center z-50 fixed inset-0 pointer-events-none">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-md shadow-2xl pointer-events-auto mx-2">
+            <h2 className="text-xl font-bold mb-4 text-blue-700">Edit Staff</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                <input
+                  type="text"
+                  value={selectedStaff.name}
+                  onChange={e => setSelectedStaff({ ...selectedStaff, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                <input
+                  type="text"
+                  value={selectedStaff.phone_number}
+                  onChange={e => setSelectedStaff({ ...selectedStaff, phone_number: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Work Schedule</label>
+                <input
+                  type="text"
+                  value={selectedStaff.work_schedule}
+                  onChange={e => setSelectedStaff({ ...selectedStaff, work_schedule: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Active</label>
+                <select
+                  value={selectedStaff.is_active ? "true" : "false"}
+                  onChange={e => setSelectedStaff({ ...selectedStaff, is_active: e.target.value === "true" })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hire Date</label>
+                <input
+                  type="date"
+                  value={selectedStaff.hire_date}
+                  onChange={e => setSelectedStaff({ ...selectedStaff, hire_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
+                <input
+                  type="text"
+                  value={selectedStaff.position}
+                  onChange={e => setSelectedStaff({ ...selectedStaff, position: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Manager ID</label>
+                <input
+                  type="number"
+                  value={selectedStaff.manager_id}
+                  onChange={e => setSelectedStaff({ ...selectedStaff, manager_id: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleEditStaff(selectedStaff);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Update Salary Modal */}
       {showSalaryModal && selectedStaff && (
@@ -505,3 +620,4 @@ export default function StaffManagementPage() {
     </div>
   );
 }
+       
