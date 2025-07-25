@@ -56,9 +56,9 @@ class ProductRepository {
       }
 
       // Whitelist allowed sort columns (using names from your view)
-      const allowedSortColumns = ['price', 'name', 'category_title', 'brand_name']; // Use 'price' for sorting
+      const allowedSortColumns = ['price', 'name', 'category_title', 'brand_name','stock_quantity']; 
       if (!allowedSortColumns.includes(sortColumn)) {
-        sortColumn = 'price'; // default fallback
+        sortColumn = 'price'; 
       }
 
       // Whitelist sort types
@@ -161,45 +161,75 @@ class ProductRepository {
     }
     
     static async updateProduct(
-          productCode: string,
-          data: {
-              name?: string;
-              price?: number;
-              quantity?: number;
-              description?: string;
-              category?: number;
-              brand?: number;
-              type_product?: number;
-              image?: string;
-              is_active?: boolean;
+      productCode: string,
+      data: {
+        name?: string;
+        price?: number;
+        stock_quantity?: number;
+        description?: string;
+        category?: number;
+        brand?: number;
+        type_product?: number;
+        image?: string;
+        is_active?: boolean;
+      }
+    ): Promise<boolean | null> {
+      try {
+        // Remove undefined fields
+        const updateData: any = Object.entries(data).reduce((acc, [key, value]) => {
+          if (value !== undefined) acc[key] = value;
+          return acc;
+        }, {} as Record<string, any>);
+
+        // Add restock date (optional: only if quantity is updated)
+        if (updateData.quantity !== undefined) {
+          updateData.last_restock_date = new Date();
+        }
+
+        const [affectedCount] = await ProductModel.update(updateData, {
+          where: { product_code: productCode },
+        });
+
+        if (affectedCount === 0) {
+          const product = await ProductModel.findOne({ where: { product_code: productCode } });
+          if (!product) {
+            throw new Error(`Product with code ${productCode} not found.`);
+          } else {
+            console.warn(`Product with code ${productCode} found but no changes made.`);
+            return true;
           }
-      ): Promise<boolean | null> {
-          try {
-    const updateData: any = { ...data };
-    updateData.last_restock_date = new Date();
+        }
 
-    const [affectedCount] = await ProductModel.update(updateData, {
-      where: { product_code: productCode },
-    });
-
-    if (affectedCount === 0) {
-      // Check if product exists
-      const product = await ProductModel.findOne({ where: { product_code: productCode } });
-      if (!product) {
-        throw new Error(`Product with code ${productCode} not found.`);
-      } else {
-        // No changes made but product exists
-        console.warn(`Product with code ${productCode} found but no changes made.`);
-        return true; // or false depending on your logic
+        return true;
+      } catch (err: any) {
+        console.error(`Failed to update product with code ${productCode}:`, err.message || err);
+        return null;
       }
     }
+  static async softDeleteProduct(productCode: string): Promise<boolean | null> {
+    try {
+      const [affectedCount] = await ProductModel.update(
+        { is_active: false },
+        { where: { product_code: productCode } }
+      );
 
-    return true;
-  } catch (err: any) {
-    console.error(`Failed to update product with code ${productCode}:`, err.message || err);
-    return null;
+      if (affectedCount === 0) {
+        const product = await ProductModel.findOne({ where: { product_code: productCode } });
+        if (!product) {
+          throw new Error(`Product with code ${productCode} not found.`);
+        } else {
+          console.warn(`Product with code ${productCode} found but no changes made.`);
+          return true;
+        }
+      }
+
+      return true;
+    } catch (err: any) {
+      console.error(`Failed to delete (soft) product with code ${productCode}:`, err.message || err);
+      return null;
   }
 }
+
 
 }
 

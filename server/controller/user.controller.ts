@@ -549,7 +549,7 @@ export async function verifyTwoFaCode(req: Request, res: Response): Promise<void
                                     phone_number: customer.phone_number,
                                     name: customer.name,
                                     profile_img_path: customer.profile_img_path,
-                                    role:'customer'
+                                   role:'customer' 
                                 }
                             });
                             return;

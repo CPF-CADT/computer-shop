@@ -448,7 +448,7 @@ export const apiService = {
     try {
 
       const response = await apiClient.delete(`product/${productId}`);
-      return response.data;
+      return response.status;
     } catch (error) {
       console.error('API error:', error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Failed to delete product");
