@@ -45,6 +45,7 @@ export interface Product {
     name: string;
     image_path: string;
     price: Price;
+    stock:number,
     description: string;
     brand: Brand;
     category: Category;
@@ -63,6 +64,7 @@ export function toProductStructure(row: any): Product {
             amount: parseFloat(row.price),
             currency: 'USD',
         },
+        stock:row.stock_quantity,
         description: row.description,
         brand: {
             id:row.brand_id,

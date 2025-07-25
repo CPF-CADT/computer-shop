@@ -38,7 +38,7 @@ export default function EditProductModal({
             ...productData,
             category: productData.category?.id || "",
             brand: productData.brand?.id || "",
-            type_product: productData.type_product?.id || "", // Ensure this key matches your data
+            type_product: productData.type?.id || "", // Ensure this key matches your data
             price: productData.price?.amount || productData.price, // Handle both object and direct price
           });
           // Set the initial image URL from the fetched data

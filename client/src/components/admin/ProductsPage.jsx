@@ -83,7 +83,21 @@ export default function ProductsPage() {
 
     const handleFilterChange = (newFilters) => setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
     const handlePageChange = (newPage) => setFilters(prev => ({ ...prev, page: newPage }));
-    const handleDeleteProduct = (productId) => console.log(`Delete product ${productId}`);
+    const handleDeleteProduct = async (productId) => {
+      try {
+          const status = await apiService.deleteProduct(productId);
+        if (status === 201 || status === 200) {
+          setIsAddModalOpen(false);
+          toast.success("Product delete successfully!");
+          fetchProducts();
+        } else {
+          toast.error("Failed to delete product. Server returned unexpected status.");
+        }
+      } catch (error) {
+        toast.error("Failed to delete product.");
+        console.error(error);
+      }
+    };
     const handleAddProduct = async (data) => {
       try {
         const status = await apiService.addNewProduct(data);
