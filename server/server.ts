@@ -49,7 +49,7 @@ connectToDatabase()
     app.use('/api/checkout',authenticateToken, CheckoutRouter(telegramBotInstance));
     app.use('/api/db',authenticateToken,authorize('admin'), userManagementRouter);
     app.use('/api/recovery-db',authenticateToken,authorize('admin'), recoveryDBRouter);
-    app.use('/api/service',authenticateToken,authorize('staff'), ServiceRouter);
+    app.use('/api/service', ServiceRouter);
     app.use('/api/staff', staffRouter);
     app.use('/api/store-infor',authenticateToken,authorize('staff'), storeInforRouter);
     app.use('/api/promotions',authenticateToken,authorize('staff'), PromotionRouter);

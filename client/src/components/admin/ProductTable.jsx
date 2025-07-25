@@ -1,4 +1,3 @@
-import React from 'react';
 import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
 export default function ProductTable({ products = [], onDelete, onEdit }) {

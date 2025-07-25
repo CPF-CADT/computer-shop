@@ -1,6 +1,4 @@
-import React from 'react';
 import { Routes, Route, useLocation } from "react-router-dom";
-
 import Head from "./components/Head";
 import Nav from "./components/Nav";
 import Home from "./components/Home";
@@ -27,58 +25,95 @@ import UserProfilePage from './components/UserProfilePage';
 import SearchPage from './components/SearchPage';
 import CategoryProductPage from './components/CategoryProductPage'; 
 import Footer from './components/Footer';
+import PrivateRoute from "./components/PrivateRoute";
+import NotFound from "./components/NotFound";
 const VerifyCodePage = () => {
   const location = useLocation();
   const phoneNumber = location.state?.phoneNumber; 
   return <VerificationCode phoneNumber={phoneNumber} />;
 };
 
-function App() {
+
+export default function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
-  return (
-    <>
-      <CategoryProvider>
-        <AuthProvider>
-          <CartProvider>
-            <Toaster
-              position="top-center"
-              reverseOrder={false}
-            />
-            {!isAdminRoute && <Head />}
-            {!isAdminRoute && <Nav />}
-            <div className="pt-4 pb-8 mx-auto">
-              <Routes>
-                <Route path='/' element={<Home />} />
-                <Route path="/login" element={<LoginForm />} />
-                <Route path="/register" element={<RegisterForm />} />
-                <Route path="/verify-code" element={<VerifyCodePage />} />
-                <Route path="/category/:categoryName" element={<CategoryProductPage />} />
-                <Route path="/product/:productId/detail" element={<ProductDetails />} />
-                <Route element={<CartLayout />}>
-                <Route path="/cart" element={<ShoppingCartPage />} />
-                <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/checkout/success" element={<Success />} />
-                <Route path="/admin" element={<div><AdminDash/></div>} />
-                <Route path="/admin/user-manage" element={<div><UserManagement /></div>} />
-                <Route path="/build-pc" element={<PCBuilderPage />} />
-                </Route>
-                <Route path="/service" element={<Service />} />
-                <Route path="/promotion" element={<Promotion />} />
-                <Route path="/about-us" element={<AboutUs />} />
-                <Route path="/peripherals" element={<Peripherals />} />
-                <Route path='/user/profile/:id' element={<UserProfilePage />}/>
-                <Route path="/search" element={<SearchPage />} /> 
-                <Route path="/search/:query?" element={<SearchPage />} />
 
-              </Routes>
-            </div>
-            <Footer />
-          </CartProvider>
-        </AuthProvider>
-      </CategoryProvider>
-    </>
+  return (
+    <CategoryProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Toaster position="top-center" reverseOrder={false} />
+          {!isAdminRoute && <Head />}
+          {!isAdminRoute && <Nav />}
+
+          <div className="pt-4 pb-8 mx-auto">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<LoginForm />} />
+              <Route path="/register" element={<RegisterForm />} />
+              <Route path="/verify-code" element={<VerifyCodePage />} />
+              <Route path="/category/:categoryName" element={<CategoryProductPage />} />
+              <Route path="/product/:productId/detail" element={<ProductDetails />} />
+              <Route path="/service" element={<Service />} />
+              <Route path="/promotion" element={<Promotion />} />
+              <Route path="/about-us" element={<AboutUs />} />
+              <Route path="/peripherals" element={<Peripherals />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/search/:query?" element={<SearchPage />} />
+              <Route path="/build-pc" element={<PCBuilderPage />} />
+
+              <Route element={<CartLayout />}>
+                <Route
+                  path="/cart"
+                  element={
+                    <PrivateRoute roles={['customer']}>
+                      <ShoppingCartPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/checkout"
+                  element={
+                    <PrivateRoute roles={['customer']}>
+                      <CheckoutPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/checkout/success"
+                  element={
+                    <PrivateRoute roles={['customer']}>
+                      <Success />
+                    </PrivateRoute>
+                  }
+                />
+              </Route>
+
+              <Route
+                path="/user/profile/:id"
+                element={
+                  <PrivateRoute roles={['customer']}>
+                    <UserProfilePage />
+                  </PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/admin"
+                element={
+                  <PrivateRoute roles={['admin','staff']}>
+                    <AdminDash />
+                  </PrivateRoute>
+                }
+              />
+
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+
+          <Footer />
+        </CartProvider>
+      </AuthProvider>
+    </CategoryProvider>
   );
 }
-
-export default App;

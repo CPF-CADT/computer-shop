@@ -67,7 +67,7 @@ const [orderLoading, setOrderLoading] = useState(true);
 
   fetchCounts();
   fetchSales();
-  fetchOrders(1,7,'date','ASC',false)
+  fetchOrders(1,7,'date','DESC',false)
 }, []);
 
 

@@ -4,9 +4,9 @@ import { authenticateToken, authorize } from '../middleware/authenticateToken.mi
 const productRouter = express.Router();
 
 productRouter.get('/', getAllProduct);
+productRouter.get('/:product_code',authenticateToken, getOneProduct);
+productRouter.get('/:product_code/detail',authenticateToken, getProductDetail);
 productRouter.post('/',authenticateToken,authorize('staff'), addNewProduct);
-productRouter.get('/:product_code',authenticateToken,authorize('staff'), getOneProduct);
-productRouter.get('/:product_code/detail',authenticateToken,authorize('staff'), getProductDetail);
 productRouter.post('/:product_code/feedback',authenticateToken,authorize('staff'), addProductFeedback);
 productRouter.put('/:productCode',authenticateToken,authorize('staff'), updateProduct);
 

@@ -74,7 +74,7 @@ const RatingsAndReviews = ({ product, onReviewSubmitted }) => {
                            </div>
                            <button
                                type="submit"
-                               disabled={isSubmitting || !isAuthenticated}
+                               disabled={isSubmitting || !isAuthenticated || user?.role !== 'customer'}
                                className="w-full bg-orange-500 text-white py-2.5 rounded-md font-semibold hover:bg-orange-600 transition disabled:bg-gray-400"
                            >
                                {isSubmitting ? 'Submitting...' : (isAuthenticated ? 'Submit Review' : 'Log in to Review')}
@@ -94,7 +94,7 @@ export default function ProductDetails() {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const { addToCart } = useCart();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated,user } = useAuth();
 
     const fetchProduct = useCallback(async () => {
         try {
@@ -151,9 +151,14 @@ export default function ProductDetails() {
                             <span className="px-5 py-2 text-lg font-medium">{quantity}</span>
                             <button onClick={() => handleQuantityChange(1)} className="p-3"><FaPlus size={12} /></button>
                         </div>
-                        <button onClick={handleAddToCart} className="flex-grow bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 font-semibold transition">
+                        <button
+                            onClick={handleAddToCart}
+                            // disabled={user?.role !== 'customer'}
+                            className={`flex-grow py-3 rounded-lg font-semibold transition bg-orange-500 text-white hover:bg-orange-600`}
+                            >
                             Add to Cart
                         </button>
+
                     </div>
                     <div className="border-t pt-6 text-sm">
                         <h2 className="font-semibold mb-2 text-base">Specifications</h2>

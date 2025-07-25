@@ -98,10 +98,10 @@ export async function createUser(req: Request, res: Response): Promise<void> {
  *             properties:
  *               phone_number:
  *                 type: string
- *                 example: 012345678
+ *                 example: 078569811
  *               password:
  *                 type: string
- *                 example: securePassword123
+ *                 example: 12345678
  *     responses:
  *       200:
  *         description: Login successful
@@ -159,9 +159,9 @@ export async function customerLogin(req: Request, res: Response): Promise<void> 
                             id: customer.customer_id,
                             phone_number: customer.phone_number,
                             name: customer.name,
-                            profile_img_path:customer.profile_img_path
+                            profile_img_path:customer.profile_img_path,
+                            role:'customer'
                         },
-                        role:'customer'
                     });
                 }else{
                     res.status(400).json({ success: false, message: 'user need to verified' });
@@ -176,8 +176,9 @@ export async function customerLogin(req: Request, res: Response): Promise<void> 
                         id: customer.customer_id,
                         phone_number: customer.phone_number,
                         name: customer.name,
-                        profile_img_path:customer.profile_img_path
-                    }
+                        profile_img_path:customer.profile_img_path,
+                        role:'customer'
+                    },
                 });
             }
         }
@@ -547,7 +548,8 @@ export async function verifyTwoFaCode(req: Request, res: Response): Promise<void
                                     id: customer.customer_id,
                                     phone_number: customer.phone_number,
                                     name: customer.name,
-                                    profile_img_path: customer.profile_img_path // Ensure this field exists on your Customer model
+                                    profile_img_path: customer.profile_img_path,
+                                    role:'customer'
                                 }
                             });
                             return;

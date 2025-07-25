@@ -347,7 +347,7 @@ export async function getProductDetail(req: Request, res: Response): Promise<voi
  *             type: object
  *             required:
  *               - name
- *               - Code
+ *               - code
  *               - price
  *               - quantity
  *               - description
@@ -399,8 +399,9 @@ export async function addNewProduct(req: Request, res: Response): Promise<void> 
     try {
         const productData = req.body;
 
-        if (!productData || !productData.Code || !productData.name || !productData.price) {
+        if (!productData || !productData.code || !productData.name || !productData.price) {
           res.status(400).json({ message: 'Missing required product data.' });
+                              console.log('err missing')
           return
         }
 
@@ -410,10 +411,12 @@ export async function addNewProduct(req: Request, res: Response): Promise<void> 
           res.status(201).json({ message: 'Product added successfully.' });
           return
         } else {
+                    console.log('err product exists')
           res.status(409).json({ message: 'Product already exists or failed to add.' });
           return
         }
     } catch (err) {
+        console.log('err server')
         res.status(500).json({ message: (err as Error).message });
     }
 }
@@ -593,7 +596,7 @@ export async function addProductFeedback(req: Request, res: Response): Promise<v
 export async function updateProduct(req: Request, res: Response): Promise<void> {
     try {
         const { productCode } = req.params;
-        const updateData = req.body;
+        const {updateData} = req.body;
 
         if (Object.keys(updateData).length === 0) {
             res.status(400).json({ message: 'No update data provided.' });

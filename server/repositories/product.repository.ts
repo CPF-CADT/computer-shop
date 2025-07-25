@@ -90,7 +90,7 @@ class ProductRepository {
     static async getOneProduct(productCode: string): Promise<Product | null> {
         try {
             const data = await sequelize.query(
-                'SELECT * FROM productShowInformation WHERE product_code = :id',{
+                'SELECT * FROM productshowinformation WHERE product_code = :id',{
                     replacements: { id: productCode },
                     type:QueryTypes.SELECT
                 }
@@ -126,7 +126,7 @@ class ProductRepository {
         }
     }
     static async addProduct(data: {
-        Code: string;
+        code: string;
         name: string;
         price: number;
         quantity: number;
@@ -138,7 +138,7 @@ class ProductRepository {
         }): Promise<boolean | null> {
         try {
             const created = await ProductModel.create({
-            product_code: data.Code,
+            product_code: data.code,
             name: data.name,
             price: data.price,
             stock_quantity: data.quantity ?? 0,
@@ -161,38 +161,45 @@ class ProductRepository {
     }
     
     static async updateProduct(
-        productCode: string,
-        data: {
-            name?: string;
-            price?: number;
-            quantity?: number;
-            description?: string;
-            category?: number;
-            brand?: number;
-            type_product?: number;
-            image?: string;
-            is_active?: boolean;
-        }
-    ): Promise<boolean | null> {
-        try {
-            const updateData: any = { ...data }; 
-            updateData.last_restock_date = new Date();
+          productCode: string,
+          data: {
+              name?: string;
+              price?: number;
+              quantity?: number;
+              description?: string;
+              category?: number;
+              brand?: number;
+              type_product?: number;
+              image?: string;
+              is_active?: boolean;
+          }
+      ): Promise<boolean | null> {
+          try {
+    const updateData: any = { ...data };
+    updateData.last_restock_date = new Date();
 
-            const [affectedCount] = await ProductModel.update(
-                updateData,
-                {
-                    where: { product_code: productCode }
-                }
-            );
+    const [affectedCount] = await ProductModel.update(updateData, {
+      where: { product_code: productCode },
+    });
 
-            // Check if any rows were affected
-            return affectedCount > 0 ? true : false;
-        } catch (err) {
-            console.error(`Failed to update product with code ${productCode}:`, err);
-            return null;
-        }
+    if (affectedCount === 0) {
+      // Check if product exists
+      const product = await ProductModel.findOne({ where: { product_code: productCode } });
+      if (!product) {
+        throw new Error(`Product with code ${productCode} not found.`);
+      } else {
+        // No changes made but product exists
+        console.warn(`Product with code ${productCode} found but no changes made.`);
+        return true; // or false depending on your logic
+      }
     }
 
+    return true;
+  } catch (err: any) {
+    console.error(`Failed to update product with code ${productCode}:`, err.message || err);
+    return null;
+  }
+}
 
 }
 

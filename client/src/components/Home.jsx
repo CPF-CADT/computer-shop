@@ -127,12 +127,6 @@ export default function Home() {
                 >
                   <FaUser className="text-[#232F3E]" size={20} />
                 </button>
-                <button
-                  className="px-4 py-2 text-xs bg-red-500 text-white rounded-full hover:bg-red-600 focus:outline-none font-bold"
-                  onClick={logout}
-                >
-                  Logout
-                </button>
               </div>
             ) : (
               <button
@@ -217,7 +211,9 @@ export default function Home() {
             </div>
           </div>
           <div className="w-full md:w-3/4 flex flex-col gap-y-5">
-            <Navigate />
+            <div className="w-full hidden md:block">
+              <Navigate />
+            </div>
             <OverlayHome />
           </div>
         </div>

@@ -440,8 +440,8 @@ export async function staffLogin(req: Request, res: Response): Promise<void> {
                     phone_number: staff.phone_number,
                     email: staff.email,
                     name: staff.name,
+                    role: staff.role
                 },
-                role: staff.role
             });
         }
     } catch (err) {
