@@ -326,7 +326,7 @@ export async function updateCustomerInfor(req:Request,res:Response):Promise<void
         if(isUpdate){
         res.status(200).json({message:'User Update Successful'})
         }else{
-        res.status(204).json({message:'User update fial!'})
+        res.status(404).json({message:'User update fial!'})
         }
     }catch(err){
         res.status(500).json({message:(err as Error).message})

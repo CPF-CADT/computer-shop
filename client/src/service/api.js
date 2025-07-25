@@ -156,7 +156,7 @@ export const apiService = {
   updateCustomer: async (customerId, updateData) => {
     try {
       const response = await apiClient.put(`/user/${customerId}`, updateData);
-      return response.data;
+      return response;
     } catch (error) {
       console.error("API Error (updateCustomer):", error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Failed to update customer");
