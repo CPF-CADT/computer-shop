@@ -1,63 +1,82 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
 import { apiService } from "../../service/api";
 
-export default function EditProductModal({
-  isOpen,
-  onClose,
-  onSave,
-  productCode,
-  categories,
-  brands,
-  types,
-}) {
-  const [formData, setFormData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
+// Initial state for the form to easily reset it
+const initialFormData = {
+  name: "",
+  Code: "",
+  price: "",
+  quantity: 1,
+  description: "",
+  category: "",
+  brand: "",
+  type_product: "",
+};
 
+export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
+  // State for form data
+  const [formData, setFormData] = useState(initialFormData);
+
+  // State for dropdown options
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [type_products, setTypeProducts] = useState([]);
+  
+  // State for data fetching status
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // State for image upload logic
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
+  // Effect to fetch categories, brands, and types when the modal opens
   useEffect(() => {
-    if (isOpen && productCode) {
-      const fetchProduct = async () => {
+    if (isOpen) {
+      const fetchData = async () => {
         setIsLoading(true);
-        setError("");
+        setError(null);
         try {
-          const productData = await apiService.getOneProduct(productCode);
-          setFormData({
-            ...productData,
-            category: productData.category?.id || "",
-            brand: productData.brand?.id || "",
-            type: productData.type?.id || "",
-            price: productData.price.amount,
-            image: productData.image || "",
-          });
-          setUploadedImageUrl(productData.image || "");
+          const [categoriesData, brandsData, typesData] = await Promise.all([
+            apiService.getAllCategories(),
+            apiService.getAllBrands(),
+            apiService.getAllTypeProducts(),
+          ]);
+          setCategories(categoriesData);
+          setBrands(brandsData);
+          setTypeProducts(typesData);
         } catch (err) {
-          setError("Failed to load product data.");
+          setError("Failed to load required data. Please try again.");
+          toast.error("Failed to load form data.");
+          console.error("Failed to fetch product data:", err);
         } finally {
           setIsLoading(false);
         }
       };
-      fetchProduct();
+      fetchData();
     }
-  }, [isOpen, productCode]);
+  }, [isOpen]);
 
+  // General handler for form input changes
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // --- Image Handling Logic ---
+
+  const handleSelectFileClick = () => {
+    fileInputRef.current?.click();
   };
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+      setUploadedImageUrl(""); // Clear any previously uploaded URL
     }
   };
 
@@ -66,221 +85,168 @@ export default function EditProductModal({
       toast.error("Please select an image file first.");
       return;
     }
+
     setIsUploading(true);
     const uploadPromise = apiService.uploadImageToCloudinary(selectedFile);
+
     toast.promise(uploadPromise, {
       loading: "Uploading image...",
       success: (url) => {
         setUploadedImageUrl(url);
-        setFormData((prev) => ({ ...prev, image: url }));
+        setSelectedFile(null);
         setIsUploading(false);
-        return "✅ Image uploaded!";
+        return "✅ Image uploaded! You can now add the product.";
       },
       error: (err) => {
         setIsUploading(false);
-        return `❌ Upload failed: ${err.message || "Try again."}`;
+        return `❌ Upload failed: ${err.message || "Please try again."}`;
       },
     });
-    await uploadPromise;
+
+    await uploadPromise.catch(err => console.error(err));
   }, [selectedFile]);
+
+  // --- Form Submission Logic ---
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await onSave(productCode, formData);
-      toast.success("✅ Product updated!");
-      onClose();
-    } catch (err) {
-      toast.error("❌ Failed to update product.");
-      console.error(err);
+
+    if (selectedFile) {
+      toast.error("You have a selected image that has not been uploaded. Please upload it first.");
+      return;
     }
+
+    if (!uploadedImageUrl) {
+      toast.error("Please select and upload a product image.");
+      return;
+    }
+
+    // Prepare the final data payload to EXACTLY match your API structure
+    const productData = {
+      name: formData.name,
+      code: formData.Code,
+      description: formData.description,
+      price: parseFloat(formData.price),
+      quantity: parseInt(formData.quantity, 10),
+      category: parseInt(formData.category, 10),
+      brand: parseInt(formData.brand, 10),
+      type_product: parseInt(formData.type_product, 10),
+      image: uploadedImageUrl,
+    };
+
+    await onAddProduct(productData);
+
+    // Reset the form for the next entry
+    setFormData(initialFormData);
+    setUploadedImageUrl("");
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
+    
+    onClose();
   };
+  
+  // --- Render Logic ---
 
   if (!isOpen) return null;
 
-  const imagePreview = selectedFile
+  const imagePreviewUrl = selectedFile
     ? URL.createObjectURL(selectedFile)
     : uploadedImageUrl;
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-center items-center bg-black bg-opacity-40">
-      <div className="bg-white rounded-lg shadow-xl m-4 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-bold text-gray-800">Edit Product</h2>
-            <p className="text-sm text-gray-500">Product Code: {productCode}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
-          >
-            &times;
-          </button>
-        </div>
+    <div className="fixed inset-0 z-40 flex justify-center items-center">
+      <div className="bg-white p-6 rounded-lg shadow-xl z-50 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <h2 className="text-2xl font-bold mb-5 text-gray-800">Add New Product</h2>
+        
+        {isLoading && <p className="text-center p-6">Loading form data...</p>}
+        {error && <p className="text-center p-6 text-red-500">{error}</p>}
 
-        {isLoading && <p className="p-6 text-center">Loading product details...</p>}
-        {error && <p className="p-6 text-center text-red-500">{error}</p>}
+        {!isLoading && !error && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Form fields are unchanged */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Product Name</label>
+              <input type="text" name="name" value={formData.name} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500" required />
+            </div>
 
-        {!isLoading && formData && (
-          <form onSubmit={handleSubmit}>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Product Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name || ""}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Price ($)
-                </label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price || 0}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  step="0.01"
-                  required
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description || ""}
-                  onChange={handleChange}
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Category
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Brand
-                </label>
-                <select
-                  name="brand"
-                  value={formData.brand}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  required
-                >
-                  <option value="">Select Brand</option>
-                  {brands.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Type
-                </label>
-                <select
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  required
-                >
-                  <option value="">Select Type</option>
-                  {types.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Product Code</label>
+              <input type="text" name="Code" value={formData.Code} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500" required />
+            </div>
 
-              {/* IMAGE UPLOAD SECTION */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Product Image
-                </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Category</label>
+                    <select name="category" value={formData.category} onChange={handleChange} className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md" required>
+                    <option value="">Select</option>
+                    {categories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.title}</option>))}
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Brand</label>
+                    <select name="brand" value={formData.brand} onChange={handleChange} className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md" required>
+                    <option value="">Select</option>
+                    {brands.map((b) => (<option key={b.id} value={b.id}>{b.name}</option>))}
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Type</label>
+                    <select name="type_product" value={formData.type_product} onChange={handleChange} className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md" required>
+                    <option value="">Select</option>
+                    {type_products.map((t) => (<option key={t.id} value={t.id}>{t.name}</option>))}
+                    </select>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Price ($)</label>
+                <input type="number" name="price" value={formData.price} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required step="0.01" min="0" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Quantity</label>
+                <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required step="1" min="0" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea name="description" value={formData.description} onChange={handleChange} rows="3" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"></textarea>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Product Image</label>
+              <div className="mt-2 space-y-3">
                 <div className="flex items-center gap-4">
-                  {imagePreview ? (
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-16 h-16 rounded-md object-cover"
-                    />
+                  {imagePreviewUrl ? (
+                    <img src={imagePreviewUrl} alt="Preview" className="w-20 h-20 rounded-md object-cover" />
                   ) : (
-                    <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center text-gray-400 text-xs">
-                      No Image
-                    </div>
+                    <div className="w-20 h-20 rounded-md bg-gray-100 flex items-center justify-center text-gray-400 text-xs text-center">No Image</div>
                   )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="px-3 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 text-sm"
-                  >
-                    {selectedFile ? "Change Image" : "Select Image"}
-                  </button>
-                  {selectedFile && (
-                    <button
-                      type="button"
-                      onClick={handleUpload}
-                      disabled={isUploading}
-                      className="px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 text-sm"
-                    >
-                      {isUploading ? "Uploading..." : "Upload Image"}
+                  <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" disabled={isUploading}/>
+
+                  <div className="flex flex-col gap-2">
+                    <button type="button" onClick={handleSelectFileClick} disabled={isUploading} className="px-4 py-2 text-sm text-purple-700 bg-purple-100 rounded-md hover:bg-purple-200 disabled:opacity-50">
+                      Select Image
                     </button>
-                  )}
+                    {selectedFile && (
+                      <button type="button" onClick={handleUpload} disabled={isUploading} className="px-4 py-2 text-sm text-green-700 bg-green-100 rounded-md hover:bg-green-200 disabled:opacity-50">
+                        {isUploading ? "Uploading..." : "Upload Now"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="p-6 bg-gray-50 border-t flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
-              >
+            <div className="pt-4 flex justify-end gap-3 border-t mt-6">
+              <button type="button" onClick={onClose} disabled={isUploading} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:opacity-50">
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={isUploading}
-                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
-              >
-                Save Changes
+              <button type="submit" disabled={isUploading || !!selectedFile} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                Add Product
               </button>
             </div>
           </form>
