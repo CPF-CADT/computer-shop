@@ -1,6 +1,6 @@
 import axios from 'axios';
 const apiClient = axios.create({
-  baseURL: 'https://computer-shop-4sqx.onrender.com',
+  baseURL: 'https://computer-shop-4sqx.onrender.com/api/',
   // baseURL: 'http://localhost:3000/api/',
   headers: {
     'Content-Type': 'application/json'
@@ -577,9 +577,9 @@ export const apiService = {
     }
   },
 
-    uploadImageToCloudinary: async (file) => {
+  uploadImageToCloudinary: async (file) => {
     const formData = new FormData();
-    formData.append('image', file); 
+    formData.append('image', file);
 
     try {
       const res = await apiClient.post('service/upload', formData, {
