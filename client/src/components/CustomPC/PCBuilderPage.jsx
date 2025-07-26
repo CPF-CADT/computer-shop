@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import PCBuilderSelector from "./PCBuilderSelector";
 import PCBuilderSummary from "./PCBuilderSummary";
 import { apiService } from '../../service/api';

@@ -10,7 +10,7 @@ const privilegeOptions = [
     "SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "GRANT OPTION"
 ];
 
-// Helper to calculate remaining days
+
 function getDaysLeft(expireDate) {
     if (!expireDate) return 'N/A';
     const today = new Date();
@@ -19,7 +19,7 @@ function getDaysLeft(expireDate) {
     return diff > 0 ? `${diff} days` : 'Expired';
 }
 
-// Reusable AlertBox Component
+
 const AlertBox = ({ show, message, type, onClose }) => {
     if (!show) return null;
     const baseClasses = "flex items-center justify-between p-4 mb-4 rounded-lg shadow-md";

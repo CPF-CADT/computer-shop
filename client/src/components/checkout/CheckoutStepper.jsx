@@ -1,4 +1,3 @@
-// src/components/checkout/CheckoutStepper.js
 import React from 'react';
 
 const CheckoutStepper = ({ currentStep, steps }) => {

@@ -1,6 +1,4 @@
-// src/components/SearchPage.jsx
-
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { apiService } from '../service/api';
 import ProductCard from "./Product/ProductCard"; 

@@ -1,6 +1,6 @@
 import G713PI from '../assets/G713PI.jpg';
 
-// Homepage Specific Data
+
 export const homePageLaptops = [
   {
     product_code: "HOME-ASUS-G713PI",

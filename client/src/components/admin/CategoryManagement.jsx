@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MdAdd, MdEdit, MdDelete, MdCategory, MdLabel, MdSearch } from 'react-icons/md';
 import { apiService } from '../../service/api';
-import { useCategory } from '../context/CategoryContext'; // Import useCategory hook
+import { useCategory } from '../context/CategoryContext'; 
 
 export default function CategoryManagement() {
-  // Destructure data and loading/error states from useCategory
+
   const { categories, brands, typeProducts, loadingCategories, categoryError, refetchCategoryData } = useCategory();
 
   const [activeTab, setActiveTab] = useState('categories');
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  // Removed local loading state as we use loadingCategories from context
-  // Removed local error state as we use categoryError from context
+
 
   const [formData, setFormData] = useState({
     title: '',
@@ -20,8 +19,7 @@ export default function CategoryManagement() {
     description: ''
   });
 
-  // Removed useEffect for fetchAllData as data is now managed by CategoryContext
-  // We will use refetchCategoryData from context for refreshing after CRUD operations.
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,7 +44,7 @@ export default function CategoryManagement() {
         }
       }
 
-      // Use refetchCategoryData from context to refresh data
+
       await refetchCategoryData();
       resetForm();
       toast.success(`${editingItem ? 'Updated' : 'Created'} ${getTabTitle().slice(0, -1)} successfully!`);
@@ -78,7 +76,7 @@ export default function CategoryManagement() {
         await apiService.deleteTypeProduct(id);
       }
 
-      // Use refetchCategoryData from context to refresh data
+   
       await refetchCategoryData();
       toast.success(`Deleted ${getTabTitle().slice(0, -1)} successfully!`);
     } catch (error) {
@@ -144,7 +142,7 @@ export default function CategoryManagement() {
     }
   };
 
-  // Use loadingCategories from context instead of local loading
+
   if (loadingCategories) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -153,7 +151,7 @@ export default function CategoryManagement() {
     );
   }
 
-  // Display error from context if any
+ 
   if (categoryError) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -164,7 +162,7 @@ export default function CategoryManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+ 
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Category Management</h1>
@@ -179,7 +177,7 @@ export default function CategoryManagement() {
         </button>
       </div>
 
-      {/* Stats Cards */}
+   
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
@@ -212,7 +210,6 @@ export default function CategoryManagement() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="bg-white rounded-lg shadow-md">
         {/* Tabs */}
         <div className="border-b border-gray-200">
@@ -240,7 +237,7 @@ export default function CategoryManagement() {
           </nav>
         </div>
 
-        {/* Search */}
+ 
         <div className="p-6 border-b border-gray-200">
           <div className="relative">
             <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -254,7 +251,7 @@ export default function CategoryManagement() {
           </div>
         </div>
 
-        {/* Table */}
+   
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -316,7 +313,7 @@ export default function CategoryManagement() {
         </div>
       </div>
 
-      {/* Create/Edit Modal */}
+     
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl">

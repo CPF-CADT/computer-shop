@@ -28,7 +28,7 @@ export default function BannerGPU() {
         </button>
       </div>
 
-      {/* Image Section */}
+
       <img
         src={PC1}
         alt="Graphic Card Banner"

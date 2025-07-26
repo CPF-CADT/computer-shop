@@ -15,7 +15,6 @@ export default function Laptop() {
   const handleFilterChange = ({ sizes, prices, colors }) => {
     let filtered = mockLaptop;
 
-    // Filter by size
     if (sizes.length > 0) {
       filtered = filtered.filter((product) => {
         const screenSize = product.description.match(/(\d+\.?\d*)['"]/) || [];
@@ -26,7 +25,6 @@ export default function Laptop() {
       });
     }
 
-    // Filter by price
     if (prices.length > 0) {
       filtered = filtered.filter((product) => {
         const price = parseFloat(product.price.amount);
@@ -36,7 +34,6 @@ export default function Laptop() {
       });
     }
 
-    // Filter by color
     if (colors.length > 0) {
       filtered = filtered.filter((product) =>
         colors.some((color) =>

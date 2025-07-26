@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../service/api'; // Adjust the path as necessary
-import { useAuth } from './context/AuthContext'; // Import useAuth to access the login function
+import { apiService } from '../service/api'; 
+import { useAuth } from './context/AuthContext'; 
 
 const VerificationCode = ({ phoneNumber }) => {
   const [codes, setCodes] = useState(['', '', '', '']);
@@ -11,7 +11,6 @@ const VerificationCode = ({ phoneNumber }) => {
   const inputRefs = useRef([]);
   const navigate = useNavigate();
   const { login } = useAuth(); 
-
   useEffect(() => {
     if (phoneNumber) {
       handleResendCode();
@@ -22,26 +21,20 @@ const VerificationCode = ({ phoneNumber }) => {
   }, [phoneNumber]);
 
   const handleChange = (index, value) => {
-    // Only allow numeric values
     if (!/^\d*$/.test(value)) return;
-
     const newCodes = [...codes];
     newCodes[index] = value;
     setCodes(newCodes);
-
-    // Auto-focus next input
     if (value && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
   };
-
   const handleKeyDown = (index, e) => {
-    // Handle backspace to move to previous input
+
     if (e.key === 'Backspace' && !codes[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
-
   const handlePaste = (e) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4);
@@ -50,10 +43,7 @@ const VerificationCode = ({ phoneNumber }) => {
     for (let i = 0; i < 4; i++) {
       newCodes[i] = pastedData[i] || '';
     }
-
     setCodes(newCodes);
-
-    // Focus the next empty input or the last input
     const nextEmptyIndex = newCodes.findIndex(code => !code);
     const focusIndex = nextEmptyIndex === -1 ? 3 : nextEmptyIndex;
     inputRefs.current[focusIndex]?.focus();

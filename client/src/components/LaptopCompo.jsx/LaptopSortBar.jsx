@@ -10,7 +10,7 @@ export default function LaptopSortBar() {
         </button>
       </div>
       <div>
-        {/* Grid/List toggle icons can go here */}
+
       </div>
     </div>
   );

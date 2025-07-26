@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MdAdd, MdEdit, MdDelete, MdLocalOffer, MdSchedule, MdVisibility, MdCode, MdPercent, MdSearch, MdCheckCircle, MdCancel } from 'react-icons/md';
-import { apiService } from '../../service/api'; // Assuming apiService is correctly defined
-import toast from 'react-hot-toast'; // For user notifications
-import { useCategory } from '../context/CategoryContext'; // Import useCategory to get brands, categories, types
+import { apiService } from '../../service/api'; 
+import toast from 'react-hot-toast'; 
+import { useCategory } from '../context/CategoryContext'; 
 
 export default function PromotionsPage() {
   const { categories: allCategories, brands: allBrands, typeProducts: allTypeProducts, loadingCategories } = useCategory();
@@ -20,30 +20,30 @@ export default function PromotionsPage() {
     discount_value: 0,
     start_date: '',
     end_date: '',
-    code: '', // Optional
+    code: '',
   });
 
-  // State for product selection modal
+ 
   const [showProductSelectionModal, setShowProductSelectionModal] = useState(false);
-  const [productsForPromotion, setProductsForPromotion] = useState([]); // Products to display in modal
-  const [selectedProductsToApply, setSelectedProductsToApply] = useState([]); // Product codes selected for current promotion
-  const [currentPromotionToApply, setCurrentPromotionToApply] = useState(null); // The promotion being applied to products
-  const [productSearchTerm, setProductSearchTerm] = useState(''); // Search term for products in modal
+  const [productsForPromotion, setProductsForPromotion] = useState([]); 
+  const [selectedProductsToApply, setSelectedProductsToApply] = useState([]); 
+  const [currentPromotionToApply, setCurrentPromotionToApply] = useState(null); 
+  const [productSearchTerm, setProductSearchTerm] = useState(''); 
   const [loadingProducts, setLoadingProducts] = useState(false);
 
-  // New states for product filters within the modal
+
   const [selectedProductType, setSelectedProductType] = useState('');
   const [selectedProductBrand, setSelectedProductBrand] = useState('');
   const [selectedProductCategory, setSelectedProductCategory] = useState('');
 
-  // New state for targeting type in modal: 'specific', 'category', 'type', 'brand'
+
   const [productTargetingType, setProductTargetingType] = useState('specific');
   const [selectedTargetCategoryIds, setSelectedTargetCategoryIds] = useState([]);
   const [selectedTargetTypeIds, setSelectedTargetTypeIds] = useState([]);
   const [selectedTargetBrandIds, setSelectedTargetBrandIds] = useState([]);
 
 
-  // Fetch all promotions on component mount
+ 
   const fetchPromotions = useCallback(async () => {
     setLoading(true);
     setApiError(null);
@@ -57,10 +57,10 @@ export default function PromotionsPage() {
         value: promo.discount_value,
         startDate: promo.start_date,
         endDate: promo.end_date,
-        status: new Date(promo.end_date) < new Date() ? 'expired' : 'active', // Derived
-        usageCount: 0, // Mocked, replace with API data if available
-        usageLimit: 1000, // Mocked, replace with API data if available
-        description: promo.description || '', // Assuming description can come from API
+        status: new Date(promo.end_date) < new Date() ? 'expired' : 'active',
+        usageCount: 0, 
+        usageLimit: 1000, 
+        description: promo.description || '', 
       }));
       setPromotions(formattedPromotions);
     } catch (err) {
@@ -75,7 +75,7 @@ export default function PromotionsPage() {
     fetchPromotions();
   }, [fetchPromotions]);
 
-  // Fetch products for the selection modal based on filters
+
   const fetchProductsForPromotion = useCallback(async () => {
     setLoadingProducts(true);
     try {
@@ -84,17 +84,14 @@ export default function PromotionsPage() {
         name: productSearchTerm, // Search by product name
       };
 
-      // Ensure API expects 'type_id' or 'type_name' based on your backend.
-      // If your API's `getProducts` expects the name (e.g., "VGA") for `type_product` parameter,
-      // then `selectedProductType` should be `type.name`. If it expects ID, it should be `type.id`.
-      // Based on previous discussions, it assumes `type_product` expects the name (title).
-      if (selectedProductType) { // selectedProductType will now hold the name (e.g. "VGA")
+
+      if (selectedProductType) { 
         params.type_product = selectedProductType;
       }
-      if (selectedProductBrand) { // selectedProductBrand holds the name (e.g., "ASUS")
+      if (selectedProductBrand) { 
         params.brand = selectedProductBrand;
       }
-      if (selectedProductCategory) { // selectedProductCategory holds the title (e.g., "Laptops")
+      if (selectedProductCategory) { 
         params.category = selectedProductCategory;
       }
 
@@ -109,7 +106,7 @@ export default function PromotionsPage() {
   }, [productSearchTerm, selectedProductType, selectedProductBrand, selectedProductCategory]);
 
   useEffect(() => {
-    if (showProductSelectionModal && !loadingCategories) { // Only fetch products if categories are loaded
+    if (showProductSelectionModal && !loadingCategories) { 
       fetchProductsForPromotion();
     }
   }, [showProductSelectionModal, productSearchTerm, selectedProductType, selectedProductBrand, selectedProductCategory, fetchProductsForPromotion, loadingCategories]);
@@ -122,10 +119,10 @@ export default function PromotionsPage() {
       const apiData = {
         title: formData.title,
         discount_type: formData.discount_type,
-        discount_value: parseFloat(formData.discount_value), // Ensure it's a number
+        discount_value: parseFloat(formData.discount_value), 
         start_date: formData.start_date,
         end_date: formData.end_date,
-        code: formData.code || null, // Send null if empty
+        code: formData.code || null, 
       };
 
       if (editingPromotion) {
@@ -136,7 +133,7 @@ export default function PromotionsPage() {
         toast.success("Promotion created successfully!");
       }
       resetForm();
-      fetchPromotions(); // Refresh list
+      fetchPromotions(); 
     } catch (err) {
       setApiError(err.message || "Failed to save promotion.");
       toast.error(err.message || "Failed to save promotion.");
@@ -159,11 +156,11 @@ export default function PromotionsPage() {
 
   const handleEdit = (promotion) => {
     setFormData({
-      title: promotion.name || promotion.title, // Use name or title
+      title: promotion.name || promotion.title, 
       discount_type: promotion.type || promotion.discount_type,
       discount_value: promotion.value || promotion.discount_value,
-      start_date: promotion.startDate ? new Date(promotion.startDate).toISOString().split('T')[0] : '', // Format date for input
-      end_date: promotion.endDate ? new Date(promotion.endDate).toISOString().split('T')[0] : '', // Format date for input
+      start_date: promotion.startDate ? new Date(promotion.startDate).toISOString().split('T')[0] : '', 
+      end_date: promotion.endDate ? new Date(promotion.endDate).toISOString().split('T')[0] : '', 
       code: promotion.code || '',
     });
     setEditingPromotion(promotion);
@@ -176,7 +173,7 @@ export default function PromotionsPage() {
     try {
       await apiService.deletePromotion(id);
       toast.success("Promotion deleted successfully!");
-      fetchPromotions(); // Refresh list
+      fetchPromotions(); 
     } catch (err) {
       setApiError(err.message || "Failed to delete promotion.");
       toast.error(err.message || "Failed to delete promotion.");
@@ -186,12 +183,12 @@ export default function PromotionsPage() {
 
   const handleApplyPromotionClick = (promotion) => {
     setCurrentPromotionToApply(promotion);
-    setSelectedProductsToApply([]); // Reset for new selection
-    setProductSearchTerm(''); // Clear search
-    setSelectedProductType(''); // Clear filters
+    setSelectedProductsToApply([]); 
+    setProductSearchTerm(''); 
+    setSelectedProductType(''); 
     setSelectedProductBrand('');
     setSelectedProductCategory('');
-    setProductTargetingType('specific'); // Default to specific product
+    setProductTargetingType('specific'); 
     setSelectedTargetCategoryIds([]);
     setSelectedTargetTypeIds([]);
     setSelectedTargetBrandIds([]);
@@ -245,7 +242,7 @@ export default function PromotionsPage() {
       await apiService.applyPromotionBatch(payload);
       toast.success(successMessage);
       setShowProductSelectionModal(false);
-      // Reset all states related to product selection
+    
       setSelectedProductsToApply([]);
       setProductSearchTerm('');
       setSelectedProductType('');

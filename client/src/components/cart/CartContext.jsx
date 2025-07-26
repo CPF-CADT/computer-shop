@@ -1,15 +1,15 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { apiService } from '../../service/api'; // Adjust path as needed for your apiService
-import { useAuth } from '../context/AuthContext'; // Adjust path as needed for your AuthContext
-import toast from 'react-hot-toast'; // For user notifications
+import { apiService } from '../../service/api'; 
+import { useAuth } from '../context/AuthContext'; 
+import toast from 'react-hot-toast'; 
 
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
-  const { user, isAuthenticated } = useAuth(); // Get user object and authentication status
-  const [cartItems, setCartItems] = useState([]); // State to hold cart items
-  const [loadingCart, setLoadingCart] = useState(true); // Loading state for cart operations
-  const [cartError, setCartError] = useState(null); // Error state for cart operations
+  const { user, isAuthenticated } = useAuth(); 
+  const [cartItems, setCartItems] = useState([]); 
+  const [loadingCart, setLoadingCart] = useState(true); 
+  const [cartError, setCartError] = useState(null); 
 
   const customerId = user?.id;
 
@@ -20,25 +20,25 @@ export function CartProvider({ children }) {
       return;
     }
 
-    setLoadingCart(true); // Start loading
-    setCartError(null); // Clear previous errors
+    setLoadingCart(true); 
+    setCartError(null); 
     try {
       const data = await apiService.getCartItems(customerId);
-      setCartItems(data); // Update cart items with data from API
+      setCartItems(data); 
     } catch (error) {
       console.error("Error fetching cart items:", error);
-      setCartError(error.message); // Set error message
-      setCartItems([]); // Clear cart on error to prevent displaying stale/incorrect data
-      toast.error("Failed to load cart items."); // Notify user
+      setCartError(error.message);
+      setCartItems([]);
+      toast.error("Failed to load cart items.");
     } finally {
-      setLoadingCart(false); // End loading
+      setLoadingCart(false); 
     }
-  }, [isAuthenticated, customerId]); // Dependencies for useCallback
+  }, [isAuthenticated, customerId]); 
 
-  // Effect hook to call fetchCartItems whenever authentication status or customerId changes
+ 
   useEffect(() => {
     fetchCartItems();
-  }, [fetchCartItems]); // Dependency on the memoized fetchCartItems function
+  }, [fetchCartItems]);
 
 
   const addToCart = async (productToAdd) => {
@@ -48,30 +48,30 @@ export function CartProvider({ children }) {
     }
 
     try {
-      // Check if the item already exists in the local cart state
+    
       const existingItem = cartItems.find(item => item.product_code === productToAdd.product_code);
 
       if (existingItem) {
-        // If item exists, update its quantity via PUT API
+    
         const newQty = existingItem.qty + productToAdd.qty;
         await apiService.updateCartItemQuantity(customerId, productToAdd.product_code, newQty);
 
-        // Optimistically update local state
+      
         setCartItems(prevItems =>
           prevItems.map(item =>
             item.product_code === productToAdd.product_code
-              ? { ...item, qty: newQty } // Update quantity
+              ? { ...item, qty: newQty }
               : item
           )
         );
         toast.success(`Updated quantity for ${productToAdd.name} in cart.`);
       } else {
-        // If item doesn't exist, add new item via POST API
+      
         await apiService.addToCartItem(
           customerId,
           productToAdd.product_code,
           productToAdd.qty,
-          productToAdd.price.amount // price_at_purchase from product object
+          productToAdd.price.amount
         );
 
         setCartItems(prevItems => [...prevItems, {
@@ -88,7 +88,7 @@ export function CartProvider({ children }) {
     } catch (error) {
       console.error("Error adding/updating cart item:", error);
       toast.error(error.message || "Failed to add item to cart.");
-      // Consider re-fetching cart items from backend on error to ensure sync
+      
       fetchCartItems();
     }
   };
@@ -99,14 +99,14 @@ export function CartProvider({ children }) {
       return;
     }
     if (newQty <= 0) {
-      // If quantity is 0 or less, remove the item
+
       await removeFromCart(productCode);
       return;
     }
 
     try {
       await apiService.updateCartItemQuantity(customerId, productCode, newQty);
-      // Optimistically update local state
+  
       setCartItems(prevItems =>
         prevItems.map(item =>
           item.product_code === productCode
@@ -118,7 +118,7 @@ export function CartProvider({ children }) {
     } catch (error) {
       console.error("Error updating cart item quantity:", error);
       toast.error(error.message || "Failed to update cart item quantity.");
-      fetchCartItems(); // Re-fetch on error
+      fetchCartItems(); 
     }
   };
 
@@ -135,14 +135,12 @@ export function CartProvider({ children }) {
     } catch (error) {
       console.error("Error removing cart item:", error);
       toast.error(error.message || "Failed to remove item from cart.");
-      fetchCartItems(); // Re-fetch on error
+      fetchCartItems(); 
     }
   };
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.qty, 0);
   const totalPrice = cartItems.reduce((sum, item) => sum + (item.qty * item.price_at_purchase), 0);
-
-  // Value provided by the context to its consumers
   const value = {
     cartItems,
     loadingCart,
@@ -152,17 +150,14 @@ export function CartProvider({ children }) {
     addToCart,
     updateCartItem,
     removeFromCart,
-    fetchCartItems, // Expose fetch function for manual refresh if needed
+    fetchCartItems, 
   };
-
   return (
     <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );
 }
-
-// Custom hook to consume the CartContext
 export const useCart = () => {
   return useContext(CartContext);
 };

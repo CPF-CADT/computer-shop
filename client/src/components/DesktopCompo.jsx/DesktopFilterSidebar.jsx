@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import Categories from "../Categories";
 
-// Case size options
+
 const defaultSizeOptions = [
   { value: 'mini', label: 'Mini Tower' },
   { value: 'mid', label: 'Mid Tower' },
   { value: 'full', label: 'Full Tower' }
 ];
 
-// Price range options
+
 const defaultPriceOptions = [
   { min: 0, max: 1000, label: 'Under $1,000' },
   { min: 1000, max: 2000, label: '$1,000 - $2,000' },
@@ -16,13 +16,13 @@ const defaultPriceOptions = [
   { min: 3000, max: Infinity, label: 'Over $3,000' }
 ];
 
-// Case type options
+
 const defaultCaseTypeOptions = [
   { value: 'glass', label: 'Glass Case' },
   { value: 'normal', label: 'Normal Case' }
 ];
 
-// Brand options (example, should be dynamic in real app)
+
 const defaultBrandOptions = [
   'ASUS', 'MSI', 'Acer', 'Dell', 'HP', 'Lenovo', 'Custom'
 ];

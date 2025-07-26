@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import mainLogo from "../assets/gear-tech.png";
 import { FaSearch } from "react-icons/fa";
 import { BsCart2 } from "react-icons/bs";

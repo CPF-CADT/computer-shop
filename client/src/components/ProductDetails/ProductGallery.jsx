@@ -13,7 +13,7 @@ export default function ProductGallery({ product }) {
         />
       </div>
       <div className="flex gap-4">
-        {/* Thumbnail images would go here */}
+
         <div 
           className="w-20 h-20 border rounded-md p-2 cursor-pointer hover:border-orange-500"
           onClick={() => setSelectedImage(product.image_path)}

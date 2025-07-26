@@ -5,7 +5,7 @@ export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState('30days');
   const [selectedReport, setSelectedReport] = useState('overview');
 
-  // Mock analytics data
+
   const analyticsData = {
     overview: {
       totalRevenue: 125340.50,
@@ -126,7 +126,7 @@ export default function AnalyticsPage() {
           }
         }
       `}</style>
-      {/* Header */}
+
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Analytics & Reports</h1>
@@ -152,7 +152,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Report Tabs */}
+
       <div className="bg-white rounded-lg shadow-md">
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">

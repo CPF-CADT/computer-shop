@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
 import { apiService } from "../../service/api";
 
@@ -9,23 +9,22 @@ export default function EditProductModal({
   productCode,
   categories = [],
   brands = [],
-  types = [], // Changed from 'type_products' to 'types' to match props
+  types = [], 
 }) {
   const [formData, setFormData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // --- NEW: State management for image upload, matching AddProductModal ---
+ 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
-  // --- END NEW ---
 
-  // Fetches the product data when the modal opens
+
   useEffect(() => {
     if (isOpen && productCode) {
-      // Reset states when modal opens with a new product
+    
       setSelectedFile(null);
       setIsUploading(false);
 
@@ -38,10 +37,10 @@ export default function EditProductModal({
             ...productData,
             category: parseInt(productData.category?.id)|| "",
             brand: parseInt(productData.brand?.id) || "",
-            type_product: parseInt(productData.type?.id) || "", // Ensure this key matches your data
-            price: productData.price?.amount || productData.price, // Handle both object and direct price
+            type_product: parseInt(productData.type?.id) || "", 
+            price: productData.price?.amount || productData.price, 
           });
-          // Set the initial image URL from the fetched data
+       
           setUploadedImageUrl(productData.image || "");
         } catch (err) {
           setError("Failed to load product data.");
@@ -54,13 +53,13 @@ export default function EditProductModal({
     }
   }, [isOpen, productCode]);
 
-  // Handles changes to form inputs
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // --- NEW: Image handling functions from AddProductModal ---
+
   const handleSelectFileClick = () => {
     fileInputRef.current?.click();
   };
@@ -84,8 +83,8 @@ export default function EditProductModal({
     toast.promise(uploadPromise, {
       loading: "Uploading image...",
       success: (url) => {
-        setUploadedImageUrl(url); // Update the final URL
-        setSelectedFile(null); // Clear the selected file as it's now uploaded
+        setUploadedImageUrl(url); 
+        setSelectedFile(null); 
         setIsUploading(false);
         return "✅ Image uploaded! You can now save the changes.";
       },
@@ -95,10 +94,10 @@ export default function EditProductModal({
       },
     });
 
-    // We await here to ensure the upload is complete before proceeding
+    
     await uploadPromise;
   }, [selectedFile]);
-  // --- END NEW ---
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -117,15 +116,14 @@ export default function EditProductModal({
       await onSave(productCode, finalData);
       onClose();
     } catch (err) {
-      // The error toast is also better handled in the parent.
+ 
       console.error(err);
     }
   };
 
-  // --- RENDER LOGIC ---
+
   if (!isOpen) return null;
 
-  // The preview should prioritize a newly selected file, then the uploaded URL
   const imagePreviewUrl = selectedFile
     ? URL.createObjectURL(selectedFile)
     : uploadedImageUrl;
@@ -151,12 +149,12 @@ export default function EditProductModal({
 
         {!isLoading && formData && (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Form fields */}
+          
             <div>
               <label className="block text-sm font-medium text-gray-700">Product Name</label>
               <input type="text" name="name" value={formData.name || ""} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500" required />
             </div>
-            {/* ... other form fields like price, description, etc. */}
+           
              <div>
               <label className="block text-sm font-medium text-gray-700">Price ($)</label>
               <input type="number" name="price" value={formData.price || 0} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500" step="0.01" required />
@@ -188,7 +186,7 @@ export default function EditProductModal({
             </div>
 
 
-            {/* --- NEW: Image Upload Section matching AddProductModal --- */}
+           
             <div>
               <label className="block text-sm font-medium text-gray-700">Product Image</label>
               <div className="mt-2 space-y-3">
@@ -213,7 +211,7 @@ export default function EditProductModal({
                 </div>
               </div>
             </div>
-            {/* --- END NEW --- */}
+          
             
             <div className="pt-4 flex justify-end gap-3 border-t mt-6">
               <button type="button" onClick={onClose} disabled={isUploading} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">

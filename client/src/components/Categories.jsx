@@ -1,4 +1,4 @@
-// src/components/Categories.jsx
+
 import React from 'react';
 import { useCategory } from './context/CategoryContext';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate

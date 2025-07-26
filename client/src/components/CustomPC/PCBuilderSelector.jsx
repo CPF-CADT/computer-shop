@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'; // Import icons here
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'; 
 
 export default function PCBuilderSelector({
   items,
@@ -8,48 +8,43 @@ export default function PCBuilderSelector({
   onSelect,
 }) {
   const scrollContainerRef = useRef(null);
-  const [currentPage, setCurrentPage] = useState(0); // Internal page for carousel
+  const [currentPage, setCurrentPage] = useState(0); 
   
-  // Define how many products to show per "page" in the carousel
-  // This should match your grid layout (e.g., 4 items for lg:grid-cols-4)
+
   const productsPerCarouselPage = 4; 
 
-  // Calculate total pages for the internal carousel
   const totalCarouselPages = items && items.length > 0
     ? Math.ceil(items.length / productsPerCarouselPage)
     : 0;
 
-  // Calculate which products to display on the current carousel page
   const startIndex = currentPage * productsPerCarouselPage;
   const endIndex = startIndex + productsPerCarouselPage;
   const displayedItems = items.slice(startIndex, endIndex);
 
   const handleNextCarouselPage = () => {
-    setCurrentPage((prevPage) => (prevPage + 1) % totalCarouselPages); // Loop back to start
-    // If you want it to stop at the end, use:
-    // setCurrentPage((prevPage) => Math.min(prevPage + 1, totalCarouselPages - 1));
+    setCurrentPage((prevPage) => (prevPage + 1) % totalCarouselPages); 
+
     if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' }); // Scroll back to start of container
+        scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' }); 
     }
   };
 
   const handlePrevCarouselPage = () => {
-    setCurrentPage((prevPage) => (prevPage - 1 + totalCarouselPages) % totalCarouselPages); // Loop back to end
-    // If you want it to stop at the beginning, use:
-    // setCurrentPage((prevPage) => Math.max(prevPage - 1, 0));
+    setCurrentPage((prevPage) => (prevPage - 1 + totalCarouselPages) % totalCarouselPages); 
+
     if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' }); // Scroll back to start of container
+        scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' }); 
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mb-6 relative"> {/* Added relative for arrow positioning */}
+    <div className="bg-white p-6 rounded-lg shadow-md mb-6 relative"> 
       <h2 className="font-semibold text-xl mb-4 text-gray-800">{title}</h2>
 
-      <div className="relative"> {/* New div to contain the items grid and arrows */}
+      <div className="relative"> 
         <div
-          ref={scrollContainerRef} // Assign ref to the scrollable container
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-x-hidden" // Use overflow-x-hidden as we control scrolling with buttons
+          ref={scrollContainerRef} 
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-x-hidden" 
         >
           {displayedItems.length === 0 ? (
             <div className="col-span-full text-gray-500 text-center py-4">No {title} products found.</div>
@@ -77,7 +72,7 @@ export default function PCBuilderSelector({
           )}
         </div>
 
-        {/* Carousel Navigation Buttons */}
+
         {totalCarouselPages > 1 && (
           <>
             <button
@@ -96,7 +91,7 @@ export default function PCBuilderSelector({
             </button>
           </>
         )}
-      </div> {/* End of new div for items grid and arrows */}
+      </div> 
 
       {selectedId && (
         <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg text-orange-700 text-sm">

@@ -3,7 +3,7 @@ import ProductCard from './ProductCard';
 export default function ProductSectionGroup({ leftImage, leftTitle, leftSubtitle, leftLink, products }) {
   return (
     <div className="flex gap-6 mb-10">
-      {/* ...left card... */}
+
       <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {products.map((product, idx) => (
           <ProductCard

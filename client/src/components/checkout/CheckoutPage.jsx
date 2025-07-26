@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FaArrowLeft, FaLock, FaChevronDown, FaChevronUp, FaMapMarkerAlt, FaShippingFast, FaCreditCard } from 'react-icons/fa';
 import { useCart } from '../cart/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -91,11 +91,11 @@ export default function CheckoutPage() {
           setPaymentStatus('completed');
           clearInterval(pollingIntervalId.current);
           
-          // Navigate to success page first, then clear cart
+ 
           setTimeout(() => {
             navigate('/checkout/success');
             clearCart();
-          }, 1500); // Wait 1.5 seconds to show success message before redirecting
+          }, 1500); 
         }
       } catch (error) {
         console.error('Polling error:', error);

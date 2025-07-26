@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MdPeople, MdAdd, MdEdit, MdDelete, MdSearch, MdFilterList, MdAttachMoney, MdEmail, MdPhone, MdBadge } from 'react-icons/md';
-import { apiService } from '../../service/api';// Adjust the import based on your project structure
+import { apiService } from '../../service/api';
 
 export default function StaffManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');

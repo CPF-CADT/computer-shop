@@ -2,19 +2,19 @@ import { useState, useEffect, useCallback } from 'react';
 import { MdWarning, MdInventory, MdSearch, MdAdd, MdRemove } from 'react-icons/md';
 import { apiService } from '../../service/api';
 import toast from 'react-hot-toast';
-import Pagination from './Pagination'; // Assuming you have this component
+import Pagination from './Pagination'; 
 
 export default function InventoryPage() {
-  // State for data and loading
+  
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   
-  // State for dashboard summary cards
+
   const [summaryData, setSummaryData] = useState({ totalProducts: 0, lowStockCount: 0, inventoryValue: 0 });
   const [isSummaryLoading, setIsSummaryLoading] = useState(true);
 
-  // Simplified state for filters: only name search and stock sort direction
+ 
   const [filters, setFilters] = useState({
     page: 1,
     limit: 10,
@@ -22,25 +22,25 @@ export default function InventoryPage() {
     sort: 'asc',  
   });
 
-  // State for the stock adjustment modal
+
   const [showStockModal, setShowStockModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [modalMode, setModalMode] = useState(null); // 'add' or 'decrease'
+  const [modalMode, setModalMode] = useState(null);
   const [adjustmentAmount, setAdjustmentAmount] = useState(1);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Fetch products from the API, always sorting by stock
+  
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const queryParams = {
         ...filters,
-        order_column: 'stock_quantity', // Ensure this matches your API parameter for stock quantity
+        order_column: 'stock_quantity', 
       };
       const res = await apiService.getProducts(queryParams);
       setProducts(res.data || []);
-      // Assuming meta contains totalItems for pagination
+      
       setSummaryData(prev => ({ ...prev, totalProducts: res.meta?.totalItems || 0 }));
     } catch (err) {
       const errorMessage = err.message || "Failed to fetch inventory.";
@@ -51,17 +51,13 @@ export default function InventoryPage() {
     }
   }, [filters]);
   
-  // The fetchSummaryData can be re-enabled if you have an API for it
-  /*
-  const fetchSummaryData = async () => { ... };
-  */
+
 
   useEffect(() => {
     fetchProducts();
-    // fetchSummaryData(); // Re-enable if you have the API
+    
   }, [fetchProducts]);
 
-  // Handlers for UI interactions
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
   };
@@ -73,7 +69,7 @@ export default function InventoryPage() {
   const openModal = (product, mode) => {
     setSelectedProduct(product);
     setModalMode(mode);
-    setAdjustmentAmount(1); // Reset to a sensible default
+    setAdjustmentAmount(1); 
     setShowStockModal(true);
   };
 
@@ -92,21 +88,21 @@ export default function InventoryPage() {
 
     setIsUpdating(true);
 
-    // Calculate the new stock based on the mode (add/decrease)
+   
     let newStock;
     if (modalMode === 'add') {
       newStock = selectedProduct.stock + adjustmentAmount;
-    } else { // mode is 'decrease'
+    } else { 
       newStock = Math.max(0, selectedProduct.stock - adjustmentAmount);
     }
     
     try {
-      // Send the *final calculated stock amount* to the API
+   
       await apiService.updateProduct(selectedProduct.product_code, {stock_quantity:newStock});
       toast.success("Stock updated successfully!");
       closeModal();
-      fetchProducts(); // Refresh the table
-      // fetchSummaryData(); // Refresh summary cards if API exists
+      fetchProducts();
+     
     } catch (error) {
       toast.error(error.message || "Failed to update stock.");
     } finally {
@@ -131,21 +127,20 @@ export default function InventoryPage() {
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6 bg-gray-50 min-h-screen">
-      {/* Header */}
+   
       <div>
         <h1 className="text-3xl font-bold text-gray-800">Inventory Management</h1>
         <p className="mt-1 text-gray-600">Track and update product stock levels.</p>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Cards remain the same, data is placeholder until fetchSummaryData is active */}
+     
         <div className="bg-white p-5 rounded-lg shadow-sm">...</div>
         <div className="bg-white p-5 rounded-lg shadow-sm">...</div>
         <div className="bg-white p-5 rounded-lg shadow-sm">...</div>
       </div>
       
-      {/* Simplified Search and Filter Controls */}
+     
       <div className="bg-white p-4 rounded-lg shadow-sm flex flex-col md:flex-row items-center gap-4">
         <div className="relative flex-grow w-full md:w-auto">
           <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -170,7 +165,7 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {/* Inventory Table Container */}
+     
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[700px]">
@@ -239,7 +234,7 @@ export default function InventoryPage() {
         )}
       </div>
 
-      {/* UPDATED Stock Adjustment Modal */}
+     
       {showStockModal && selectedProduct && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl">
