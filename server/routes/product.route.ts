@@ -6,8 +6,8 @@ const productRouter = express.Router();
 productRouter.get('/', getAllProduct);
 productRouter.get('/:product_code', authenticateToken, getOneProduct);
 productRouter.get('/:product_code/detail', getProductDetail);
+productRouter.post('/:product_code/feedback', authenticateToken, addProductFeedback);
 productRouter.post('/', authenticateToken, authorize('staff'), addNewProduct);
-productRouter.post('/:product_code/feedback', authenticateToken, authorize('staff'), addProductFeedback);
 productRouter.put('/:productCode', authenticateToken, authorize('staff'), updateProduct);
 productRouter.delete('/:productCode', authenticateToken, authorize('staff'), deleteProduct);
 
