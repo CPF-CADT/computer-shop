@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   MdPerson,
-  MdPhone,
   MdEdit,
   MdHome,
   MdAdd,
@@ -127,8 +126,13 @@ export default function UserProfilePage() {
   const handleProfileImageUpdate = async (url) => {
     try {
       const updatedData = { profile_img_path: url };
-      const check = await apiService.updateCustomer(authUser.id, updatedData);
+      console.log(updatedData)
+      const check = await apiService.updateCustomer(
+          authUser.id, 
+          updatedData);
+      console.log(check.status)
       if(check.status===200){
+        authUser.profile_img_path = url;
         toast.success("Profile image updated!");
       }else{
         toast.error(check.data.message)
