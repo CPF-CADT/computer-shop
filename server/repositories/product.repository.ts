@@ -56,7 +56,7 @@ class ProductRepository {
       }
 
       // Whitelist allowed sort columns (using names from your view)
-      const allowedSortColumns = ['price', 'name', 'category_title', 'brand_name','stock_quantity']; 
+      const allowedSortColumns = ['price', 'name', 'category_title', 'brand_name','stock_quantity','last_restock_date']; 
       if (!allowedSortColumns.includes(sortColumn)) {
         sortColumn = 'price'; 
       }
@@ -167,22 +167,19 @@ class ProductRepository {
         price?: number;
         stock_quantity?: number;
         description?: string;
-        category?: number;
-        brand?: number;
-        type_product?: number;
-        image?: string;
-        is_active?: boolean;
+        category_id?: number;
+        brand_id?: number;
+        image_path?: string;
+        type_id?: number;
       }
     ): Promise<boolean | null> {
       try {
-        // Remove undefined fields
         const updateData: any = Object.entries(data).reduce((acc, [key, value]) => {
           if (value !== undefined) acc[key] = value;
           return acc;
         }, {} as Record<string, any>);
 
-        // Add restock date (optional: only if quantity is updated)
-        if (updateData.quantity !== undefined) {
+        if (updateData.stock_quantity  !== undefined) {
           updateData.last_restock_date = new Date();
         }
 

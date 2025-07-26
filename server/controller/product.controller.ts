@@ -373,15 +373,15 @@ export async function getProductDetail(req: Request, res: Response): Promise<voi
  *                 type: string
  *                 description: Description of the product.
  *               category:
- *                 type: string
+ *                 type: integer
  *                 description: Product category.
  *               brand:
- *                 type: string
+ *                 type: integer
  *                 description: Product brand.
  *               type_product:
- *                 type: string
+ *                 type: integer
  *                 description: Type of the product (e.g. physical, digital).
- *               image:
+ *               image_path:
  *                 type: string
  *                 description: URL to the product image.
  *     responses:
@@ -597,13 +597,32 @@ export async function updateProduct(req: Request, res: Response): Promise<void> 
   try {
     const { productCode } = req.params;
     const updateData = req.body;
-
+    console.log(updateData)
     if (!updateData || Object.keys(updateData).length === 0) {
       res.status(400).json({ message: 'No update data provided.' });
       return;
     }
+    const transformedData: Partial<{
+      name: string;
+      price: number;
+      stock_quantity: number;
+      description: string;
+      category_id: number;
+      brand_id: number;
+      type_id: number;
+      image_path: string;
+    }> = {};
 
-    const success = await ProductRepository.updateProduct(productCode, updateData);
+    if (updateData.name) transformedData.name = updateData.name;
+    if (updateData.price) transformedData.price = updateData.price;
+    if (updateData.stock_quantity) transformedData.stock_quantity = updateData.stock_quantity;
+    if (updateData.description) transformedData.description = updateData.description;
+    if (updateData.category) transformedData.category_id = Number(updateData.category);
+    if (updateData.brand) transformedData.brand_id = updateData.brand;
+    if (updateData.type.id) transformedData.type_id = updateData.type.id;
+    if (updateData.image) transformedData.image_path = updateData.image;
+
+    const success = await ProductRepository.updateProduct(productCode,transformedData);
 
     if (success) {
       res.status(200).json({ message: 'Product updated successfully.' });

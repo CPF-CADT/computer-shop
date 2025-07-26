@@ -36,9 +36,9 @@ export default function EditProductModal({
           const productData = await apiService.getOneProduct(productCode);
           setFormData({
             ...productData,
-            category: productData.category?.id || "",
-            brand: productData.brand?.id || "",
-            type_product: productData.type?.id || "", // Ensure this key matches your data
+            category: parseInt(productData.category?.id)|| "",
+            brand: parseInt(productData.brand?.id) || "",
+            type_product: parseInt(productData.type?.id) || "", // Ensure this key matches your data
             price: productData.price?.amount || productData.price, // Handle both object and direct price
           });
           // Set the initial image URL from the fetched data
@@ -100,7 +100,6 @@ export default function EditProductModal({
   }, [selectedFile]);
   // --- END NEW ---
 
-  // Final submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (selectedFile) {
@@ -114,8 +113,8 @@ export default function EditProductModal({
     };
 
     try {
+      console.log("Update Data",productCode,finalData)
       await onSave(productCode, finalData);
-      console.log(productCode,finalData)
       onClose();
     } catch (err) {
       // The error toast is also better handled in the parent.
