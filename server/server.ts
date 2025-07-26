@@ -38,6 +38,10 @@ connectToDatabase()
     telegramBotInstance.startPolling();
     console.log('Telegram Bot is polling for updates.');
 
+    app.get('/', (req, res) => {
+      res.redirect('/api-docs/');
+    });
+    
     app.use('/api/service', authenticateToken,express.raw({ type: 'application/octet-stream', limit: '100mb' }));
     app.use('/api/product', productRouter);
     app.use('/api/category', categoryRouter);
@@ -55,6 +59,7 @@ connectToDatabase()
     app.use('/api/promotions',authenticateToken,authorize('staff'), PromotionRouter);
     app.use('/api/order', authenticateToken,ordersRoute);
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
     // console.log(Encryption.hashPassword('cadt2025'))
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
