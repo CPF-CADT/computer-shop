@@ -10,7 +10,7 @@ describe('Security Services', () => {
     });
 
     it('[CS-002] JWT correctly creates and verifies a token', () => {
-        const jwtToken = JWT.create({ customer_id: 10, customer_phone_number: '078569811' });
+        const jwtToken = JWT.create({ id: 10, phone_number: '078569811' ,role:'customer'});
         const decoded = JWT.verify(jwtToken);
         expect(decoded).toMatchObject({ id: 10, phone_number: '078569811' });
     });
