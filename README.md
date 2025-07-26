@@ -72,11 +72,11 @@ MySQL hosted on **AWS RDS**
 
 ### **Backend API**
 Hosted on **Render**
-* **URL**: [https://computer-shop-89hq.onrender.com](https://computer-shop-89hq.onrender.com)
+* **URL**: [https://computer-shop-89hq.onrender.com](https://computer-shop-4sqx.onrender.com)
 
 ### **Frontend**
 Hosted on **Vercel**
-* **URL**: [https://computer-shop-henna.vercel.app/](https://computer-shop-henna.vercel.app/)
+* **URL**: [https://computer-shop-henna.vercel.app/](https://computer-shop-rho.vercel.app/)
 
 ---
 ## 🔄 Data Flow
