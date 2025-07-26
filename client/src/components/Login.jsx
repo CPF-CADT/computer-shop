@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const LoginForm = () => {
-    // Combined state for email or phone number
+    
     const [credential, setCredential] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -14,9 +14,9 @@ const LoginForm = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    // Helper function to validate if the input is an email
+
     const isEmail = (input) => {
-        // A simple regex for email validation
+  
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
     };
 

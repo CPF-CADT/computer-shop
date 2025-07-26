@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ProductToolbar from "./ProductToolbar";
 import ProductTable from "./ProductTable";
 import AddProductModal from "./AddProductModal";

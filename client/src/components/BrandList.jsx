@@ -4,7 +4,7 @@ const logoFiles = [
   "adata.png", "asus.png", "gigabyte.png", "hp.png", "msi.png", "razer.png", "rog.png"
 ];
 
-// Helper to match brand name to logo file (case-insensitive, ignore spelling)
+
 function getLogoFile(brandName) {
   const lowerName = brandName.toLowerCase();
   return logoFiles.find(file => lowerName.includes(file.replace('.png', '').toLowerCase()));

@@ -2,7 +2,6 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
 import { apiService } from "../../service/api";
 
-// Initial state for the form to easily reset it
 const initialFormData = {
   name: "",
   Code: "",
@@ -13,27 +12,19 @@ const initialFormData = {
   brand: "",
   type_product: "",
 };
-
 export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
-  // State for form data
-  const [formData, setFormData] = useState(initialFormData);
 
-  // State for dropdown options
+  const [formData, setFormData] = useState(initialFormData);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [type_products, setTypeProducts] = useState([]);
-  
-  // State for data fetching status
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // State for image upload logic
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Effect to fetch categories, brands, and types when the modal opens
   useEffect(() => {
     if (isOpen) {
       const fetchData = async () => {
@@ -59,14 +50,10 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
       fetchData();
     }
   }, [isOpen]);
-
-  // General handler for form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
-  // --- Image Handling Logic ---
 
   const handleSelectFileClick = () => {
     fileInputRef.current?.click();
@@ -76,7 +63,7 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      setUploadedImageUrl(""); // Clear any previously uploaded URL
+      setUploadedImageUrl(""); 
     }
   };
 
@@ -88,7 +75,6 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
 
     setIsUploading(true);
     const uploadPromise = apiService.uploadImageToCloudinary(selectedFile);
-
     toast.promise(uploadPromise, {
       loading: "Uploading image...",
       success: (url) => {
@@ -105,9 +91,6 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
 
     await uploadPromise.catch(err => console.error(err));
   }, [selectedFile]);
-
-  // --- Form Submission Logic ---
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -120,8 +103,6 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
       toast.error("Please select and upload a product image.");
       return;
     }
-
-    // Prepare the final data payload to EXACTLY match your API structure
     const productData = {
       name: formData.name,
       code: formData.Code,
@@ -135,8 +116,6 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
     };
 
     await onAddProduct(productData);
-
-    // Reset the form for the next entry
     setFormData(initialFormData);
     setUploadedImageUrl("");
     setSelectedFile(null);
@@ -146,26 +125,20 @@ export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
     
     onClose();
   };
-  
-  // --- Render Logic ---
-
   if (!isOpen) return null;
 
   const imagePreviewUrl = selectedFile
     ? URL.createObjectURL(selectedFile)
     : uploadedImageUrl;
-
   return (
     <div className="fixed inset-0 z-40 flex justify-center items-center">
       <div className="bg-white p-6 rounded-lg shadow-xl z-50 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-bold mb-5 text-gray-800">Add New Product</h2>
-        
         {isLoading && <p className="text-center p-6">Loading form data...</p>}
         {error && <p className="text-center p-6 text-red-500">{error}</p>}
 
         {!isLoading && !error && (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Form fields are unchanged */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Product Name</label>
               <input type="text" name="name" value={formData.name} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500" required />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MdPeople, MdAdd, MdEdit, MdDelete, MdSearch, MdFilterList, MdAttachMoney, MdEmail, MdPhone, MdBadge } from 'react-icons/md';
 import StaffManagementPage from './StaffManagementPage';
 
@@ -15,7 +15,7 @@ export default function AdminDashboard() {
 
   const roles = ['Admin', 'Support', 'Delivery', 'Sales', 'Manager', 'Accountant'];
 
-  // Mock staff data
+
   const [staffList, setStaffList] = useState([
     {
       id: 1,
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Staff Management</h1>
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* Summary Cards */}
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
@@ -194,7 +194,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Search and Filter */}
+
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Staff Table */}
+
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -311,7 +311,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Create Staff Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -393,7 +392,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Update Salary Modal */}
       {showSalaryModal && selectedStaff && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">

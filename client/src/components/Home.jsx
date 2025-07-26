@@ -258,7 +258,3 @@ export default function Home() {
     </>
   );
 }
-
-// Add this to your CSS for slideDown animation if you want smooth effect:
-// @keyframes slideDown { from { opacity: 0; transform: translateY(-16px);} to { opacity: 1; transform: translateY(0);} }
-// .animate-slideDown { animation: slideDown 0.2s ease; }

@@ -15,7 +15,7 @@ export default function LoopBanner({ height = "h-64", className = "", interval =
       handleNext();
     }, interval);
     return () => clearInterval(timer);
-    // eslint-disable-next-line
+
   }, [currentIndex, interval]);
 
   const handleNext = () => {
@@ -41,7 +41,7 @@ export default function LoopBanner({ height = "h-64", className = "", interval =
     setTimeout(() => setIsAnimating(false), 500);
   };
 
-  // Mouse/touch drag handlers
+
   const handleDragStart = (e) => {
     startX.current = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
   };

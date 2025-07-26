@@ -1,4 +1,4 @@
-// src/components/Pagination.jsx
+
 import React from 'react';
 
 export default function Pagination({ currentPage, totalPages, onPageChange, disabled = false }) { // Add disabled prop

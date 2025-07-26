@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
 import { apiService } from "../../service/api";
-// This array is the single source of truth for all privileges shown in the UI.
+
 const privilegeOptions = [
     "SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "GRANT OPTION"
 ];
 
 
-// Modal to view permissions
+
 const ViewPermissionsModal = ({ title, permissions, onClose }) => {
     return (
         <div className="fixed inset-0 bg-slate-900/25 backdrop-blur-sm flex justify-center items-center z-50 p-4">
@@ -27,7 +27,7 @@ const ViewPermissionsModal = ({ title, permissions, onClose }) => {
     );
 };
 
-// Modal for confirming actions like deletion
+
 const ConfirmModal = ({ title, message, onConfirm, onCancel }) => {
     return (
         <div className="fixed inset-0 bg-slate-900/25 backdrop-blur-sm flex justify-center items-center z-50 p-4">
@@ -43,7 +43,7 @@ const ConfirmModal = ({ title, message, onConfirm, onCancel }) => {
     );
 };
 
-// Modal for success notifications
+
 const SuccessModal = ({ title, message, onClose }) => {
     return (
         <div className="fixed inset-0 bg-slate-900/25 backdrop-blur-sm flex justify-center items-center z-50 p-4">
@@ -64,7 +64,7 @@ const SuccessModal = ({ title, message, onClose }) => {
 };
 
 
-// Main component for role management
+
 export default function AdminManageRole() {
     const [roles, setRoles] = useState([]);
     const [availableTables, setAvailableTables] = useState([]);

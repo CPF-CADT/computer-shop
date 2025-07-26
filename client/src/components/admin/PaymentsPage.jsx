@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MdPayment, MdSearch, MdFilterList, MdRefresh, MdDownload, MdCheckCircle, MdError, MdAccessTime } from 'react-icons/md';
 
 export default function PaymentsPage() {
@@ -9,7 +9,7 @@ export default function PaymentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Mock payment data
+
   const payments = [
     {
       id: 'PAY-001',
@@ -273,7 +273,7 @@ export default function PaymentsPage() {
           }
         }
       `}</style>
-      {/* Header */}
+
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Payments & Transactions</h1>
@@ -359,7 +359,7 @@ export default function PaymentsPage() {
         </div>
       </div>
 
-      {/* Search and Filter */}
+ 
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
@@ -389,7 +389,7 @@ export default function PaymentsPage() {
         </div>
       </div>
 
-      {/* Payments Table */}
+
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -463,13 +463,13 @@ export default function PaymentsPage() {
           </table>
           <div
             className="overflow-y-auto"
-            style={{ maxHeight: '425px' }} // Show ~5 rows, only vertical scroll
+            style={{ maxHeight: '425px' }}
           >
-            {/* ...existing code for scrollable content if needed... */}
+         
           </div>
         </div>
 
-        {/* Pagination */}
+      
         {totalPages > 1 && (
           <div className="bg-gray-50 px-6 py-3 border-t border-gray-200">
             <div className="flex items-center justify-between">
@@ -490,14 +490,14 @@ export default function PaymentsPage() {
                   1
                 </button>
 
-                {/* Previous Pages */}
+     
                 {currentPage > 3 && (
                   <>
                     <span className="text-gray-500">...</span>
                   </>
                 )}
 
-                {/* Current Page Range */}
+         
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   const firstPage = Math.max(1, Math.min(totalPages - 4, currentPage - 2));
                   const page = firstPage + i;
@@ -517,14 +517,14 @@ export default function PaymentsPage() {
                   );
                 })}
 
-                {/* Next Pages */}
+       
                 {currentPage < totalPages - 2 && (
                   <>
                     <span className="text-gray-500">...</span>
                   </>
                 )}
 
-                {/* Last Page */}
+       
                 {totalPages > 1 && (
                   <button
                     onClick={() => handlePageChange(totalPages)}
@@ -539,7 +539,7 @@ export default function PaymentsPage() {
                   </button>
                 )}
 
-                {/* Next Button */}
+
                 <button
                   onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
                   disabled={currentPage === totalPages}
@@ -552,7 +552,6 @@ export default function PaymentsPage() {
                   »
                 </button>
 
-                {/* Last Button */}
                 <button
                   onClick={() => handlePageChange(totalPages)}
                   disabled={currentPage === totalPages}
@@ -570,7 +569,7 @@ export default function PaymentsPage() {
         )}
       </div>
 
-      {/* Refund Modal */}
+     
       {showRefundModal && selectedTransaction && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div

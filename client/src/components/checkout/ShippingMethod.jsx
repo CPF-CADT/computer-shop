@@ -1,4 +1,3 @@
-// src/components/checkout/ShippingMethod.js
 import React, { useState } from 'react';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { mockShippingMethods } from '../../data/mockData';
@@ -6,12 +5,12 @@ import { mockShippingMethods } from '../../data/mockData';
 
 const ShippingMethod = ({ onNext, onBack, currentSelection, onSelectionChange, isCompleted }) => {
   const [selectedMethod, setSelectedMethod] = useState(currentSelection || mockShippingMethods[0].id);
-  const [isCollapsed, setIsCollapsed] = useState(isCompleted); // Start collapsed if completed
+  const [isCollapsed, setIsCollapsed] = useState(isCompleted); 
 
   const handleSelection = (methodId) => {
     setSelectedMethod(methodId);
     const selected = mockShippingMethods.find(m => m.id === methodId);
-    onSelectionChange(selected); // Pass the full selected method object
+    onSelectionChange(selected); 
   };
 
   const handleSubmit = (e) => {

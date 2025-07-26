@@ -22,7 +22,7 @@ import { useAuth } from "../context/AuthContext";
 
 export default function Sidebar({ activePage, setActivePage }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, logout } = useAuth(); // Add logout function
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleNavClick = (itemLabel) => {
@@ -31,8 +31,8 @@ export default function Sidebar({ activePage, setActivePage }) {
   };
 
   const handleLogout = () => {
-    logout();            // Clear user session
-    navigate("/login");  // Redirect to login or home
+    logout();            
+    navigate("/login");  
   };
 
   const isAdmin = user?.role === 'admin';

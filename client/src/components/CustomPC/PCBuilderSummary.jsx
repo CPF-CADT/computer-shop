@@ -30,10 +30,10 @@ export default function PCBuilderSummary({ selectedList, totalPrice, onRemove, o
       </div>
       <button
         className="w-full bg-orange-500 text-white py-2 rounded-md font-bold hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed" // Added disabled styles
-        disabled={selectedList.length === 0 || isAddToCartLoading} // Disable if no items or if loading
-        onClick={onAddToCart} // <--- Correctly calls the onAddToCart prop
+        disabled={selectedList.length === 0 || isAddToCartLoading} 
+        onClick={onAddToCart} 
       >
-        {isAddToCartLoading ? 'Adding to Cart...' : 'Add to Cart'} {/* Dynamic button text */}
+        {isAddToCartLoading ? 'Adding to Cart...' : 'Add to Cart'} 
       </button>
     </div>
   );

@@ -26,7 +26,7 @@ export default function Footer() {
               all your tech needs.
             </p>
           </div>
-          {/* Services */}
+
           <div className="flex flex-col items-center md:items-start justify-center h-full pt-14">
             <h3 className="font-semibold text-white mb-3 text-base uppercase tracking-wider">
               Services
@@ -38,7 +38,7 @@ export default function Footer() {
               <li>User Training</li>
             </ul>
           </div>
-          {/* Company */}
+
           <div className="flex flex-col items-center md:items-start justify-center h-full pt-14">
             <h3 className="font-semibold text-white mb-3 text-base uppercase tracking-wider">
               Company
@@ -67,7 +67,7 @@ export default function Footer() {
               
             </ul>
           </div>
-          {/* Contact & Social */}
+
           <div className="flex flex-col items-center md:items-start justify-center h-full pt-14">
             <h3 className="font-semibold text-white mb-3 text-base uppercase tracking-wider">
               Contact Us
