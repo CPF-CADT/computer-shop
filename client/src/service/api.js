@@ -1,7 +1,7 @@
 import axios from 'axios';
 const apiClient = axios.create({
-  baseURL: 'https://computer-shop-89hq.onrender.com/api/',
-  // baseURL: 'http://localhost:3000/api/',
+  // baseURL: 'https://computer-shop-89hq.onrender.com/api/',
+  baseURL: 'http://localhost:3000/api/',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -156,7 +156,7 @@ export const apiService = {
   updateCustomer: async (customerId, updateData) => {
     try {
       const response = await apiClient.put(`/user/${customerId}`, updateData);
-      return response.data;
+      return response;
     } catch (error) {
       console.error("API Error (updateCustomer):", error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Failed to update customer");

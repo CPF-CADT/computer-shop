@@ -522,7 +522,7 @@ export async function addProductFeedback(req: Request, res: Response): Promise<v
  *                 format: float
  *                 description: The new price of the product NOT (USD).
  *                 example: 1300.00
- *              stock_quantity:
+ *               stock_quantity:
  *                 type: integer
  *                 description: The new quantity in stock.
  *                 example: 45

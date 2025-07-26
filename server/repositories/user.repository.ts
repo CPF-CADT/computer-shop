@@ -5,7 +5,7 @@ interface CustomerAttributes {
   customer_id: number;
   name: string;
   phone_number: string;
-  usr_profile_url: string | null;
+  profile_img_path: string | null;
   password: string;
 }
 export class CusomerRepository {
@@ -83,31 +83,37 @@ export class CusomerRepository {
         });
         return customer ;
     }
-    static async update(customer_id:number,name: string, phone_number: string, usr_profile_url: string | null, password: string): Promise<boolean | null> {
-         try {
+    
 
-            const updateData: Partial<CustomerAttributes> = {
-                name: name,
-                phone_number: phone_number,
-                usr_profile_url: usr_profile_url,
-                password: password, 
-            };
-            const [affectedCount] = await Customer.update(
-                updateData,
-                {
-                    where: { customer_id: customer_id }
-                }
-            );
+    static async update(
+      customer_id?: number,
+      name?: string,
+      phone_number?: string,
+      usr_profile_url?: string,
+      password?: string
+    ): Promise<boolean | null> {
+      try {
+        const updateData: Partial<CustomerAttributes> = {};
+        if (name !== undefined) updateData.name = name;
+        if (phone_number !== undefined) updateData.phone_number = phone_number;
+        if (usr_profile_url !== undefined) updateData.profile_img_path = usr_profile_url;
+        if (password !== undefined) updateData.password = password;
 
-            if (affectedCount > 0) {
-                return true; 
-            } else {
-                return false; 
-            }
-        } catch (error) {
-            return null; 
+        if (Object.keys(updateData).length === 0) {
+          return false;
         }
-    }
+
+        const [affectedCount] = await Customer.update(updateData, {
+          where: { customer_id: customer_id },
+        });
+
+        return affectedCount > 0;
+      } catch (error) {
+        return null;
+  }
+}
+
+
     static async markCustomerAsVerified(customerId: number): Promise<boolean> {
     try {
       const [affectedCount] = await Customer.update(

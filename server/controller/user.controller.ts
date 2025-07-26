@@ -312,26 +312,38 @@ export async function getAllCustomer(req: Request, res: Response): Promise<void>
  *         description: Server error
  */
 
-export async function updateCustomerInfor(req:Request,res:Response):Promise<void> {
-    const body :{
-        phone_number:string,
-        password:string,
-        name:string,
-        profile_img_path :string,
-    } = req.body;
-    const { customer_id } = req.params;
-    try{
-        const {phone_number,password,name,profile_img_path} = body;
-        const isUpdate:Boolean | null = await CusomerRepository.update(Number(customer_id),name,phone_number,profile_img_path,Encryption.hashPassword(password));
-        if(isUpdate){
-        res.status(200).json({message:'User Update Successful'})
-        }else{
-        res.status(204).json({message:'User update fial!'})
-        }
-    }catch(err){
-        res.status(500).json({message:(err as Error).message})
+export async function updateCustomerInfor(req: Request, res: Response): Promise<void> {
+  const body = req.body; 
+
+  const { customer_id } = req.params;
+  try {
+    const {
+      phone_number,
+      password,
+      name,
+      profile_img_path,
+    } = body;
+
+    const hashedPassword = password ? Encryption.hashPassword(password) : undefined;
+
+    const isUpdate: boolean | null = await CusomerRepository.update(
+      Number(customer_id),
+      name,
+      phone_number,
+      profile_img_path,
+      hashedPassword
+    );
+
+    if (isUpdate) {
+      res.status(200).json({ message: "User Update Successful" });
+    } else {
+      res.status(404).json({ message: "User update fail!" });
     }
+  } catch (err) {
+    res.status(500).json({ message: (err as Error).message });
+  }
 }
+
 
 /**
  * @swagger
