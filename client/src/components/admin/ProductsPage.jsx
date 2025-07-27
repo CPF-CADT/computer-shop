@@ -71,6 +71,7 @@ export default function ProductsPage() {
 
     const handleUpdateProduct = async (productCode, data) => {
         try {
+            console.log(data)
             await apiService.updateProduct(productCode, data);
             handleCloseEditModal();
             fetchProducts();

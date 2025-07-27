@@ -1,7 +1,7 @@
 import axios from 'axios';
 const apiClient = axios.create({
-  // baseURL: 'https://computer-shop-4sqx.onrender.com/api/',
-  baseURL: 'http://localhost:3000/api/',
+  baseURL: 'https://computer-shop-4sqx.onrender.com/api/',
+  // baseURL: 'http://localhost:3000/api/',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -251,7 +251,7 @@ export const apiService = {
     }
   },
   checkPaymentStatus: async (uniqueMd5, orderId) => {
-    console.log(uniqueMd5,orderId)
+    console.log(uniqueMd5, orderId)
     try {
       const response = await apiClient.post(`checkout/check-payment`, {
         unique_md5: uniqueMd5,
