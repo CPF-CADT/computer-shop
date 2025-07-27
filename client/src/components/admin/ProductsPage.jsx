@@ -5,6 +5,7 @@ import AddProductModal from "./AddProductModal";
 import EditProductModal from "./EditProductModal";
 import Pagination from "./Pagination";
 import { apiService } from "../../service/api"; 
+import toast from "react-hot-toast";
 
 export default function ProductsPage() {
     const [products, setProducts] = useState([]);
@@ -73,17 +74,46 @@ export default function ProductsPage() {
             await apiService.updateProduct(productCode, data);
             handleCloseEditModal();
             fetchProducts();
-            alert("Product updated successfully!");
+            toast.success("Product updated successfully!");
         } catch (error) {
-            alert("Failed to update product.");
+            toast.error("Failed to update product.");
             console.error(error);
         }
     };
 
     const handleFilterChange = (newFilters) => setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
     const handlePageChange = (newPage) => setFilters(prev => ({ ...prev, page: newPage }));
-    const handleDeleteProduct = (productId) => console.log(`Delete product ${productId}`);
-    const handleAddProduct = (data) => console.log('Add product', data);
+    const handleDeleteProduct = async (productId) => {
+      try {
+          const status = await apiService.deleteProduct(productId);
+        if (status === 201 || status === 200) {
+          setIsAddModalOpen(false);
+          toast.success("Product delete successfully!");
+          fetchProducts();
+        } else {
+          toast.error("Failed to delete product. Server returned unexpected status.");
+        }
+      } catch (error) {
+        toast.error("Failed to delete product.");
+        console.error(error);
+      }
+    };
+    const handleAddProduct = async (data) => {
+      try {
+        const status = await apiService.addNewProduct(data);
+        if (status === 201 || status === 200) {
+          setIsAddModalOpen(false);
+          toast.success("Product added successfully!");
+        } else {
+          toast.error("Failed to add product. Server returned unexpected status.");
+        }
+      } catch (error) {
+        toast.error("Failed to add product.");
+        console.error(error);
+      }
+    };
+
+
 
     const totalPages = Math.ceil(totalProducts / filters.limit);
 
@@ -198,6 +228,9 @@ export default function ProductsPage() {
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
                 onAddProduct={handleAddProduct}
+                categories={categories}
+                brands={brands}
+                type_products={typeProducts}
             />
 
             <EditProductModal

@@ -52,7 +52,6 @@ export default function OrdersPage() {
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [detailLoading, setDetailLoading] = useState(false);
 
-    // Centralized function to fetch data based on current filters and page
     const fetchData = useCallback(async (isRefresh = false) => {
         try {
             setLoading(true);
@@ -61,10 +60,10 @@ export default function OrdersPage() {
             const params = {
                 page: pagination.page,
                 limit: pagination.limit,
-                sortBy: 'date', // Assuming 'date' is a valid sort column in your API
-                sortType: 'DESC', // Assuming 'DESC' is a valid sort type in your API
-                search: debouncedSearchTerm || undefined, // Assuming API accepts 'search' for name/ID
-                status: statusFilter !== 'all' ? statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1) : undefined, // Convert to "Pending", "Processing" etc.
+                sortBy: 'date', 
+                sortType: 'DESC', 
+                search: debouncedSearchTerm || undefined, 
+                status: statusFilter !== 'all' ? statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1) : undefined, 
                 province: provinceFilter !== 'all' ? provinceFilter : undefined,
             };
 

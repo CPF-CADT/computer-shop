@@ -5,7 +5,7 @@ import { MdLocalOffer, MdStar, MdCardGiftcard, MdSchool, MdGroup } from "react-i
 export default function Promotion() {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-gradient-to-br from-orange-100 via-white to-orange-200">
+    <div className="min-h-screen flex flex-col justify-between bg-white">
       <div className="max-w-4xl mx-auto py-12 px-4">
         <button
           onClick={() => navigate(-1)}
@@ -53,7 +53,7 @@ export default function Promotion() {
           </div>
         </div>
       </div>
-      <Footer />
+      
     </div>
   );
 }

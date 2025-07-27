@@ -1,403 +1,256 @@
-import { useState, useRef, useCallback,useEffect  } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import toast from "react-hot-toast";
 import { apiService } from "../../service/api";
 
+// Initial state for the form to easily reset it
+const initialFormData = {
+  name: "",
+  Code: "",
+  price: "",
+  quantity: 1,
+  description: "",
+  category: "",
+  brand: "",
+  type_product: "",
+};
+
 export default function AddProductModal({ isOpen, onClose, onAddProduct }) {
-  // Form states
-    const [categories, setCategories] = useState([]);
-    const [brands, setBrands] = useState([]);
-    const [type_products, setTypeProducts] = useState([]);
+  // State for form data
+  const [formData, setFormData] = useState(initialFormData);
 
-    const [name, setName] = useState("");
-    const [Code, setCode] = useState(""); // example Code default
-    const [price, setPrice] = useState(0);
-    const [quantity, setQuantity] = useState(1);
-    const [description, setDescription] = useState("");
-    const [category, setCategory] = useState(1);
-    const [type_product, setTypeProduct] = useState(1);
-    const [brand, setBrand] = useState(1);
-    
-    const [progress, setProgress] = useState(0);
-    const [status, setStatus] = useState("Ready to upload");
-    const [uploadedImageUrl, setUploadedImageUrl] = useState("");
-    const [selectedFile, setSelectedFile] = useState(null);
+  // State for dropdown options
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [type_products, setTypeProducts] = useState([]);
+  
+  // State for data fetching status
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-   
+  // State for image upload logic
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  const handleUpload = useCallback(async () => {
-    if (!selectedFile) {
-      alert("Please select a file first");
-      return;
-    }
-
-    const callbacks = {
-      onProgress: (p) => setProgress(p),
-      onStatusChange: (s) => setStatus(s),
-      onSuccess: (url) => {
-        setUploadedImageUrl(url);
-        setStatus("Upload complete");
-      },
-      onError: (error) => {
-        console.error("Upload failed:", error);
-        setStatus("Upload failed");
-        setProgress(0);
-      },
-    };
-
-    await apiService.uploadFileInChunksService(selectedFile, callbacks);
-  }, [selectedFile]);
-
+  // Effect to fetch categories, brands, and types when the modal opens
   useEffect(() => {
-        const fetchData = async () => {
+    if (isOpen) {
+      const fetchData = async () => {
+        setIsLoading(true);
+        setError(null);
         try {
-            const categoriesData = await apiService.getAllCategories();
-            const brandsData = await apiService.getAllBrands();
-            const typesData = await apiService.getAllTypeProducts()
-
-            setCategories(categoriesData);
-            setBrands(brandsData);
-            setTypeProducts(typesData);
-
+          const [categoriesData, brandsData, typesData] = await Promise.all([
+            apiService.getAllCategories(),
+            apiService.getAllBrands(),
+            apiService.getAllTypeProducts(),
+          ]);
+          setCategories(categoriesData);
+          setBrands(brandsData);
+          setTypeProducts(typesData);
         } catch (err) {
-            setError(err.message);
-            console.error("Failed to fetch product data:", err);
+          setError("Failed to load required data. Please try again.");
+          toast.error("Failed to load form data.");
+          console.error("Failed to fetch product data:", err);
         } finally {
-            setLoading(false);
+          setIsLoading(false);
         }
-        };
-
-        fetchData();
-    }, []); 
-
-    if (loading) {
-        return <div>Loading form data...</div>;
+      };
+      fetchData();
     }
+  }, [isOpen]);
 
-    if (error) {
-        return <div className="text-red-500">Error: {error}</div>;
-    }
-  ///// HOOK RUN BEFORE HERE
-  if (!isOpen) return null;
-  
-  
-
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setStatus(`File selected: ${file.name}`);
-      setProgress(0);
-      setUploadedImageUrl("");
-    } else {
-      setSelectedFile(null);
-      setStatus("Ready to upload");
-      setUploadedImageUrl("");
-      setProgress(0);
-    }
+  // General handler for form input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
+  // --- Image Handling Logic ---
 
   const handleSelectFileClick = () => {
     fileInputRef.current?.click();
   };
 
-  // Upload function using your apiServic
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setUploadedImageUrl(""); // Clear any previously uploaded URL
+    }
+  };
 
-  // Submit handler: upload file if not uploaded, then submit form data
+  const handleUpload = useCallback(async () => {
+    if (!selectedFile) {
+      toast.error("Please select an image file first.");
+      return;
+    }
+
+    setIsUploading(true);
+    const uploadPromise = apiService.uploadImageToCloudinary(selectedFile);
+
+    toast.promise(uploadPromise, {
+      loading: "Uploading image...",
+      success: (url) => {
+        setUploadedImageUrl(url);
+        setSelectedFile(null);
+        setIsUploading(false);
+        return "✅ Image uploaded! You can now add the product.";
+      },
+      error: (err) => {
+        setIsUploading(false);
+        return `❌ Upload failed: ${err.message || "Please try again."}`;
+      },
+    });
+
+    await uploadPromise.catch(err => console.error(err));
+  }, [selectedFile]);
+
+  // --- Form Submission Logic ---
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!name || !price || !quantity ) {
-      alert("Please fill in all required fields.");
+    if (selectedFile) {
+      toast.error("You have a selected image that has not been uploaded. Please upload it first.");
       return;
-    }
-
-    // If file selected but not yet uploaded, upload it first
-    if (selectedFile && !uploadedImageUrl) {
-      await handleUpload();
-
-      if (!uploadedImageUrl) {
-        return;
-      }
     }
 
     if (!uploadedImageUrl) {
-      alert("Please upload a product image.");
+      toast.error("Please select and upload a product image.");
       return;
     }
 
-    // Prepare product data
+    // Prepare the final data payload to EXACTLY match your API structure
     const productData = {
-      name,
-      Code,
-      price: parseFloat(price),
-      quantity: parseInt(quantity),
-      description,
-      category,
-      brand,
-      type_product,
+      name: formData.name,
+      code: formData.Code,
+      description: formData.description,
+      price: parseFloat(formData.price),
+      quantity: parseInt(formData.quantity, 10),
+      category: parseInt(formData.category, 10),
+      brand: parseInt(formData.brand, 10),
+      type_product: parseInt(formData.type_product, 10),
       image: uploadedImageUrl,
     };
-    onAddProduct(productData);
-    // Reset all states
-    setName("");
-    setCode("10001");
-    setPrice("");
-    setQuantity("");
-    setDescription(
-      "A high-performance Monitor from Razer. Designed for accessories needs."
-    );
-    setCategory("Accessories");
-    setSelectedFile(null);
-    setUploadedImageUrl("");
-    setProgress(0);
-    setStatus("Ready to upload");
 
+    await onAddProduct(productData);
+
+    // Reset the form for the next entry
+    setFormData(initialFormData);
+    setUploadedImageUrl("");
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
+    
     onClose();
   };
+  
+  // --- Render Logic ---
 
-  // Render preview if uploaded image or local selected image exists
-  const imagePreviewUrl = uploadedImageUrl
-    ? uploadedImageUrl
-    : selectedFile
+  if (!isOpen) return null;
+
+  const imagePreviewUrl = selectedFile
     ? URL.createObjectURL(selectedFile)
-    : "";
+    : uploadedImageUrl;
 
   return (
-    <div className="fixed inset-0 bg-transparent z-40 flex justify-center items-center">
-      <div className="bg-white p-6 rounded-lg shadow-xl z-50 w-full max-w-lg max-h-[90vh] overflow-auto">
-        <h2 className="text-2xl font-bold mb-5">Add New Product</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Product Name */}
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Product Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              required
-            />
-          </div>
+    <div className="fixed inset-0 z-40 flex justify-center items-center">
+      <div className="bg-white p-6 rounded-lg shadow-xl z-50 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <h2 className="text-2xl font-bold mb-5 text-gray-800">Add New Product</h2>
+        
+        {isLoading && <p className="text-center p-6">Loading form data...</p>}
+        {error && <p className="text-center p-6 text-red-500">{error}</p>}
 
-          {/* Code */}
-          <div>
-            <label
-              htmlFor="Code"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Product Code (Code)
-            </label>
-            <input
-              type="text"
-              id="Code"
-              value={Code}
-              onChange={(e) => setCode(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              required
-            />
-          </div>
-
-          {/* Category */}
-          <div>
-            <label
-              htmlFor="category"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Category
-            </label>
-            <select
-              id="category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-            >
-              {categories.map((cate) => (
-                <option key={cate.id} value={cate.id}>
-                  {cate.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-           {/* brand */}
-          <div>
-            <label
-              htmlFor="brand"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Brand
-            </label>
-            <select
-              id="brand"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-            >
-              {brands.map((brand) => (
-                <option key={brand.id} value={brand.id}>
-                  {brand.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-
-           {/* Type Product */}
-          <div>
-            <label
-              htmlFor="type-product"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Typr Product
-            </label>
-            <select
-              id="type-product"
-              value={type_product}
-              onChange={(e) => setTypeProduct(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-            >
-              {type_products.map((tp) => (
-                <option key={tp.id} value={tp.id}>
-                  {tp.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Price and Quantity */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {!isLoading && !error && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Form fields are unchanged */}
             <div>
-              <label
-                htmlFor="price"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Price ($)
-              </label>
-              <input
-                type="number"
-                id="price"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                required
-                step="0.01"
-              />
+              <label className="block text-sm font-medium text-gray-700">Product Name</label>
+              <input type="text" name="name" value={formData.name} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500" required />
             </div>
+
             <div>
-              <label
-                htmlFor="quantity"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Quantity
-              </label>
-              <input
-                type="number"
-                id="quantity"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                required
-              />
+              <label className="block text-sm font-medium text-gray-700">Product Code</label>
+              <input type="text" name="Code" value={formData.Code} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500" required />
             </div>
-          </div>
 
-          {/* Description */}
-          <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Description
-            </label>
-            <textarea
-              id="description"
-              rows="3"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-            ></textarea>
-          </div>
-
-          {/* Image Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Product Image
-            </label>
-            <div className="mt-1 flex items-center gap-4">
-              {imagePreviewUrl ? (
-                <img
-                  src={imagePreviewUrl}
-                  alt="Preview"
-                  className="w-16 h-16 rounded object-cover"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded bg-gray-100 flex items-center justify-center text-gray-400">
-                  No Image
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Category</label>
+                    <select name="category" value={formData.category} onChange={handleChange} className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md" required>
+                    <option value="">Select</option>
+                    {categories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.title}</option>))}
+                    </select>
                 </div>
-              )}
-
-              <button
-                type="button"
-                onClick={handleSelectFileClick}
-                disabled={progress > 0 && progress < 100}
-                className="block px-4 py-2 text-sm text-gray-500 bg-purple-50 rounded-full hover:bg-purple-100"
-              >
-                Select Image
-              </button>
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleFileSelect}
-                className="hidden"
-                disabled={progress > 0 && progress < 100}
-              />
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Brand</label>
+                    <select name="brand" value={formData.brand} onChange={handleChange} className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md" required>
+                    <option value="">Select</option>
+                    {brands.map((b) => (<option key={b.id} value={b.id}>{b.name}</option>))}
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Type</label>
+                    <select name="type_product" value={formData.type_product} onChange={handleChange} className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md" required>
+                    <option value="">Select</option>
+                    {type_products.map((t) => (<option key={t.id} value={t.id}>{t.name}</option>))}
+                    </select>
+                </div>
             </div>
 
-            {/* Upload progress and status */}
-            <div className="mt-2">
-              <div className="text-sm text-gray-700">{status}</div>
-              {progress > 0 && (
-                <div className="w-full bg-gray-200 rounded-full mt-1">
-                  <div
-                    className="bg-purple-600 text-xs font-medium text-purple-100 text-center p-0.5 leading-none rounded-full"
-                    style={{ width: `${progress}%` }}
-                  >
-                    {Math.round(progress)}%
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Price ($)</label>
+                <input type="number" name="price" value={formData.price} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required step="0.01" min="0" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Quantity</label>
+                <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required step="1" min="0" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea name="description" value={formData.description} onChange={handleChange} rows="3" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"></textarea>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Product Image</label>
+              <div className="mt-2 space-y-3">
+                <div className="flex items-center gap-4">
+                  {imagePreviewUrl ? (
+                    <img src={imagePreviewUrl} alt="Preview" className="w-20 h-20 rounded-md object-cover" />
+                  ) : (
+                    <div className="w-20 h-20 rounded-md bg-gray-100 flex items-center justify-center text-gray-400 text-xs text-center">No Image</div>
+                  )}
+                  <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" disabled={isUploading}/>
+
+                  <div className="flex flex-col gap-2">
+                    <button type="button" onClick={handleSelectFileClick} disabled={isUploading} className="px-4 py-2 text-sm text-purple-700 bg-purple-100 rounded-md hover:bg-purple-200 disabled:opacity-50">
+                      Select Image
+                    </button>
+                    {selectedFile && (
+                      <button type="button" onClick={handleUpload} disabled={isUploading} className="px-4 py-2 text-sm text-green-700 bg-green-100 rounded-md hover:bg-green-200 disabled:opacity-50">
+                        {isUploading ? "Uploading..." : "Upload Now"}
+                      </button>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
-          </div>
 
-          {/* Buttons */}
-          <div className="pt-4 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-              disabled={progress > 0 && progress < 100}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-              disabled={progress > 0 && progress < 100}
-            >
-              Add Product
-            </button>
-          </div>
-        </form>
+            <div className="pt-4 flex justify-end gap-3 border-t mt-6">
+              <button type="button" onClick={onClose} disabled={isUploading} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:opacity-50">
+                Cancel
+              </button>
+              <button type="submit" disabled={isUploading || !!selectedFile} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                Add Product
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

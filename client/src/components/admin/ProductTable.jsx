@@ -1,4 +1,3 @@
-import React from 'react';
 import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
 export default function ProductTable({ products = [], onDelete, onEdit }) {
@@ -25,8 +24,8 @@ export default function ProductTable({ products = [], onDelete, onEdit }) {
                     </tr>
                 </thead>
                 <tbody>
-                    {products.map((prod) => (
-                        <tr key={prod.product_code} className="border-b hover:bg-gray-50">
+                    {products.map((prod,index) => (
+                        <tr key={index} className="border-b hover:bg-gray-50">
                             <td className="p-3">
                                 <input type="checkbox" />
                             </td>

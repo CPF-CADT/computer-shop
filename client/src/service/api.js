@@ -1,16 +1,32 @@
 import axios from 'axios';
-// Create a pre-configured instance of axios
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3000/api/',
+  baseURL: 'https://computer-shop-4sqx.onrender.com/api/',
+  // baseURL: 'http://localhost:3000/api/',
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB
-
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 export const apiService = {
-   sendVerificationCode: async (phoneNumber) => {
+  staffLogin: async (email, password) => {
+    try {
+      const response = await apiClient.post(`staff/login`, { email, password })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message);
+    }
+  },
+  sendVerificationCode: async (phoneNumber) => {
     try {
       const response = await apiClient.post('user/request-otp', { phone_number: phoneNumber });
       return response.data;
@@ -34,7 +50,7 @@ export const apiService = {
   getAllPromotions: async () => {
     try {
       const response = await apiClient.get('promotions');
-      return response.data; 
+      return response.data;
     } catch (error) {
       console.error("API Error (getAllPromotions):", error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Failed to fetch promotions");
@@ -100,7 +116,7 @@ export const apiService = {
   getOrdersByCustomerId: async (customerId) => {
     try {
       const response = await apiClient.get(`user/${customerId}/orders`);
-      return response.data; 
+      return response.data;
     } catch (error) {
       console.error("API Error (getOrdersByCustomerId):", error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Failed to fetch customer orders");
@@ -130,7 +146,7 @@ export const apiService = {
   getAllCustomers: async (params = {}) => {
     try {
       const response = await apiClient.get('/user/all', { params });
-      return response.data; 
+      return response.data;
     } catch (error) {
       console.error("API Error (getAllCustomers):", error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Failed to fetch customers");
@@ -140,7 +156,7 @@ export const apiService = {
   updateCustomer: async (customerId, updateData) => {
     try {
       const response = await apiClient.put(`/user/${customerId}`, updateData);
-      return response.data;
+      return response;
     } catch (error) {
       console.error("API Error (updateCustomer):", error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Failed to update customer");
@@ -210,7 +226,7 @@ export const apiService = {
       const payload = {
         customer_id: customerId,
         address_id: addressId,
-        express_handle:expressHandle
+        express_handle: expressHandle
 
       };
       const response = await apiClient.post(`checkout/place-order`, payload);
@@ -246,24 +262,24 @@ export const apiService = {
       throw new Error(error.response?.data?.message || "Failed to check payment status");
     }
   },
-  userRegister:async (name,phone_number,password,profile_url='')=>{
-    try{
-      const response = await apiClient.post(`user/register`,{name,phone_number,password,profile_url})
+  userRegister: async (name, phone_number, password, profile_url = '') => {
+    try {
+      const response = await apiClient.post(`user/register`, { name, phone_number, password, profile_url })
       return response.data
-    }catch (error) {
+    } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to fetch cart items");
     }
   }
   ,
-  userLogin:async (phone_number,password)=>{
-    try{
-      const response = await apiClient.post(`user/login`,{phone_number,password})
+  userLogin: async (phone_number, password) => {
+    try {
+      const response = await apiClient.post(`user/login`, { phone_number, password })
       return response.data
-    }catch (error) {
+    } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to fetch cart items");
     }
   },
-   getCartItems: async (customerId) => {
+  getCartItems: async (customerId) => {
     try {
       const response = await apiClient.get(`cart-item/${customerId}`);
       return response.data;
@@ -312,7 +328,7 @@ export const apiService = {
     }
   }
   ,
-  getOrderSummary:async ()=>{
+  getOrderSummary: async () => {
     try {
       const response = await apiClient.get('order/summary');
       return response.data;
@@ -320,20 +336,20 @@ export const apiService = {
       throw new Error(error.response?.data?.message || "Failed to fetch Order stats");
     }
   },
-  getOrders: async ({ page = 1, limit = 10, sortBy = 'date', sortType = 'ASC',includeItem=false }) => {
+  getOrders: async ({ page = 1, limit = 10, sortBy = 'date', sortType = 'ASC', includeItem = false }) => {
     try {
       const response = await apiClient.get('order', {
-        params: { page, limit, sortBy, sortType,includeItem }
+        params: { page, limit, sortBy, sortType, includeItem }
       });
-      return response.data; 
+      return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to fetch orders");
     }
   },
-  getUserOrderdetail:async(order_id)=>{
+  getUserOrderdetail: async (order_id) => {
     try {
       const response = await apiClient.get(`order/${order_id}`)
-      return response.data; 
+      return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to fetch orders");
     }
@@ -346,7 +362,7 @@ export const apiService = {
       throw new Error(error.response?.data?.message || "Failed to fetch dashboard stats");
     }
   },
-  getStoreSaleInfor:async (topProduct)=>{
+  getStoreSaleInfor: async (topProduct) => {
     try {
       const response = await apiClient.get(`store-infor/sales?top=${topProduct}`);
       return response.data;
@@ -356,7 +372,7 @@ export const apiService = {
   }
   ,
   // Recovery API 
-  getFileRecovery:async () => {
+  getFileRecovery: async () => {
     try {
       const response = await apiClient.get('recovery-db/file');
       return response.data;
@@ -375,17 +391,17 @@ export const apiService = {
   },
   // --- Product API
   getProducts: async (query_param) => {
-  try {
-    const response = await apiClient.get('product', {
-      params: query_param,
-    });
-    console.log("Sending query:", query_param);
-    return response.data;
-  } catch (error) {
-    console.error('Failed to fetch products:', error.message);
-    throw error;
-  }
-},
+    try {
+      const response = await apiClient.get('product', {
+        params: query_param,
+      });
+      console.log("Sending query:", query_param);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch products:', error.message);
+      throw error;
+    }
+  },
   getProductDetail: async (product_id) => {
     try {
       const response = await apiClient.get(`product/${product_id}/detail`);
@@ -395,7 +411,19 @@ export const apiService = {
       throw error;
     }
   },
-
+  addFeedbackForProduct: async (customer_id, product_id, rating, comment) => {
+    try {
+      const response = await apiClient.post(`product/${product_id}/feedback`, {
+        customer_id: customer_id,
+        rating: rating,
+        comment: comment
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch products:', error.message);
+      throw error;
+    }
+  },
   getOneProduct: async (product_id) => {
     try {
       const response = await apiClient.get(`product/${product_id}`);
@@ -408,8 +436,8 @@ export const apiService = {
 
   addNewProduct: async (productData) => {
     try {
-      const response = await apiClient.post('product', productData);
-      return response.data;
+      const response = await apiClient.post('product/', productData);
+      return response.status;
     } catch (error) {
       console.error('API error:', error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Failed to Create Product");
@@ -418,9 +446,9 @@ export const apiService = {
 
   deleteProduct: async (productId) => {
     try {
-     
+
       const response = await apiClient.delete(`product/${productId}`);
-      return response.data;
+      return response.status;
     } catch (error) {
       console.error('API error:', error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Failed to delete product");
@@ -445,7 +473,7 @@ export const apiService = {
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to fetch categories");
     }
-  },        
+  },
 
   getAllTypeProducts: async () => {
     try {
@@ -463,7 +491,7 @@ export const apiService = {
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to fetch brands");
     }
-  },    
+  },
 
   // --- Category Management ---
   createCategory: async (categoryData) => {
@@ -547,174 +575,145 @@ export const apiService = {
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to delete type product");
     }
-  },    
+  },
 
-  // --- File Upload Service ---
-  uploadFileInChunksService: async (file, { onProgress, onStatusChange, onSuccess, onError }) => {
-    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-    const uploadId = crypto.randomUUID();       
+  uploadImageToCloudinary: async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
 
-    onStatusChange('Starting upload...');
+    try {
+      const res = await apiClient.post('service/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
-    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-      const start = chunkIndex * CHUNK_SIZE;
-      const end = Math.min(start + CHUNK_SIZE, file.size);
-      const chunk = file.slice(start, end);
+      return res.data.url;
 
-      try {
-        onStatusChange(`Uploading chunk ${chunkIndex + 1} of ${totalChunks}...`);
-
-        // Using axios for the chunk upload
-        const response = await apiClient.post('service/upload', chunk, {
-          headers: {
-            'Content-Type': 'application/octet-stream',
-            'x-unique-upload-id': uploadId,
-            'content-range': `bytes ${start}-${end - 1}/${file.size}`,
-          },
-        });
-
-        const newProgress = ((chunkIndex + 1) / totalChunks) * 100;
-        onProgress(newProgress);
-
-        const result = response.data;
-
-        if (result.url) {
-          const transformedUrl = result.url.replace('upload/', '/upload/w_400/');
-          onSuccess(transformedUrl);
-          onStatusChange('Upload complete! File available on Cloudinary.');
-          return; // Exit the loop and function
-        } else {
-          onStatusChange(`Chunk ${chunkIndex + 1} uploaded. Server status: ${result.status}`);
-        }
-      } catch (error) {
-        console.error('Error uploading chunk:', error);
-        const errorMessage = error.response?.data?.error || error.message || 'Chunk upload failed';
-        onError(new Error(errorMessage));
-        onStatusChange(`Error: ${errorMessage}`);
-        return; // Stop the upload on error
-      }
+    } catch (error) {
+      throw new Error(error.response?.data?.error || "Failed to upload image");
     }
   },
 
   // --- User API Calls ---
   getUsers: async () => {
     try {
-        const response = await apiClient.get('db/users');
-        const users = response.data;
+      const response = await apiClient.get('db/users');
+      const users = response.data;
 
-        // The logic to augment users with permissions remains the same
-        const augmentedUsers = await Promise.all(users.map(async (user) => {
-            const perms = await apiService.getUserPermissions(user.User, user.Host);
-            const roles = perms
-                .filter(p => p.toUpperCase().startsWith('GRANT `'))
-                .map(p => p.match(/`([^`]+)`/)[1]);
-            const expireDate = new Date();
-            expireDate.setDate(expireDate.getDate() + 90);
-            return { ...user, roles, expireDate: expireDate.toISOString().slice(0, 10) };
-        }));
-        return augmentedUsers;
+      // The logic to augment users with permissions remains the same
+      const augmentedUsers = await Promise.all(users.map(async (user) => {
+        const perms = await apiService.getUserPermissions(user.User, user.Host);
+        const roles = perms
+          .filter(p => p.toUpperCase().startsWith('GRANT `'))
+          .map(p => p.match(/`([^`]+)`/)[1]);
+        const expireDate = new Date();
+        expireDate.setDate(expireDate.getDate() + 90);
+        return { ...user, roles, expireDate: expireDate.toISOString().slice(0, 10) };
+      }));
+      return augmentedUsers;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Failed to fetch users');
+      throw new Error(error.response?.data?.message || 'Failed to fetch users');
     }
   },
 
   createUser: async (userData) => {
     try {
-        const response = await apiClient.post('db/users', userData);
-        return response.data;
+      const response = await apiClient.post('db/users', userData);
+      return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Failed to create user');
+      throw new Error(error.response?.data?.message || 'Failed to create user');
     }
   },
 
   dropUser: async (username, host = '%') => {
     try {
-        // For DELETE with body, axios uses the 'data' property in the config object
-        const response = await apiClient.delete(`db/users/${username}`, { data: { host } });
-        return response.data;
+      // For DELETE with body, axios uses the 'data' property in the config object
+      const response = await apiClient.delete(`db/users/${username}`, { data: { host } });
+      return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Failed to delete user');
+      throw new Error(error.response?.data?.message || 'Failed to delete user');
     }
   },
 
   grantRoleToUser: async (roleName, username, host = '%') => {
     try {
-        const response = await apiClient.post('db/users/grant-role', { roleName, username, host });
-        return response.data;
+      const response = await apiClient.post('db/users/grant-role', { roleName, username, host });
+      return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Failed to grant role');
+      throw new Error(error.response?.data?.message || 'Failed to grant role');
     }
   },
 
   getUserPermissions: async (username, host = '%') => {
     try {
-        const response = await apiClient.get(`db/users/${username}/permissions`, { params: { host } });
-        const data = response.data;
-        return data.grants ? data.grants.map(g => Object.values(g)[0]) : [];
+      const response = await apiClient.get(`db/users/${username}/permissions`, { params: { host } });
+      const data = response.data;
+      return data.grants ? data.grants.map(g => Object.values(g)[0]) : [];
     } catch (error) {
-        // Gracefully return an empty array on failure, as in the original code
-        console.error(`Could not fetch permissions for user: ${username}`, error);
-        return [];
+      // Gracefully return an empty array on failure, as in the original code
+      console.error(`Could not fetch permissions for user: ${username}`, error);
+      return [];
     }
   },
 
   // --- Role API Calls ---
   getRoles: async () => {
     try {
-        const response = await apiClient.get('db/roles');
-        return response.data;
+      const response = await apiClient.get('db/roles');
+      return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Failed to fetch roles');
+      throw new Error(error.response?.data?.message || 'Failed to fetch roles');
     }
   },
 
   createRole: async (roleName) => {
     try {
-        const response = await apiClient.post('db/roles', { roleName });
-        return response.data;
+      const response = await apiClient.post('db/roles', { roleName });
+      return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Failed to create role');
+      throw new Error(error.response?.data?.message || 'Failed to create role');
     }
   },
 
   dropRole: async (roleName) => {
     try {
-        const response = await apiClient.delete(`db/roles/${roleName}`);
-        return response.data;
+      const response = await apiClient.delete(`db/roles/${roleName}`);
+      return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Failed to delete role');
+      throw new Error(error.response?.data?.message || 'Failed to delete role');
     }
   },
 
   grantPermissionsToRole: async (data) => {
     try {
-        const response = await apiClient.post('db/roles/grant-permissions', data);
-        return response.data;
+      const response = await apiClient.post('db/roles/grant-permissions', data);
+      return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Failed to grant permissions');
+      throw new Error(error.response?.data?.message || 'Failed to grant permissions');
     }
   },
 
   getRolePermissions: async (roleName) => {
     try {
-        const response = await apiClient.get(`db/roles/${roleName}/permissions`);
-        const data = response.data;
-        return data.grants ? data.grants.map(g => Object.values(g)[0]) : [];
+      const response = await apiClient.get(`db/roles/${roleName}/permissions`);
+      const data = response.data;
+      return data.grants ? data.grants.map(g => Object.values(g)[0]) : [];
     } catch (error) {
-        console.error(`Could not fetch permissions for role: ${roleName}`, error);
-        return [];
+      console.error(`Could not fetch permissions for role: ${roleName}`, error);
+      return [];
     }
   },
 
   getTables: async () => {
     try {
-        const response = await apiClient.get('db/tables');
-        return response.data;
+      const response = await apiClient.get('db/tables');
+      return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Failed to fetch tables');
+      throw new Error(error.response?.data?.message || 'Failed to fetch tables');
     }
   },
-   grantPermissionsToUser: async (data) => {
+  grantPermissionsToUser: async (data) => {
     try {
       const response = await apiClient.post('db/users/grant-permissions', data);
       return response.data;
@@ -757,5 +756,19 @@ export const apiService = {
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to revoke role permissions');
     }
-  }
+  },
+
+  // --- Staff Profile Upload ---
+  uploadProfileImage: async (formData) => {
+    try {
+      const response = await apiClient.post('staff/upload-profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to upload staff profile image");
+    }
+  },
 };

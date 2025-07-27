@@ -1,48 +1,35 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import QRCode from 'react-qr-code';
-import { useNavigate } from 'react-router-dom';
 
-const Khqr = ({ name = "Rathanak", amount = 0, qrValue = "" }) => {
-  const navigate = useNavigate();
-
-  // This useEffect is removed as payment status is now handled by CheckoutPage polling
-  // useEffect(() => { setTimeout(() => setPaid(true), 5000); }, []);
-
-  // The redirection to success page will be triggered by the parent CheckoutPage
-  // when the backend confirms payment success.
-  // useEffect(() => {
-  //   if (paid) {
-  //     navigate('/success');
-  //   }
-  // }, [paid, navigate]);
-
+export default function Khqr({ name = "Rathanak", amount = 0, qrValue = "" }) {
   return (
-    <div className="max-w-lg mx-auto rounded-2xl overflow-hidden shadow-2xl border-2 border-gray-400">
-      {/* Red Header */}
-      <div className="bg-red-600 p-8 text-white font-bold text-2xl rounded-t-2xl flex justify-between items-center">
-        <span>KHQR</span>
-        <div className="w-0 h-0 border-t-[60px] border-t-transparent border-l-[60px] border-l-white -mt-8 -mr-8"></div>
+    <div className="w-full max-w-sm mx-auto rounded-lg overflow-hidden shadow-lg border border-gray-200 bg-white">
+      <div className="bg-red-600 p-4 sm:p-6 text-white font-bold text-xl sm:text-2xl rounded-t-lg flex justify-between items-center">
+        <span>KHQR Payment</span>
+        <div className="w-0 h-0 border-t-[40px] sm:border-t-[50px] border-t-transparent border-l-[40px] sm:border-l-[50px] border-l-white -mt-4 -mr-4 sm:-mt-6 sm:-mr-6"></div>
       </div>
 
-      {/* Name and Amount */}
-      <div className="bg-white px-10 py-8 text-center border-b border-dashed">
-        <h2 className="text-3xl text-black font-semibold">{name}</h2>
-        <p className="text-5xl text-black font-bold mt-4">R{amount.toFixed(2)}</p>
+      <div className="px-6 py-4 text-center border-b border-dashed">
+        <h2 className="text-xl sm:text-2xl text-black font-semibold">{name}</h2>
+        <p className="text-3xl sm:text-4xl text-black font-bold mt-2">
+          ${amount.toFixed(2)}
+        </p>
       </div>
 
-      {/* QR Code */}
-      <div className="bg-white p-10 flex flex-col items-center justify-center">
-        <div className="relative">
-          {/* Use the qrValue prop directly */}
-          {qrValue ? (
-            <QRCode value={qrValue} size={300} />
-          ) : (
-            <div className="text-gray-500 text-center">Loading QR code...</div>
-          )}
-        </div>
+      <div className="bg-white p-6 flex flex-col items-center justify-center">
+        {qrValue ? (
+          <div style={{ height: "auto", margin: "0 auto", maxWidth: 200, width: "100%" }}>
+            <QRCode
+              size={256}
+              style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+              value={qrValue}
+              viewBox={`0 0 256 256`}
+            />
+          </div>
+        ) : (
+          <div className="text-gray-500 text-center py-10">Generating QR code...</div>
+        )}
       </div>
     </div>
   );
-};
-
-export default Khqr;
+}

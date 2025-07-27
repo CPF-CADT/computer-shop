@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 export default function Service() {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-gradient-to-br from-orange-50 via-white to-white">
+    <div className="bg-white min-h-screen flex flex-col justify-between">
       <div className="max-w-5xl mx-auto py-12 px-4">
         <button
           onClick={() => navigate(-1)}
@@ -80,7 +80,7 @@ export default function Service() {
           </div>
         </div>
       </div>
-      <Footer />
+     
     </div>
   );
 }

@@ -1,14 +1,15 @@
-import { getAllProduct,getOneProduct,getProductDetail,addProductFeedback,addNewProduct,updateProduct } from '../controller/product.controller';
+import { getAllProduct, getOneProduct, getProductDetail, addProductFeedback, addNewProduct, updateProduct, deleteProduct } from '../controller/product.controller';
 import express from 'express'
-import JWT from '../service/JWT';
+import { authenticateToken, authorize } from '../middleware/authenticateToken.middleware';
 const productRouter = express.Router();
 
 productRouter.get('/', getAllProduct);
-productRouter.post('/', addNewProduct);
-productRouter.get('/:product_code', getOneProduct);
+productRouter.get('/:product_code', authenticateToken, getOneProduct);
 productRouter.get('/:product_code/detail', getProductDetail);
-productRouter.post('/:product_code/feedback', JWT.verify, addProductFeedback);
-productRouter.put('/:productCode', updateProduct);
+productRouter.post('/:product_code/feedback', authenticateToken, addProductFeedback);
+productRouter.post('/', authenticateToken, authorize('staff'), addNewProduct);
+productRouter.put('/:productCode', authenticateToken, authorize('staff'), updateProduct);
+productRouter.delete('/:productCode', authenticateToken, authorize('staff'), deleteProduct);
 
 export default productRouter;
 

@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { StaffRepository } from '../repositories/staff.repository';
 import { CreationAttributes, Op } from 'sequelize';
 import { Staff } from '../db/models/Staff';
+import { Encryption } from '../service/encription';
+import JWT from '../service/JWT';
 
 /**
  * @swagger
@@ -144,7 +146,7 @@ import { Staff } from '../db/models/Staff';
  *         description: Internal Server Error.
  */
 
-export async function createStaff (req: Request, res: Response): Promise<void> {
+export async function createStaff(req: Request, res: Response): Promise<void> {
     try {
         const {
             name,
@@ -325,6 +327,10 @@ export const getAllStaff = async (req: Request, res: Response): Promise<void> =>
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
+
+
+
 /**
  * @swagger
  * /api/staff/{id}:
@@ -374,6 +380,75 @@ export const getStaffById = async (req: Request, res: Response): Promise<void> =
         return;
     }
 };
+
+
+/**
+ * @swagger
+ * /api/staff/login:
+ *   post:
+ *     summary: Staff login
+ *     tags: [Staff]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: alice.kim@example.com
+ *               password:
+ *                 type: string
+ *                 example: cadt2025
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Staff not found or password incorrect.
+ */
+
+export async function staffLogin(req: Request, res: Response): Promise<void> {
+    const body: {
+        email: string,
+        password: string,
+    } = req.body;
+    const { email, password } = body;
+
+    try {
+        const staff: Staff | null = await StaffRepository.findByEmail(email);
+        if (!staff) {
+            res.status(400).json({ success: false, message: 'Staff not found' });
+        } else if (!Encryption.verifyPassword(staff.password, password)) {
+            res.status(400).json({ success: false, message: 'Password incorrect' });
+        } else {
+            const token = JWT.create({
+                id: staff.staff_id,
+                email: staff.email,
+                role:staff.role
+            });
+
+            res.status(200).json({
+                success: true,
+                message: 'Login successful',
+                token,
+                user: {
+                    id: staff.staff_id,
+                    phone_number: staff.phone_number,
+                    email: staff.email,
+                    name: staff.name,
+                    role: staff.role
+                },
+            });
+        }
+    } catch (err) {
+        res.status(500).json({ message: (err as Error).message });
+    }
+}
+
 
 /**
  * @swagger

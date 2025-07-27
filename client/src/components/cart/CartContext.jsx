@@ -74,25 +74,15 @@ export function CartProvider({ children }) {
           productToAdd.price.amount // price_at_purchase from product object
         );
 
-        // --- FIX START ---
-        // Construct the new item for local state to match the structure from the backend API
-        // This assumes your backend's getCartItems returns a structure like:
-        // { product_code, qty, price_at_purchase, product: { name, image_path, ... } }
         setCartItems(prevItems => [...prevItems, {
           product_code: productToAdd.product_code,
           qty: productToAdd.qty,
           price_at_purchase: productToAdd.price.amount,
-          // Create the nested 'product' object to match the API response structure
           product: {
             name: productToAdd.name,
             image_path: productToAdd.image_path,
-            // Include any other product details that your backend's getCartItems
-            // might include in the nested 'product' object, e.g.,
-            // description: productToAdd.description,
-            // price: productToAdd.price, // if your API nests the full price object
           }
         }]);
-        // --- FIX END ---
         toast.success(`${productToAdd.qty} x ${productToAdd.name} added to cart!`);
       }
     } catch (error) {
@@ -103,11 +93,6 @@ export function CartProvider({ children }) {
     }
   };
 
-  /**
-   * Updates the quantity of an existing item in the cart.
-   * @param {string} productCode - The code of the product to update.
-   * @param {number} newQty - The new quantity for the item.
-   */
   const updateCartItem = async (productCode, newQty) => {
     if (!isAuthenticated || !customerId) {
       toast.error("Please log in to modify your cart.");
@@ -137,10 +122,6 @@ export function CartProvider({ children }) {
     }
   };
 
-  /**
-   * Removes an item from the cart.
-   * @param {string} productCode - The code of the product to remove.
-   */
   const removeFromCart = async (productCode) => {
     if (!isAuthenticated || !customerId) {
       toast.error("Please log in to modify your cart.");
@@ -149,7 +130,6 @@ export function CartProvider({ children }) {
 
     try {
       await apiService.removeCartItem(customerId, productCode);
-      // Optimistically update local state
       setCartItems(prevItems => prevItems.filter(item => item.product_code !== productCode));
       toast.success("Item removed from cart.");
     } catch (error) {
@@ -159,7 +139,6 @@ export function CartProvider({ children }) {
     }
   };
 
-  // Calculate total items and total price based on local cart state
   const totalItems = cartItems.reduce((sum, item) => sum + item.qty, 0);
   const totalPrice = cartItems.reduce((sum, item) => sum + (item.qty * item.price_at_purchase), 0);
 

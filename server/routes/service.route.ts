@@ -1,8 +1,11 @@
+// src/routes/upload.routes.ts
 import { Router } from 'express';
-import { handleChunkedUpload } from '../controller/services.controller';
+import multer from 'multer';
+import { handleImageUpload } from '../controller/services.controller';
 
-const ServiceRouter = Router();
+const router = Router();
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+router.post('/upload', upload.single('image'), handleImageUpload);
 
-ServiceRouter.post('/upload', handleChunkedUpload);
-
-export default ServiceRouter;
+export default router;

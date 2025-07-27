@@ -215,7 +215,7 @@ export async function getAllProduct(req: Request, res: Response): Promise<void> 
     const brandProduct = (req.query.brand as string);
     const nameProductSearch = (req.query.name as string);
     const sortType = (req.query.sort as string) || 'asc';
-    const sortColumn = (req.query.order_column as string) || 'name';
+    const sortColumn = (req.query.order_column as string);
     const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 10;
     const page = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : 1;
 
@@ -347,7 +347,7 @@ export async function getProductDetail(req: Request, res: Response): Promise<voi
  *             type: object
  *             required:
  *               - name
- *               - Code
+ *               - code
  *               - price
  *               - quantity
  *               - description
@@ -373,15 +373,15 @@ export async function getProductDetail(req: Request, res: Response): Promise<voi
  *                 type: string
  *                 description: Description of the product.
  *               category:
- *                 type: string
+ *                 type: integer
  *                 description: Product category.
  *               brand:
- *                 type: string
+ *                 type: integer
  *                 description: Product brand.
  *               type_product:
- *                 type: string
+ *                 type: integer
  *                 description: Type of the product (e.g. physical, digital).
- *               image:
+ *               image_path:
  *                 type: string
  *                 description: URL to the product image.
  *     responses:
@@ -399,8 +399,9 @@ export async function addNewProduct(req: Request, res: Response): Promise<void> 
     try {
         const productData = req.body;
 
-        if (!productData || !productData.Code || !productData.name || !productData.price) {
+        if (!productData || !productData.code || !productData.name || !productData.price) {
           res.status(400).json({ message: 'Missing required product data.' });
+                              console.log('err missing')
           return
         }
 
@@ -410,10 +411,12 @@ export async function addNewProduct(req: Request, res: Response): Promise<void> 
           res.status(201).json({ message: 'Product added successfully.' });
           return
         } else {
+                    console.log('err product exists')
           res.status(409).json({ message: 'Product already exists or failed to add.' });
           return
         }
     } catch (err) {
+        console.log('err server')
         res.status(500).json({ message: (err as Error).message });
     }
 }
@@ -461,10 +464,8 @@ export async function addNewProduct(req: Request, res: Response): Promise<void> 
  */
 export async function addProductFeedback(req: Request, res: Response): Promise<void> {
     try {
-        // Assuming JWT middleware adds auth_payload to req.body
         const { product_code } = req.params;
-        const { rating, comment, auth_payload } = req.body;
-        const customer_id = auth_payload?.customer_id;
+        const { rating, comment,customer_id } = req.body;
 
         if (!customer_id) {
             res.status(401).json({ message: 'Unauthorized: No customer ID found in token.' });
@@ -521,7 +522,7 @@ export async function addProductFeedback(req: Request, res: Response): Promise<v
  *                 format: float
  *                 description: The new price of the product NOT (USD).
  *                 example: 1300.00
- *               quantity:
+ *               stock_quantity:
  *                 type: integer
  *                 description: The new quantity in stock.
  *                 example: 45
@@ -593,23 +594,103 @@ export async function addProductFeedback(req: Request, res: Response): Promise<v
  */
 
 export async function updateProduct(req: Request, res: Response): Promise<void> {
-    try {
-        const { productCode } = req.params;
-        const updateData = req.body;
-
-        if (Object.keys(updateData).length === 0) {
-            res.status(400).json({ message: 'No update data provided.' });
-            return
-        }
-
-        const success = await ProductRepository.updateProduct(productCode, updateData);
-
-        if (success) {
-            res.status(200).json({ message: 'Product updated successfully.' });
-        } else {
-            res.status(404).json({ message: `Product with code ${productCode} not found or no changes made.` });
-        }
-    } catch (err) {
-        res.status(500).json({ message: (err as Error).message || 'Internal server error.' });
+  try {
+    const { productCode } = req.params;
+    const updateData = req.body;
+    console.log(updateData)
+    if (!updateData || Object.keys(updateData).length === 0) {
+      res.status(400).json({ message: 'No update data provided.' });
+      return;
     }
+    const transformedData: Partial<{
+      name: string;
+      price: number;
+      stock_quantity: number;
+      description: string;
+      category_id: number;
+      brand_id: number;
+      type_id: number;
+      image_path: string;
+    }> = {};
+
+    if (updateData.name) transformedData.name = updateData.name;
+    if (updateData.price) transformedData.price = updateData.price;
+    if (updateData.stock_quantity) transformedData.stock_quantity = updateData.stock_quantity;
+    if (updateData.description) transformedData.description = updateData.description;
+    if (updateData.category) transformedData.category_id = Number(updateData.category);
+    if (updateData.brand) transformedData.brand_id = updateData.brand;
+    if (updateData.type.id) transformedData.type_id = updateData.type.id;
+    if (updateData.image) transformedData.image_path = updateData.image;
+
+    const success = await ProductRepository.updateProduct(productCode,transformedData);
+
+    if (success) {
+      res.status(200).json({ message: 'Product updated successfully.' });
+    } else {
+      res.status(404).json({ message: `Product with code ${productCode} not found or no changes made.` });
+    }
+  } catch (err) {
+    res.status(500).json({ message: (err as Error).message || 'Internal server error.' });
+  }
+}
+
+/**
+ * @swagger
+ * /api/product/{productCode}:
+ *   delete:
+ *     summary: Soft delete a product (set is_active = false)
+ *     tags: [Product]
+ *     parameters:
+ *       - in: path
+ *         name: productCode
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique code of the product to deactivate.
+ *         example: "P1001"
+ *     responses:
+ *       200:
+ *         description: Product deactivated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Product deactivated successfully.
+ *       404:
+ *         description: Product not found or already deactivated.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Product with code P1001 not found or already inactive.
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error.
+ */
+
+export async function deleteProduct(req: Request, res: Response): Promise<void> {
+  try {
+    const { productCode } = req.params;
+    const success = await ProductRepository.softDeleteProduct(productCode);
+    if (success) {
+      res.status(200).json({ message: 'Product deactivated successfully.' });
+    } else {
+      res.status(404).json({ message: `Product with code ${productCode} not found or no changes made.` });
+    }
+  } catch (err) {
+    res.status(500).json({ message: (err as Error).message || 'Internal server error.' });
+  }
 }

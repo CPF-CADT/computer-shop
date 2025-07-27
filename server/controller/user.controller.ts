@@ -98,10 +98,10 @@ export async function createUser(req: Request, res: Response): Promise<void> {
  *             properties:
  *               phone_number:
  *                 type: string
- *                 example: 012345678
+ *                 example: 078569811
  *               password:
  *                 type: string
- *                 example: securePassword123
+ *                 example: 12345678
  *     responses:
  *       200:
  *         description: Login successful
@@ -150,7 +150,7 @@ export async function customerLogin(req: Request, res: Response): Promise<void> 
         } else {
             if(process.env.IS_CHECK_2FA==='1'){
                 if(customer.is_verifyed){
-                    const token = JWT.create({customer_id:customer.id,customer_phone_number:customer.phone_number});
+                    const token = JWT.create({id:customer.id,phone_number:customer.phone_number,role:'customer'});
                     res.status(200).json({
                         success: true, 
                         message: 'Login successful', 
@@ -159,14 +159,15 @@ export async function customerLogin(req: Request, res: Response): Promise<void> 
                             id: customer.customer_id,
                             phone_number: customer.phone_number,
                             name: customer.name,
-                            profile_img_path:customer.profile_img_path
-                        }
+                            profile_img_path:customer.profile_img_path,
+                            role:'customer'
+                        },
                     });
                 }else{
                     res.status(400).json({ success: false, message: 'user need to verified' });
                 }
             }else{
-                const token = JWT.create({customer_id:customer.id,customer_phone_number:customer.phone_number});
+                const token = JWT.create({id:customer.id,phone_number:customer.phone_number,role:'customer'});
                 res.status(200).json({
                     success: true, 
                     message: 'Login successful', 
@@ -175,8 +176,9 @@ export async function customerLogin(req: Request, res: Response): Promise<void> 
                         id: customer.customer_id,
                         phone_number: customer.phone_number,
                         name: customer.name,
-                        profile_img_path:customer.profile_img_path
-                    }
+                        profile_img_path:customer.profile_img_path,
+                        role:'customer'
+                    },
                 });
             }
         }
@@ -310,26 +312,38 @@ export async function getAllCustomer(req: Request, res: Response): Promise<void>
  *         description: Server error
  */
 
-export async function updateCustomerInfor(req:Request,res:Response):Promise<void> {
-    const body :{
-        phone_number:string,
-        password:string,
-        name:string,
-        profile_img_path :string,
-    } = req.body;
-    const { customer_id } = req.params;
-    try{
-        const {phone_number,password,name,profile_img_path} = body;
-        const isUpdate:Boolean | null = await CusomerRepository.update(Number(customer_id),name,phone_number,profile_img_path,Encryption.hashPassword(password));
-        if(isUpdate){
-        res.status(200).json({message:'User Update Successful'})
-        }else{
-        res.status(204).json({message:'User update fial!'})
-        }
-    }catch(err){
-        res.status(500).json({message:(err as Error).message})
+export async function updateCustomerInfor(req: Request, res: Response): Promise<void> {
+  const body = req.body; 
+
+  const { customer_id } = req.params;
+  try {
+    const {
+      phone_number,
+      password,
+      name,
+      profile_img_path,
+    } = body;
+
+    const hashedPassword = password ? Encryption.hashPassword(password) : undefined;
+
+    const isUpdate: boolean | null = await CusomerRepository.update(
+      Number(customer_id),
+      name,
+      phone_number,
+      profile_img_path,
+      hashedPassword
+    );
+
+    if (isUpdate) {
+      res.status(200).json({ message: "User Update Successful" });
+    } else {
+      res.status(404).json({ message: "User update fail!" });
     }
+  } catch (err) {
+    res.status(500).json({ message: (err as Error).message });
+  }
 }
+
 
 /**
  * @swagger
@@ -537,11 +551,7 @@ export async function verifyTwoFaCode(req: Request, res: Response): Promise<void
                             await TwoFaTokenRepository.markTokenAsUsed(customer.customer_id);
                             await CusomerRepository.markCustomerAsVerified(customer.customer_id);
 
-                            const token = JWT.create({
-                                customer_id: customer.customer_id,
-                                customer_phone_number: customer.phone_number
-                            });
-
+                            const token = JWT.create({id:customer.id,phone_number:customer.phone_number,role:'customer'});
                             res.status(201).json({
                                 success: true,
                                 message: 'Verification successful and logged in',
@@ -550,7 +560,8 @@ export async function verifyTwoFaCode(req: Request, res: Response): Promise<void
                                     id: customer.customer_id,
                                     phone_number: customer.phone_number,
                                     name: customer.name,
-                                    profile_img_path: customer.profile_img_path // Ensure this field exists on your Customer model
+                                    profile_img_path: customer.profile_img_path,
+                                   role:'customer' 
                                 }
                             });
                             return;

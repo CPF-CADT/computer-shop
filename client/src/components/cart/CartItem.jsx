@@ -1,34 +1,64 @@
 import { FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
-import { useCart } from '../../context/CartContext';
+import { useCart } from './CartContext';
 
-const CartItem = ({ item }) => {
-  const { updateQuantity, removeFromCart } = useCart();
+export default function CartItem({ item }) {
+  const { updateCartItem, removeFromCart } = useCart();
+
+  const handleQuantityUpdate = (newQuantity) => {
+    if (newQuantity < 1) {
+      removeFromCart(item.product_code);
+    } else {
+      updateCartItem(item.product_code, newQuantity);
+    }
+  };
+
+  const product = item.product || item;
+  const price = item.price_at_purchase || product.price?.amount || 0;
+  const image = product.image_path || 'https://placehold.co/100x100/f9f9f9/333333?text=No+Image';
 
   return (
-    <div className="flex flex-col sm:flex-row items-center py-4 border-b border-gray-200">
-      <img src={item.image_path || item.image} alt={item.name} className="w-24 h-24 object-contain rounded mr-0 mb-3 sm:mr-4 sm:mb-0" />
-      <div className="flex-grow text-center sm:text-left">
-        <h3 className="font-semibold text-gray-800 text-sm md:text-base">{item.name}</h3>
-        <p className="text-xs text-gray-500 truncate-2-lines">{item.description}</p>
-         <button onClick={() => removeFromCart(item.id)} className="text-red-500 hover:text-red-700 text-xs mt-1">
-          <FaTrash className="inline mr-1" /> Remove
-        </button>
-      </div>
-      <div className="font-semibold text-gray-700 w-20 text-center text-sm md:text-base my-2 sm:my-0">${Number(item.price).toFixed(2)}</div>
-      <div className="flex items-center justify-center mx-4 my-2 sm:my-0">
-        <button onClick={() => updateQuantity(item.id, item.qty - 1)} className="p-1.5 border rounded hover:bg-gray-100">
-          <FaMinus size={12} />
-        </button>
-        <span className="px-3 py-1 w-10 text-center">{item.qty}</span>
-        <button onClick={() => updateQuantity(item.id, item.qty + 1)} className="p-1.5 border rounded hover:bg-gray-100">
-          <FaPlus size={12} />
-        </button>
-      </div>
-      <div className="font-bold text-brand-orange w-24 text-center sm:text-right text-sm md:text-base">
-        ${(Number(item.price) * item.qty).toFixed(2)}
+    <div className="p-4 border-b last:border-b-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6">
+        <img
+          src={image}
+          alt={product.name}
+          className="w-24 h-24 object-contain rounded-md bg-gray-50 self-center shrink-0"
+        />
+        <div className="flex-grow mt-4 sm:mt-0 text-center sm:text-left">
+          <h3 className="font-semibold text-gray-800">{product.name}</h3>
+          <p className="text-gray-600 text-sm mt-1">${Number(price).toFixed(2)}</p>
+        </div>
+
+        <div className="flex items-center justify-between sm:justify-center gap-6 mt-4 sm:mt-0 w-full sm:w-auto">
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleQuantityUpdate(item.qty - 1)}
+              className="p-2 border rounded-l-md hover:bg-gray-100 transition"
+            >
+              <FaMinus size={12} />
+            </button>
+            <span className="px-4 py-1.5 w-12 text-center border-t border-b font-medium">{item.qty}</span>
+            <button
+              onClick={() => handleQuantityUpdate(item.qty + 1)}
+              className="p-2 border rounded-r-md hover:bg-gray-100 transition"
+            >
+              <FaPlus size={12} />
+            </button>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <span className="font-bold text-gray-800 w-20 text-right">
+              ${(Number(price) * item.qty).toFixed(2)}
+            </span>
+            <button
+              onClick={() => removeFromCart(item.product_code)}
+              className="text-gray-400 hover:text-red-500 transition p-2"
+            >
+              <FaTrash size={16} />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
-};
-
-export default CartItem;
+}

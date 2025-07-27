@@ -1,6 +1,6 @@
 import { Table, Column, Model, DataType, PrimaryKey, AutoIncrement, Default, Unique, ForeignKey, BelongsTo, HasMany } from 'sequelize-typescript';
 import { InventoryLog } from './InventoryLog';
-
+import { StaffRole } from './Enums';
 @Table({
   tableName: 'staff',
   timestamps: false,
@@ -16,6 +16,26 @@ export class Staff extends Model {
     allowNull: false,
   })
   name!: string;
+
+  @Unique
+  @Column({
+    type: DataType.STRING(255),
+    allowNull: false,
+  })
+  email!: string;
+
+  @Column({
+    type: DataType.STRING(255),
+    allowNull: false,
+  })
+  password!: string;
+  
+  @Default(StaffRole.STAFF)
+  @Column({
+    type: DataType.ENUM(...Object.values(StaffRole)),
+    allowNull: false,
+  })
+  role!: StaffRole;
 
   @Unique
   @Column({

@@ -56,9 +56,9 @@ class ProductRepository {
       }
 
       // Whitelist allowed sort columns (using names from your view)
-      const allowedSortColumns = ['price', 'name', 'category_title', 'brand_name']; // Use 'price' for sorting
+      const allowedSortColumns = ['price', 'name', 'category_title', 'brand_name','stock_quantity','last_restock_date']; 
       if (!allowedSortColumns.includes(sortColumn)) {
-        sortColumn = 'price'; // default fallback
+        sortColumn = 'price'; 
       }
 
       // Whitelist sort types
@@ -90,7 +90,7 @@ class ProductRepository {
     static async getOneProduct(productCode: string): Promise<Product | null> {
         try {
             const data = await sequelize.query(
-                'SELECT * FROM productShowInformation WHERE product_code = :id',{
+                'SELECT * FROM productshowinformation WHERE product_code = :id',{
                     replacements: { id: productCode },
                     type:QueryTypes.SELECT
                 }
@@ -126,7 +126,7 @@ class ProductRepository {
         }
     }
     static async addProduct(data: {
-        Code: string;
+        code: string;
         name: string;
         price: number;
         quantity: number;
@@ -138,7 +138,7 @@ class ProductRepository {
         }): Promise<boolean | null> {
         try {
             const created = await ProductModel.create({
-            product_code: data.Code,
+            product_code: data.code,
             name: data.name,
             price: data.price,
             stock_quantity: data.quantity ?? 0,
@@ -161,37 +161,71 @@ class ProductRepository {
     }
     
     static async updateProduct(
-        productCode: string,
-        data: {
-            name?: string;
-            price?: number;
-            quantity?: number;
-            description?: string;
-            category?: number;
-            brand?: number;
-            type_product?: number;
-            image?: string;
-            is_active?: boolean;
-        }
+      productCode: string,
+      data: {
+        name?: string;
+        price?: number;
+        stock_quantity?: number;
+        description?: string;
+        category_id?: number;
+        brand_id?: number;
+        image_path?: string;
+        type_id?: number;
+      }
     ): Promise<boolean | null> {
-        try {
-            const updateData: any = { ...data }; 
-            updateData.last_restock_date = new Date();
+      try {
+        const updateData: any = Object.entries(data).reduce((acc, [key, value]) => {
+          if (value !== undefined) acc[key] = value;
+          return acc;
+        }, {} as Record<string, any>);
 
-            const [affectedCount] = await ProductModel.update(
-                updateData,
-                {
-                    where: { product_code: productCode }
-                }
-            );
-
-            // Check if any rows were affected
-            return affectedCount > 0 ? true : false;
-        } catch (err) {
-            console.error(`Failed to update product with code ${productCode}:`, err);
-            return null;
+        if (updateData.stock_quantity  !== undefined) {
+          updateData.last_restock_date = new Date();
         }
+
+        const [affectedCount] = await ProductModel.update(updateData, {
+          where: { product_code: productCode },
+        });
+
+        if (affectedCount === 0) {
+          const product = await ProductModel.findOne({ where: { product_code: productCode } });
+          if (!product) {
+            throw new Error(`Product with code ${productCode} not found.`);
+          } else {
+            console.warn(`Product with code ${productCode} found but no changes made.`);
+            return true;
+          }
+        }
+
+        return true;
+      } catch (err: any) {
+        console.error(`Failed to update product with code ${productCode}:`, err.message || err);
+        return null;
+      }
     }
+  static async softDeleteProduct(productCode: string): Promise<boolean | null> {
+    try {
+      const [affectedCount] = await ProductModel.update(
+        { is_active: false },
+        { where: { product_code: productCode } }
+      );
+
+      if (affectedCount === 0) {
+        const product = await ProductModel.findOne({ where: { product_code: productCode } });
+        if (!product) {
+          throw new Error(`Product with code ${productCode} not found.`);
+        } else {
+          console.warn(`Product with code ${productCode} found but no changes made.`);
+          return true;
+        }
+      }
+
+      return true;
+    } catch (err: any) {
+      console.error(`Failed to delete (soft) product with code ${productCode}:`, err.message || err);
+      return null;
+  }
+}
 
 
 }

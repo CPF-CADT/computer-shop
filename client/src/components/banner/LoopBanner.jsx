@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { MdArrowBack, MdArrowForward } from 'react-icons/md';
+import { useState, useEffect, useRef } from 'react';
 import banner1 from '../../assets/LoopBanner/banner1.webp';
 import banner2 from '../../assets/LoopBanner/banner2.webp';
 import banner3 from '../../assets/LoopBanner/banner3.webp';
@@ -9,6 +8,7 @@ const bannerImages = [banner1, banner2, banner3];
 export default function LoopBanner({ height = "h-64", className = "", interval = 5000 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const startX = useRef(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -41,8 +41,35 @@ export default function LoopBanner({ height = "h-64", className = "", interval =
     setTimeout(() => setIsAnimating(false), 500);
   };
 
+  // Mouse/touch drag handlers
+  const handleDragStart = (e) => {
+    startX.current = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
+  };
+
+  const handleDragEnd = (e) => {
+    if (startX.current === null) return;
+    const endX = e.type === "touchend"
+      ? e.changedTouches[0].clientX
+      : e.clientX;
+    const diff = endX - startX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        handlePrev();
+      } else {
+        handleNext();
+      }
+    }
+    startX.current = null;
+  };
+
   return (
-    <div className={`relative overflow-hidden rounded-lg ${height} ${className} bg-transparent p-0`}>
+    <div
+      className={`relative overflow-hidden rounded-lg ${height} ${className} bg-transparent p-0`}
+      onMouseDown={handleDragStart}
+      onMouseUp={handleDragEnd}
+      onTouchStart={handleDragStart}
+      onTouchEnd={handleDragEnd}
+    >
       <div className="h-full w-full relative rounded-lg overflow-hidden">
         {bannerImages.map((image, index) => (
           <div
@@ -59,18 +86,6 @@ export default function LoopBanner({ height = "h-64", className = "", interval =
           </div>
         ))}
       </div>
-      <button
-        onClick={handlePrev}
-        className="absolute top-1/2 left-4 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full"
-      >
-        <MdArrowBack size={24} />
-      </button>
-      <button
-        onClick={handleNext}
-        className="absolute top-1/2 right-4 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full"
-      >
-        <MdArrowForward size={24} />
-      </button>
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
         {bannerImages.map((_, index) => (
           <button
