@@ -1,8 +1,5 @@
-
 import { createHash } from 'crypto';
-import { request, RequestOptions } from 'https';
-import { IncomingMessage } from 'http';
-import { URL } from 'url';
+import axios, { AxiosInstance, AxiosError } from 'axios';
 
 const emv = {
     default_dynamic_qr: "010212",
@@ -51,7 +48,7 @@ interface CreateQRParams {
     merchantName: string;
     merchantCity: string;
     currency: Currency;
-    amount?: string | number; // Required for dynamic QR
+    amount?: string | number;
     storeLabel?: string;
     phoneNumber?: string;
     billNumber?: string;
@@ -104,7 +101,6 @@ class TransactionCurrency {
         } else if (normalizedCurrency === "KHR") {
             currencyValue = emv.transaction_currency_khr;
         } else {
-            // This case is largely prevented by the `Currency` type, but serves as a runtime safeguard.
             throw new Error(`Invalid currency code '${currency}'. Supported codes are 'USD' and 'KHR'.`);
         }
 
@@ -124,12 +120,8 @@ class TimeStamp {
 }
 
 class PointOfInitiation {
-    public dynamic(): string {
-        return emv.default_dynamic_qr;
-    }
-    public static(): string {
-        return emv.default_static_qr;
-    }
+    public dynamic(): string { return emv.default_dynamic_qr; }
+    public static(): string { return emv.default_static_qr; }
 }
 
 class PayloadFormatIndicator {
@@ -142,9 +134,7 @@ class PayloadFormatIndicator {
 
 class MerchantName {
     public value(merchantName: string): string {
-        if (!merchantName) {
-            throw new Error("Merchant Name cannot be empty.");
-        }
+        if (!merchantName) throw new Error("Merchant Name cannot be empty.");
         if (merchantName.length > emv.invalid_length_merchant_name) {
             throw new Error(`Merchant Name cannot exceed ${emv.invalid_length_merchant_name} characters.`);
         }
@@ -155,9 +145,7 @@ class MerchantName {
 
 class MerchantCity {
     public value(merchantCity: string): string {
-        if (!merchantCity) {
-            throw new Error("Merchant city cannot be empty.");
-        }
+        if (!merchantCity) throw new Error("Merchant city cannot be empty.");
         if (merchantCity.length > emv.invalid_length_merchant_city) {
             throw new Error(`Merchant City cannot exceed ${emv.invalid_length_merchant_city} characters.`);
         }
@@ -278,8 +266,7 @@ class AdditionalDataField {
 }
 
 class KHQR {
-    public bakongToken: string;
-    public bakongApi: string = "https://api-bakong.nbc.gov.kh/v1";
+    private apiClient: AxiosInstance;
     private crc = new CRC();
     private mcc = new MCC();
     private hash = new HASH();
@@ -295,52 +282,47 @@ class KHQR {
     private globalUniqueIdentifier = new GlobalUniqueIdentifier();
 
     constructor(bakongToken: string) {
-        this.bakongToken = bakongToken;
-        this.checkBakongToken();
-    }
-
-    private checkBakongToken(): void {
-        if (!this.bakongToken) {
+        if (!bakongToken) {
             throw new Error("Bakong Developer Token is required. Initialize with: new KHQR('your_token_here')");
         }
-    }
 
-    private postRequest<T>(endpoint: string, payload: object): Promise<T> {
-        this.checkBakongToken();
-        const data = JSON.stringify(payload);
-        const parsedUrl = new URL(this.bakongApi + endpoint);
-
-        const options: RequestOptions = {
-            hostname: parsedUrl.hostname,
-            path: parsedUrl.pathname,
-            method: 'POST',
+        // Create an Axios instance specific to this KHQR instance
+        this.apiClient = axios.create({
+            baseURL: "https://api-bakong.nbc.gov.kh/v1",
             headers: {
-                'Authorization': `Bearer ${this.bakongToken}`,
                 'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(data),
-            },
-        };
-
-        return new Promise((resolve, reject) => {
-            const req = request(options, (res: IncomingMessage) => {
-                let responseBody = '';
-                res.on('data', (chunk) => (responseBody += chunk));
-                res.on('end', () => {
-                    if (res.statusCode === 200) {
-                        resolve(JSON.parse(responseBody));
-                    } else if (res.statusCode === 401) {
-                        reject(new Error("Your Developer Token is incorrect or expired."));
-                    } else if (res.statusCode === 504) {
-                        reject(new Error("Bakong server is busy, please try again later."));
-                    } else {
-                        reject(new Error(`API request failed with status ${res.statusCode}: ${responseBody}`));
-                    }
-                });
-            });
-            req.on('error', (e: Error) => reject(e));
-            req.write(data);
-            req.end();
+            }
         });
+
+        this.apiClient.interceptors.request.use(
+            (config) => {
+                config.headers['Authorization'] = `Bearer ${bakongToken}`;
+                return config;
+            },
+            (error) => Promise.reject(error)
+        );
+    }
+    
+    private handleApiError(error: unknown): never {
+        if (axios.isAxiosError(error)) {
+            const axiosError = error as AxiosError;
+            if (axiosError.response) {
+                const { status, data } = axiosError.response;
+                if (status === 401) {
+                    throw new Error("Your Developer Token is incorrect or expired.");
+                }
+                if (status === 504) {
+                    throw new Error("Bakong server is busy, please try again later.");
+                }
+                // Use the error message from the API if available
+                const message = (data as any)?.message || JSON.stringify(data);
+                throw new Error(`API request failed with status ${status}: ${message}`);
+            } else if (axiosError.request) {
+                throw new Error("Network error: No response received from the server.");
+            }
+        }
+        // For non-Axios errors
+        throw error;
     }
 
     public createQR({
@@ -362,8 +344,8 @@ class KHQR {
         let qrData = this.payloadFormatIndicator.value();
         qrData += isStatic ? this.pointOfInitiation.static() : this.pointOfInitiation.dynamic();
         qrData += this.globalUniqueIdentifier.value(bankAccount);
-        qrData += this.mcc.value(); // Using default MCC
-        qrData += this.countryCode.value(); // Using default Country Code
+        qrData += this.mcc.value();
+        qrData += this.countryCode.value();
         qrData += this.merchantName.value(merchantName);
         qrData += this.merchantCity.value(merchantCity);
         qrData += this.timestamp.value();
@@ -389,27 +371,43 @@ class KHQR {
             qr,
             sourceInfo: { appIconUrl, appName, appDeepLinkCallback: callback },
         };
-        const response = await this.postRequest<BakongDeeplinkResponse>("/generate_deeplink_by_qr", payload);
-        return response?.responseCode === 0 ? response.data?.shortLink ?? null : null;
+        try {
+            const response = await this.apiClient.post<BakongDeeplinkResponse>("/generate_deeplink_by_qr", payload);
+            return response.data?.responseCode === 0 ? response.data.data?.shortLink ?? null : null;
+        } catch (error) {
+            this.handleApiError(error);
+        }
     }
 
     public async checkPayment(md5: string): Promise<PaymentStatus> {
         const payload = { md5 };
-        const response = await this.postRequest<BakongTransactionResponse>("/check_transaction_by_md5", payload);
-        return response?.responseCode === 0 ? "PAID" : "UNPAID";
+        try {
+            const response = await this.apiClient.post<BakongTransactionResponse>("/check_transaction_by_md5", payload);
+            return response.data?.responseCode === 0 ? "PAID" : "UNPAID";
+        } catch (error) {
+            this.handleApiError(error);
+        }
     }
 
     public async getPayment(md5: string): Promise<Record<string, any> | null> {
         const payload = { md5 };
-        const response = await this.postRequest<BakongTransactionResponse>("/check_transaction_by_md5", payload);
-        return response?.responseCode === 0 ? response.data ?? null : null;
+        try {
+            const response = await this.apiClient.post<BakongTransactionResponse>("/check_transaction_by_md5", payload);
+            return response.data?.responseCode === 0 ? response.data.data ?? null : null;
+        } catch (error) {
+            this.handleApiError(error);
+        }
     }
     
     public async checkBulkPayments(md5List: string[]): Promise<string[]> {
-        const response = await this.postRequest<BakongBulkResponse>("/check_transaction_by_md5_list", { md5List });
-        return response?.data
-            ?.filter(item => item.status === "SUCCESS")
-            .map(item => item.md5) || [];
+        try {
+            const response = await this.apiClient.post<BakongBulkResponse>("/check_transaction_by_md5_list", { md5List });
+            return response.data?.data
+                ?.filter(item => item.status === "SUCCESS")
+                .map(item => item.md5) || [];
+        } catch (error) {
+            this.handleApiError(error);
+        }
     }
 }
 
