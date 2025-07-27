@@ -210,47 +210,47 @@ import { Product } from "../db/models";
  */
 
 export async function getAllProduct(req: Request, res: Response): Promise<void> {
-    const category = (req.query.category as string);
-    const type_product = (req.query.type_product as string);
-    const brandProduct = (req.query.brand as string);
-    const nameProductSearch = (req.query.name as string);
-    const sortType = (req.query.sort as string) || 'asc';
-    const sortColumn = (req.query.order_column as string);
-    const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 10;
-    const page = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : 1;
+  const category = (req.query.category as string);
+  const type_product = (req.query.type_product as string);
+  const brandProduct = (req.query.brand as string);
+  const nameProductSearch = (req.query.name as string);
+  const sortType = (req.query.sort as string) || 'asc';
+  const sortColumn = (req.query.order_column as string);
+  const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 10;
+  const page = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : 1;
 
-    // NEW: Extract price_min and price_max
-    const priceMin = typeof req.query.price_min === 'string' ? parseFloat(req.query.price_min) : undefined;
-    const priceMax = typeof req.query.price_max === 'string' ? parseFloat(req.query.price_max) : undefined;
+  // NEW: Extract price_min and price_max
+  const priceMin = typeof req.query.price_min === 'string' ? parseFloat(req.query.price_min) : undefined;
+  const priceMax = typeof req.query.price_max === 'string' ? parseFloat(req.query.price_max) : undefined;
 
-    try {
-        const product = await ProductRepository.getAllProduct(
-            nameProductSearch,
-            sortType,
-            sortColumn,
-            category,
-            type_product,
-            brandProduct,
-            priceMin, // NEW
-            priceMax, // NEW
-            page,
-            limit
-        );
-        const totalItems = await Product.count(); // <--- This is the primary suspect
-        const totalPages: number = Math.round(totalItems / limit);
-        res.status(200).json({
-            meta: {
-                totalItems,
-                page,
-                totalPages
-            },
-            data: product
-        });
-        return;
-    } catch (err) {
-        res.status(404).json({ message: (err as Error).message });
-        return;
-    }
+  try {
+    const product = await ProductRepository.getAllProduct(
+      nameProductSearch,
+      sortType,
+      sortColumn,
+      category,
+      type_product,
+      brandProduct,
+      priceMin, // NEW
+      priceMax, // NEW
+      page,
+      limit
+    );
+    const totalItems = await Product.count(); // <--- This is the primary suspect
+    const totalPages: number = Math.round(totalItems / limit);
+    res.status(200).json({
+      meta: {
+        totalItems,
+        page,
+        totalPages
+      },
+      data: product
+    });
+    return;
+  } catch (err) {
+    res.status(404).json({ message: (err as Error).message });
+    return;
+  }
 }
 
 
@@ -283,13 +283,13 @@ export async function getAllProduct(req: Request, res: Response): Promise<void> 
  */
 
 export async function getOneProduct(req: Request, res: Response): Promise<void> {
-    try {
-        const productCode = req.params.product_code;
-        const product = await ProductRepository.getOneProduct(productCode);
-        res.status(200).send(product);
-    } catch (err) {
-        res.status(404).json({ message: (err as Error).message });
-    }
+  try {
+    const productCode = req.params.product_code;
+    const product = await ProductRepository.getOneProduct(productCode);
+    res.status(200).send(product);
+  } catch (err) {
+    res.status(404).json({ message: (err as Error).message });
+  }
 }
 
 /**
@@ -322,13 +322,13 @@ export async function getOneProduct(req: Request, res: Response): Promise<void> 
  */
 
 export async function getProductDetail(req: Request, res: Response): Promise<void> {
-    try {
-        const productCode = req.params.product_code;
-        const product = await ProductRepository.getProductDetail(productCode);
-        res.status(200).send(product);
-    } catch (err) {
-        res.status(404).json({ message: (err as Error).message });
-    }
+  try {
+    const productCode = req.params.product_code;
+    const product = await ProductRepository.getProductDetail(productCode);
+    res.status(200).send(product);
+  } catch (err) {
+    res.status(404).json({ message: (err as Error).message });
+  }
 }
 
 
@@ -396,29 +396,29 @@ export async function getProductDetail(req: Request, res: Response): Promise<voi
  */
 
 export async function addNewProduct(req: Request, res: Response): Promise<void> {
-    try {
-        const productData = req.body;
+  try {
+    const productData = req.body;
 
-        if (!productData || !productData.code || !productData.name || !productData.price) {
-          res.status(400).json({ message: 'Missing required product data.' });
-                              console.log('err missing')
-          return
-        }
-
-        const success = await ProductRepository.addProduct(productData);
-
-        if (success) {
-          res.status(201).json({ message: 'Product added successfully.' });
-          return
-        } else {
-                    console.log('err product exists')
-          res.status(409).json({ message: 'Product already exists or failed to add.' });
-          return
-        }
-    } catch (err) {
-        console.log('err server')
-        res.status(500).json({ message: (err as Error).message });
+    if (!productData || !productData.code || !productData.name || !productData.price) {
+      res.status(400).json({ message: 'Missing required product data.' });
+      console.log('err missing')
+      return
     }
+
+    const success = await ProductRepository.addProduct(productData);
+
+    if (success) {
+      res.status(201).json({ message: 'Product added successfully.' });
+      return
+    } else {
+      console.log('err product exists')
+      res.status(409).json({ message: 'Product already exists or failed to add.' });
+      return
+    }
+  } catch (err) {
+    console.log('err server')
+    res.status(500).json({ message: (err as Error).message });
+  }
 }
 
 /**
@@ -463,32 +463,32 @@ export async function addNewProduct(req: Request, res: Response): Promise<void> 
  *         description: Internal server error.
  */
 export async function addProductFeedback(req: Request, res: Response): Promise<void> {
-    try {
-        const { product_code } = req.params;
-        const { rating, comment,customer_id } = req.body;
+  try {
+    const { product_code } = req.params;
+    const { rating, comment, customer_id } = req.body;
 
-        if (!customer_id) {
-            res.status(401).json({ message: 'Unauthorized: No customer ID found in token.' });
-            return
-        }
-
-        const ratingInt = parseInt(rating);
-        if (
-            Number.isNaN(ratingInt) ||
-            typeof comment !== 'string' ||
-            !comment.trim()
-        ) {
-            res.status(400).json({ message: 'Invalid or missing input values' });
-            return
-        }
-
-        await ProductFeedBackRepositories.addFeedback(product_code, customer_id, ratingInt, comment);
-        res.status(201).json({ message: 'Feedback added successfully.' });
-        return
-    } catch (err) {
-        res.status(500).json({ message: (err as Error).message });
-        return
+    if (!customer_id) {
+      res.status(401).json({ message: 'Unauthorized: No customer ID found in token.' });
+      return
     }
+
+    const ratingInt = parseInt(rating);
+    if (
+      Number.isNaN(ratingInt) ||
+      typeof comment !== 'string' ||
+      !comment.trim()
+    ) {
+      res.status(400).json({ message: 'Invalid or missing input values' });
+      return
+    }
+
+    await ProductFeedBackRepositories.addFeedback(product_code, customer_id, ratingInt, comment);
+    res.status(201).json({ message: 'Feedback added successfully.' });
+    return
+  } catch (err) {
+    res.status(500).json({ message: (err as Error).message });
+    return
+  }
 }
 
 
@@ -619,10 +619,10 @@ export async function updateProduct(req: Request, res: Response): Promise<void> 
     if (updateData.description) transformedData.description = updateData.description;
     if (updateData.category) transformedData.category_id = Number(updateData.category);
     if (updateData.brand) transformedData.brand_id = updateData.brand;
-    if (updateData.type.id) transformedData.type_id = updateData.type.id;
+    if (updateData.type_product) transformedData.type_id = Number(updateData.type_product);
     if (updateData.image) transformedData.image_path = updateData.image;
 
-    const success = await ProductRepository.updateProduct(productCode,transformedData);
+    const success = await ProductRepository.updateProduct(productCode, transformedData);
 
     if (success) {
       res.status(200).json({ message: 'Product updated successfully.' });
