@@ -251,7 +251,7 @@ export const apiService = {
     }
   },
   checkPaymentStatus: async (uniqueMd5, orderId) => {
-    console.log(uniqueMd5,orderId)
+    console.log(uniqueMd5, orderId)
     try {
       const response = await apiClient.post(`checkout/check-payment`, {
         unique_md5: uniqueMd5,
