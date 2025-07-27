@@ -1,11 +1,12 @@
 import { OrderRepositories, PaymentTransactionRepositories } from "../repositories/checkout.repository";
 import { Request, Response } from 'express';
 import { TelegramBot } from "../service/TelegramBot";
-import { Address, Customer, OrderItem, Orders } from "../db/models";
+import { Address, CartItem, Customer, OrderItem, Orders } from "../db/models";
 import { AddressRepository } from "../repositories/address.repository";
 import { generateBillNumber } from '../service/TwoFA';
 import KHQR from '../service/BakongKHQR';
 import dotenv from 'dotenv';
+import { CartItemRepository } from "../repositories/cartItem.repository";
 dotenv.config()
 
 
@@ -249,14 +250,13 @@ export async function checkPayment(req: Request, res: Response, telegramBotInsta
 
         if (bakongPayStatus === 'PAID') {
             await PaymentTransactionRepositories.updatePaymentStatus(order_id, 'Completed');
-
             try {
                 const order = await Orders.findByPk(order_id);
                 if (order) {
                     const customer = await Customer.findByPk(order.customer_id) as Customer;
                     const customerAddress = await AddressRepository.getAddressById(order.address_id) as Address;
                     const order_items = await OrderItem.findAll({ where: { order_id: order.order_id } });
-
+                    await CartItemRepository.clearCart(order.customer_id);
                     if (order_items && customer && customerAddress) {
                         const totalAmount = order_items.reduce((sum, item) => sum + (item.price_at_purchase * item.qty), 0);
                         telegramBotInstance.sendOrderNotification({
