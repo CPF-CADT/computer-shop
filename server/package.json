@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon --watch . --ext ts --exec ts-node server.ts",
     "start": "node dist/server.js",
+    "seed:catalog": "node dist/scripts/seedCatalog.js",
     "test": "jest",
     "build": "tsc"
   },

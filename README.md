@@ -88,6 +88,28 @@ Hosted on **Vercel**
 
 This architecture allows for independent scaling and maintenance of frontend, backend, and database components.
 
+## Run locally with Docker
+
+Requirements: Docker Desktop or Docker Engine with Docker Compose.
+
+```bash
+docker compose up --build
+```
+
+Then open:
+
+- Frontend: http://localhost:5173
+- Backend API documentation: http://localhost:3000/api-docs
+- MySQL: `localhost:3306`
+
+The local MySQL schema is created automatically from the Sequelize models. Data is
+stored in the `mysql_data` Docker volume. To enable optional integrations such as
+Telegram, Cloudinary, or Bakong, copy `.env.docker.example` to `.env` and fill in
+the required values.
+
+Stop the application with `docker compose down`. Add `-v` only when you also want
+to delete the local database data.
+
 ---
 ## 🙏 Acknowledgments
 

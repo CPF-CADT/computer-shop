@@ -1,0 +1,58 @@
+services:
+  database:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: computer_shop
+      MYSQL_USER: computer_shop
+      MYSQL_PASSWORD: computer_shop
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  server:
+    build:
+      context: ./server
+    environment:
+      PORT: 3000
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_USER: computer_shop
+      DB_PASS: computer_shop
+      DB_NAME: computer_shop
+      DB_SYNC: "true"
+      JWT_SECRET: ${JWT_SECRET:-local-development-secret}
+      IS_CHECK_2FA: "0"
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_GROUP_CHAT_ORDERS_ID: ${TELEGRAM_GROUP_CHAT_ORDERS_ID:-}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      BAKONG_TOKEN: ${BAKONG_TOKEN:-}
+      BAKONG_BANK_ACCOUNT: ${BAKONG_BANK_ACCOUNT:-}
+      MERCHANT_NAME: ${MERCHANT_NAME:-}
+      MERCHANT_CITY: ${MERCHANT_CITY:-}
+      PHONE_NUMBER: ${PHONE_NUMBER:-}
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "3002:3000"
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_API_URL: http://localhost:3002/api/
+    depends_on:
+      - server
+    ports:
+      - "5173:80"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

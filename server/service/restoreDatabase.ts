@@ -3,19 +3,29 @@ import * as fs from 'fs';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const dbConfig = {
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_RECOVERY,
-};
+function getDbConfig() {
+  const dbConfig = {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_RECOVERY,
+  };
 
-if (!dbConfig.host || !dbConfig.user || !dbConfig.password || !dbConfig.database) {
-  throw new Error("Missing required database environment variables.");
+  if (!dbConfig.host || !dbConfig.user || !dbConfig.password || !dbConfig.database) {
+    throw new Error("Missing required database recovery environment variables.");
+  }
+
+  return {
+    host: dbConfig.host,
+    port: dbConfig.port,
+    user: dbConfig.user,
+    password: dbConfig.password,
+    database: dbConfig.database,
+  };
 }
 
-function executeSqlCommand(sql: string): Promise<void> {
+function executeSqlCommand(sql: string, dbConfig: ReturnType<typeof getDbConfig>): Promise<void> {
   return new Promise((resolve, reject) => {
     const mysqlAdminArgs: string[] = [
       `--host=${dbConfig.host}`,
@@ -48,11 +58,11 @@ function executeSqlCommand(sql: string): Promise<void> {
   });
 }
 
-async function cleanDatabase(dbName: string): Promise<void> {
+async function cleanDatabase(dbName: string, dbConfig: ReturnType<typeof getDbConfig>): Promise<void> {
   console.log(`--- Cleaning database '${dbName}' ---`);
   try {
-    await executeSqlCommand(`DROP DATABASE IF EXISTS \`${dbName}\`;`);
-    await executeSqlCommand(`CREATE DATABASE \`${dbName}\`;`);
+    await executeSqlCommand(`DROP DATABASE IF EXISTS \`${dbName}\`;`, dbConfig);
+    await executeSqlCommand(`CREATE DATABASE \`${dbName}\`;`, dbConfig);
     console.log(`--- Database '${dbName}' cleaned and recreated ---`);
   } catch (error) {
     console.error(` Failed to clean database '${dbName}'`);
@@ -97,6 +107,7 @@ export async function restoreDatabase(backupFiles: string[]): Promise<void> {
     return;
   }
 
+  const dbConfig = getDbConfig();
   const dbName = dbConfig.database;
   console.log(`--- Starting restore for '${dbName}' ---`);
 
@@ -109,7 +120,7 @@ export async function restoreDatabase(backupFiles: string[]): Promise<void> {
   ];
 
   try {
-    await cleanDatabase(dbName as string);
+    await cleanDatabase(dbName, dbConfig);
     for (const file of backupFiles) {
       await applyBackup(mysqlCommandArgs, file);
     }

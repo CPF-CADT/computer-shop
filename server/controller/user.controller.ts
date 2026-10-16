@@ -13,16 +13,16 @@ dotenv.config();
 /**
  * @swagger
  * tags:
- *   name: Customer
- *   description: Customer Management
+ *   name: User
+ *   description: User Management
  */
 
 /**
  * @swagger
  * /api/user/register:
  *   post:
- *     summary: Register a new customer
- *     tags: [Customer]
+ *     summary: Register a new User
+ *     tags: [User]
  *     requestBody:
  *       required: true
  *       content:
