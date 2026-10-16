@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import dotenv from 'dotenv';
 import { v2 as cloudinary } from 'cloudinary';
+import { Op } from 'sequelize';
 import { sequelize } from '../db/sequelize';
 import { Brand, Category, Product, TypeProduct } from '../db/models';
 
@@ -74,9 +75,20 @@ async function uploadImages(): Promise<Record<ImageKey, string>> {
 }
 
 async function seed(): Promise<void> {
-  const images = await uploadImages();
   await sequelize.authenticate();
   await sequelize.sync();
+
+  const productCodes = products.map((product) => product.code);
+  const existingProductCount = await Product.count({
+    where: { product_code: { [Op.in]: productCodes } },
+  });
+
+  if (existingProductCount === products.length) {
+    console.log('Catalog is already seeded; skipping.');
+    return;
+  }
+
+  const images = await uploadImages();
 
   const categoryIds = new Map<string, number>();
   const typeIds = new Map<string, number>();

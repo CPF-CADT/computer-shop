@@ -1,5 +1,7 @@
 import { Sequelize } from 'sequelize-typescript';
 import dotenv from 'dotenv';
+import fs from 'node:fs';
+import path from 'node:path';
 dotenv.config();
 
 import * as allModels from './models';
@@ -11,6 +13,7 @@ const {
   DB_USER,
   DB_PASS,
   DB_NAME,
+  DB_SSL,
 } = process.env;
 
 if (!DB_HOST || !DB_PORT || !DB_USER || !DB_PASS || !DB_NAME) {
@@ -24,6 +27,14 @@ export const sequelize = new Sequelize({
   username: DB_USER,
   password: DB_PASS,
   database: DB_NAME,
+  dialectOptions: DB_SSL === 'true'
+    ? {
+        ssl: {
+          ca: fs.readFileSync(path.join(__dirname, 'ca.pem'), 'utf8'),
+          rejectUnauthorized: true,
+        },
+      }
+    : undefined,
   logging: false,
   models: Object.values(allModels),
 });
